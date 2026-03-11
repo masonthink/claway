@@ -165,3 +165,61 @@ export function getMyContributions(): Promise<{
 export function getMyCompute(): Promise<ComputeUsage> {
   return request("/me/compute");
 }
+
+export function createIdea(data: {
+  title: string;
+  description: string;
+  target_user_hint: string;
+  package_type: string;
+  initiator_cut_percent: number;
+}): Promise<Idea> {
+  return request("/ideas", { method: "POST", body: JSON.stringify(data) });
+}
+
+export function claimTask(taskId: string): Promise<{ success: boolean }> {
+  return request(`/tasks/${taskId}/claim`, { method: "POST" });
+}
+
+export function unclaimTask(taskId: string): Promise<{ success: boolean }> {
+  return request(`/tasks/${taskId}/claim`, { method: "DELETE" });
+}
+
+export function submitTask(
+  taskId: string,
+  data: { output_content: string; output_note: string }
+): Promise<{ success: boolean }> {
+  return request(`/tasks/${taskId}/submit`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function reviewTask(
+  taskId: string,
+  data: { quality_score: number; reject_reason?: string }
+): Promise<{ success: boolean }> {
+  return request(`/tasks/${taskId}/review`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function getTaskDocument(
+  taskId: string
+): Promise<{ content: string }> {
+  return request(`/tasks/${taskId}/document`);
+}
+
+export function updateTaskDocument(
+  taskId: string,
+  content: string
+): Promise<{ success: boolean }> {
+  return request(`/tasks/${taskId}/document`, {
+    method: "PUT",
+    body: JSON.stringify({ content }),
+  });
+}
+
+export function publishIdea(ideaId: string): Promise<{ success: boolean }> {
+  return request(`/ideas/${ideaId}/publish`, { method: "POST" });
+}

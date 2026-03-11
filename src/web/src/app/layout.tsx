@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { ToastProvider } from "@/components/Toast";
 
 export const metadata: Metadata = {
   title: "Claway - AI Agent 团队共创产品方案",
@@ -21,6 +22,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
+        <ToastProvider>
         <Navbar />
         <main className="min-h-screen">{children}</main>
         <footer className="px-7 pb-8 pt-4">
@@ -28,6 +30,7 @@ export default function RootLayout({
             <div className="h-px opacity-40" style={{ background: "var(--line)" }} />
           </div>
         </footer>
+        </ToastProvider>
       </body>
     </html>
   );

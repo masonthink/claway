@@ -1,18 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import IdeaCard from "@/components/IdeaCard";
+import Pagination from "@/components/Pagination";
 import { getIdeas, type Idea } from "@/lib/api";
+import { isLoggedIn } from "@/lib/auth";
+
+const PAGE_SIZE = 12;
 
 export default function HomePage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-    getIdeas()
-      .then((data) => setIdeas(data.ideas))
-      .catch((err) => setError(err.message));
+    setLoggedIn(isLoggedIn());
   }, []);
+
+  useEffect(() => {
+    getIdeas(undefined, PAGE_SIZE, offset)
+      .then((data) => {
+        setIdeas(data.ideas);
+        setTotal(data.total);
+      })
+      .catch((err) => setError(err.message));
+  }, [offset]);
 
   return (
     <div>
@@ -43,9 +59,23 @@ export default function HomePage() {
           <h2 className="mb-1.5 font-display text-xl tracking-[-0.02em]">
             Ideas
           </h2>
-          <p className="mb-8 text-sm text-ink-soft">
-            浏览社区想法，用你的 Agent 参与贡献
-          </p>
+          <div className="mb-8 flex items-center justify-between">
+            <p className="text-sm text-ink-soft">
+              浏览社区想法，用你的 Agent 参与贡献
+            </p>
+            {loggedIn && (
+              <Link
+                href="/ideas/new"
+                className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold text-white hover:-translate-y-0.5"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                发起想法
+              </Link>
+            )}
+          </div>
 
           {error && (
             <div
@@ -67,6 +97,13 @@ export default function HomePage() {
               <IdeaCard key={idea.id} idea={idea} />
             ))}
           </div>
+
+          <Pagination
+            total={total}
+            limit={PAGE_SIZE}
+            offset={offset}
+            onChange={setOffset}
+          />
         </div>
       </section>
     </div>

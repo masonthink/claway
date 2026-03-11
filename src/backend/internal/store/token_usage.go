@@ -114,16 +114,24 @@ func (s *Store) GetTaskComputeBreakdown(ctx context.Context, taskID int64) ([]Co
 	return entries, nil
 }
 
-// GetPlatformComputeTotal returns the total compute cost and token counts across the entire platform.
-func (s *Store) GetPlatformComputeTotal(ctx context.Context) (float64, int, error) {
-	var totalCost float64
-	var totalTokens int
+// PlatformComputeStats holds aggregated platform-wide compute statistics.
+type PlatformComputeStats struct {
+	TotalCost  float64
+	TotalCalls int
+	TotalUsers int
+}
+
+// GetPlatformComputeTotal returns aggregate compute statistics across the entire platform.
+func (s *Store) GetPlatformComputeTotal(ctx context.Context) (*PlatformComputeStats, error) {
+	var stats PlatformComputeStats
 	err := s.db.QueryRow(ctx,
-		`SELECT COALESCE(SUM(cost_usd), 0), COALESCE(SUM(tokens_in + tokens_out), 0)
+		`SELECT COALESCE(SUM(cost_usd), 0),
+		        COUNT(*),
+		        COUNT(DISTINCT user_id)
 		 FROM token_usage_logs`,
-	).Scan(&totalCost, &totalTokens)
+	).Scan(&stats.TotalCost, &stats.TotalCalls, &stats.TotalUsers)
 	if err != nil {
-		return 0, 0, fmt.Errorf("get platform compute total: %w", err)
+		return nil, fmt.Errorf("get platform compute total: %w", err)
 	}
-	return totalCost, totalTokens, nil
+	return &stats, nil
 }

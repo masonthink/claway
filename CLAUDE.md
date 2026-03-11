@@ -87,6 +87,17 @@ cd src/backend
 go test -v ./internal/
 ```
 
+## 部署架构
+- **后端**: GitHub Actions → Docker → GHCR → SSH 部署 VPS
+- **前端**: Vercel 自动部署（TODO: 配置）
+- **VPS**: 45.32.57.146 (Vultr Tokyo)，与 DTC 共用
+- **域名**: claway.concors.ai（临时，后续注册独立域名）
+- **反向代理**: Cloudflare → DTC Caddy → localhost:8081
+- **数据库**: DTC PostgreSQL 容器内的独立 claway 数据库
+- **部署路径**: /opt/claway/
+- **SSH 密钥**: ~/.ssh/dtc_deploy_vps
+- **Cloudflare SSL**: Flexible 模式
+
 ## 开发规范
 - 中文编写文档
 - 代码注释用英文

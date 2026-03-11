@@ -10,26 +10,56 @@ import {
   getIdea,
   getIdeaTasks,
   getIdeaCompute,
+  getMe,
+  publishIdea,
   type Idea,
   type Task,
   type ComputeLeaderboard,
+  type User,
 } from "@/lib/api";
+import { isLoggedIn } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 
 export default function IdeaDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [idea, setIdea] = useState<Idea | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [leaderboard, setLeaderboard] = useState<ComputeLeaderboard | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
+  const loadData = () => {
     if (!id) return;
     Promise.all([
       getIdea(id).then(setIdea),
       getIdeaTasks(id).then((d) => setTasks(d.tasks)),
       getIdeaCompute(id).then(setLeaderboard),
     ]).catch((err) => setError(err.message));
+  };
+
+  useEffect(() => {
+    loadData();
+    if (isLoggedIn()) {
+      getMe().then(setCurrentUser).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const handlePublish = async () => {
+    if (!id) return;
+    setPublishing(true);
+    try {
+      await publishIdea(id);
+      toast("success", "PRD 发布成功");
+      loadData();
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "发布失败");
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   if (error) {
     return (
@@ -103,10 +133,36 @@ export default function IdeaDetailPage() {
         )}
       </div>
 
+      {/* Publish PRD button */}
+      {currentUser &&
+        idea.initiator === currentUser.username &&
+        idea.status === "active" &&
+        tasks.length > 0 &&
+        tasks.every((t) => t.status === "approved") && (
+          <div className="mb-8">
+            <button
+              onClick={handlePublish}
+              disabled={publishing}
+              className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+              style={{
+                background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
+              }}
+            >
+              <FileText className="h-4 w-4" />
+              {publishing ? "发布中..." : "发布 PRD"}
+            </button>
+          </div>
+        )}
+
       {/* Tasks */}
       <div className="mb-8">
         <h2 className="mb-4 font-display text-lg tracking-[-0.02em]">Tasks</h2>
-        <TaskList tasks={tasks} />
+        <TaskList
+          tasks={tasks}
+          currentUsername={currentUser?.username}
+          isInitiator={currentUser?.username === idea.initiator}
+          onRefresh={loadData}
+        />
       </div>
 
       {/* Leaderboard */}

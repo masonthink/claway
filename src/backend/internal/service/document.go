@@ -77,7 +77,7 @@ func (s *Service) UpdateDocument(ctx context.Context, taskID, userID int64, req 
 	}
 
 	newVersion := doc.CurrentVersion + 1
-	diff := "" // TODO: compute diff
+	diff := computeUnifiedDiff(doc.Content, req.Content)
 
 	if err := s.store.UpdateDocumentContent(ctx, doc.ID, req.Content, newVersion); err != nil {
 		return fmt.Errorf("failed to update document: %w", err)

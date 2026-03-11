@@ -69,14 +69,19 @@ func (s *Service) GetTaskCompute(ctx context.Context, taskID int64) (*TaskComput
 // PlatformComputeResponse contains platform-wide compute statistics.
 type PlatformComputeResponse struct {
 	TotalCostUSD float64 `json:"total_cost_usd"`
+	TotalCalls   int     `json:"total_calls"`
 	TotalUsers   int     `json:"total_users"`
 }
 
 // GetPlatformCompute returns platform-wide compute statistics.
 func (s *Service) GetPlatformCompute(ctx context.Context) (*PlatformComputeResponse, error) {
-	total, users, err := s.store.GetPlatformComputeTotal(ctx)
+	stats, err := s.store.GetPlatformComputeTotal(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get platform compute: %w", err)
 	}
-	return &PlatformComputeResponse{TotalCostUSD: total, TotalUsers: users}, nil
+	return &PlatformComputeResponse{
+		TotalCostUSD: stats.TotalCost,
+		TotalCalls:   stats.TotalCalls,
+		TotalUsers:   stats.TotalUsers,
+	}, nil
 }
