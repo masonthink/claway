@@ -17,7 +17,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: root
           password: ${{ secrets.VPS_ROOT_PASSWORD }}
-          port: 8443
+          port: 22
           script: |
             set -e
 

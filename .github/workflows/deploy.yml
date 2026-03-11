@@ -65,7 +65,7 @@ jobs:
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
-          port: 8443
+          port: 22
           username: deploy
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
