@@ -1,0 +1,46 @@
+name: Fix Caddy Config
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix Caddy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            cat > /opt/caddy/Caddyfile << 'EOF'
+            :80 {
+              reverse_proxy localhost:8081
+              header {
+                X-Content-Type-Options "nosniff"
+                X-Frame-Options "DENY"
+                -Server
+              }
+            }
+            EOF
+
+            docker rm -f claway-caddy || true
+            docker run -d \
+              --name claway-caddy \
+              --restart always \
+              --network host \
+              -v /opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
+              -v caddy_data:/data \
+              -v caddy_config:/config \
+              caddy:2-alpine
+
+            sleep 2
+            echo "=== Caddy status ==="
+            docker ps | grep caddy
+            echo ""
+            echo "=== Health check ==="
+            curl -s http://localhost:80/health || echo "No response on 80"
+            curl -s http://localhost:8081/health || echo "No response on 8081"
