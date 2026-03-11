@@ -1,5 +1,5 @@
 # Claway 生产环境
-# 复用 DTC 的 PostgreSQL 和 Caddy，只运行后端 + 迁移
+# 后端 + 迁移（PostgreSQL 和 Caddy 独立运行）
 #
 # 部署：
 #   docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm migrate

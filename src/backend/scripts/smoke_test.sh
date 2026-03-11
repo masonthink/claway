@@ -2,7 +2,7 @@
 # Smoke test for Claway backend API
 set -e
 
-BASE="http://localhost:8080/api/v1"
+BASE="http://localhost:8081/api/v1"
 PSQL="/opt/homebrew/opt/postgresql@16/bin/psql"
 JWT_SECRET="dev-secret-key-123"
 

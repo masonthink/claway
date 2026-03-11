@@ -79,7 +79,7 @@ go run ./cmd/server/
 
 # 前端
 cd src/web
-NEXT_PUBLIC_API_URL="http://localhost:8080/api/v1" \
+NEXT_PUBLIC_API_URL="http://localhost:8081/api/v1" \
 npm run dev
 
 # 测试
@@ -89,11 +89,12 @@ go test -v ./internal/
 
 ## 部署架构
 - **后端**: GitHub Actions → Docker → GHCR → SSH 部署 VPS
-- **前端**: Vercel 自动部署（TODO: 配置）
-- **VPS**: 45.32.57.146 (Vultr Tokyo)，与 DTC 共用
-- **域名**: claway.concors.ai（临时，后续注册独立域名）
-- **反向代理**: Cloudflare → DTC Caddy → localhost:8081
-- **数据库**: DTC PostgreSQL 容器内的独立 claway 数据库
+- **前端**: Vercel 自动部署，自定义域名 claway.concors.ai
+- **VPS**: 45.32.57.146 (Vultr Tokyo)
+- **API 域名**: api-claway.concors.ai
+- **前端域名**: claway.concors.ai (Vercel)
+- **反向代理**: Cloudflare → Caddy → localhost:8081
+- **数据库**: PostgreSQL 16 (Docker 容器 claway-postgres)
 - **部署路径**: /opt/claway/
 - **SSH 密钥**: ~/.ssh/dtc_deploy_vps
 - **Cloudflare SSL**: Flexible 模式
