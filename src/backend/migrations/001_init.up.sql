@@ -1,5 +1,5 @@
 -- 001_init.up.sql
--- Initial schema for ClawBeach
+-- Initial schema for Claway
 
 CREATE TABLE IF NOT EXISTS users (
     id              BIGSERIAL PRIMARY KEY,

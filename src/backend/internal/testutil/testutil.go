@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/clawbeach/server/internal/config"
-	"github.com/clawbeach/server/internal/service"
-	"github.com/clawbeach/server/internal/store"
+	"github.com/claway/server/internal/config"
+	"github.com/claway/server/internal/service"
+	"github.com/claway/server/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -16,7 +16,7 @@ import (
 const TestJWTSecret = "test-jwt-secret"
 
 // defaultTestDatabaseURL is the fallback when TEST_DATABASE_URL is not set.
-const defaultTestDatabaseURL = "postgres://mason@localhost:5432/clawbeach_test?sslmode=disable"
+const defaultTestDatabaseURL = "postgres://mason@localhost:5432/claway_test?sslmode=disable"
 
 // adminDatabaseURL connects to the default postgres database for administrative operations.
 const adminDatabaseURL = "postgres://mason@localhost:5432/postgres?sslmode=disable"
@@ -140,26 +140,26 @@ func testDatabaseURL() string {
 	return defaultTestDatabaseURL
 }
 
-// SetupTestDB connects to clawbeach_test, runs migration, and returns a pool.
+// SetupTestDB connects to claway_test, runs migration, and returns a pool.
 // It creates the database if it does not exist.
 func SetupTestDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	ctx := context.Background()
 
-	// Connect to the default postgres database to create clawbeach_test if needed.
+	// Connect to the default postgres database to create claway_test if needed.
 	adminPool, err := pgxpool.New(ctx, adminDatabaseURL)
 	if err != nil {
 		t.Fatalf("failed to connect to admin database: %v", err)
 	}
 
 	var exists bool
-	err = adminPool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = 'clawbeach_test')").Scan(&exists)
+	err = adminPool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = 'claway_test')").Scan(&exists)
 	if err != nil {
 		adminPool.Close()
 		t.Fatalf("failed to check if test database exists: %v", err)
 	}
 	if !exists {
-		_, err = adminPool.Exec(ctx, "CREATE DATABASE clawbeach_test")
+		_, err = adminPool.Exec(ctx, "CREATE DATABASE claway_test")
 		if err != nil {
 			adminPool.Close()
 			t.Fatalf("failed to create test database: %v", err)

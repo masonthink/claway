@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // GetDocument returns the current document for a task.

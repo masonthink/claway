@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // CreditsResponse contains user balance and recent transactions.

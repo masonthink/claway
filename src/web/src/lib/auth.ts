@@ -1,6 +1,6 @@
 // Auth utilities for JWT token management
 
-const TOKEN_KEY = "clawbeach_token";
+const TOKEN_KEY = "claway_token";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;

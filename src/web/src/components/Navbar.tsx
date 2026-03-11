@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Waves, LayoutDashboard, LogIn, LogOut } from "lucide-react";
+import { LayoutDashboard, LogIn, LogOut } from "lucide-react";
 import { isLoggedIn, removeToken } from "@/lib/auth";
 
 export default function Navbar() {
@@ -19,49 +19,46 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-indigo-600">
-          <Waves className="h-6 w-6" />
-          ClawBeach
+    <nav
+      className="sticky top-0 z-10 backdrop-blur-[18px]"
+      style={{ background: "var(--nav-bg)", borderBottom: "1px solid var(--line)" }}
+    >
+      <div className="mx-auto flex max-w-[1200px] items-center gap-6 px-7 py-4">
+        <Link href="/" className="font-display text-[1.35rem] font-bold tracking-[-0.03em]">
+          Claway
         </Link>
 
-        <div className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors"
-          >
-            Ideas
-          </Link>
-
+        <div className="flex gap-4 text-[0.92rem] text-ink-soft">
+          <Link href="/" className="hover:text-ink">Ideas</Link>
           {loggedIn && (
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors"
-            >
-              <LayoutDashboard className="h-4 w-4" />
+            <Link href="/dashboard" className="flex items-center gap-1.5 hover:text-ink">
+              <LayoutDashboard className="h-3.5 w-3.5" />
               Dashboard
             </Link>
           )}
-
-          {loggedIn ? (
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-          ) : (
-            <a
-              href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/auth/openclaw`}
-              className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
-            >
-              <LogIn className="h-4 w-4" />
-              Login
-            </a>
-          )}
         </div>
+
+        <div className="flex-1" />
+
+        {loggedIn ? (
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center gap-2 rounded-[10px] px-3.5 py-2 text-sm font-medium text-ink-soft hover:text-ink"
+            style={{ border: "1px solid var(--line)" }}
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Logout
+          </button>
+        ) : (
+          <a
+            href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/auth/openclaw`}
+            className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5"
+            style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            Sign in
+          </a>
+        )}
       </div>
     </nav>
   );

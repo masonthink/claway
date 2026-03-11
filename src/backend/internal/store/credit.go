@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // CreateCreditTransaction records a credit transaction for a user.

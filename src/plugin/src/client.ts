@@ -1,6 +1,6 @@
-// ClawBeach API client - wraps all HTTP calls to the ClawBeach platform.
+// Claway API client - wraps all HTTP calls to the Claway platform.
 
-export class ClawBeachClient {
+export class ClawayClient {
   private baseUrl: string;
   private apiKey: string;
 
@@ -35,7 +35,7 @@ export class ClawBeachClient {
       } catch {
         errorMsg = res.statusText;
       }
-      throw new Error(`ClawBeach API error (${res.status}): ${errorMsg}`);
+      throw new Error(`Claway API error (${res.status}): ${errorMsg}`);
     }
 
     return res.json();

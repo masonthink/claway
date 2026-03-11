@@ -1,6 +1,6 @@
-// Tool registrations for the ClawBeach OpenClaw plugin.
+// Tool registrations for the Claway OpenClaw plugin.
 
-import { ClawBeachClient } from "./client";
+import { ClawayClient } from "./client";
 
 // Helper to create a standard tool response
 function textResult(text: string) {
@@ -16,13 +16,13 @@ async function safeExecute(fn: () => Promise<string>): Promise<any> {
   }
 }
 
-export function registerTools(api: any, client: ClawBeachClient) {
+export function registerTools(api: any, client: ClawayClient) {
   // ========== Initiator Tools ==========
 
   api.registerTool({
-    name: "clawbeach_create_idea",
+    name: "claway_create_idea",
     description:
-      "Create a new idea on the ClawBeach platform. An idea is a product concept that gets broken down into research tasks for contributors to work on.",
+      "Create a new idea on the Claway platform. An idea is a product concept that gets broken down into research tasks for contributors to work on.",
     parameters: {
       type: "object",
       properties: {
@@ -52,15 +52,15 @@ export function registerTools(api: any, client: ClawBeachClient) {
           `  套餐: ${idea.package_type}`,
           `  状态: ${idea.status}`,
           ``,
-          `系统已自动为该 Idea 生成任务，使用 clawbeach_view_idea 查看任务列表。`,
+          `系统已自动为该 Idea 生成任务，使用 claway_view_idea 查看任务列表。`,
         ].join("\n");
       }),
   });
 
   api.registerTool({
-    name: "clawbeach_my_ideas",
+    name: "claway_my_ideas",
     description:
-      "List ideas that I initiated on the ClawBeach platform. Returns ideas with their current status.",
+      "List ideas that I initiated on the Claway platform. Returns ideas with their current status.",
     parameters: {
       type: "object",
       properties: {
@@ -88,7 +88,7 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_review_task",
+    name: "claway_review_task",
     description:
       "Review a submitted task (approve or reject). Only the idea initiator can review tasks. Approving awards credits to the contributor.",
     parameters: {
@@ -128,7 +128,7 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_publish_prd",
+    name: "claway_publish_prd",
     description:
       "Merge all approved task outputs into a final PRD document and publish it. Only the idea initiator can publish.",
     parameters: {
@@ -153,9 +153,9 @@ export function registerTools(api: any, client: ClawBeachClient) {
   // ========== Contributor Tools ==========
 
   api.registerTool({
-    name: "clawbeach_browse_ideas",
+    name: "claway_browse_ideas",
     description:
-      "Browse available ideas on the ClawBeach platform that you can contribute to. Shows ideas with open tasks.",
+      "Browse available ideas on the Claway platform that you can contribute to. Shows ideas with open tasks.",
     parameters: {
       type: "object",
       properties: {
@@ -190,7 +190,7 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_view_idea",
+    name: "claway_view_idea",
     description:
       "View detailed information about an idea, including its task list with status and descriptions.",
     parameters: {
@@ -234,7 +234,7 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_claim_task",
+    name: "claway_claim_task",
     description:
       "Claim an open task so you can work on it. The task's dependency tasks must all be approved before claiming.",
     parameters: {
@@ -255,14 +255,14 @@ export function registerTools(api: any, client: ClawBeachClient) {
           `  描述: ${task.description}`,
           `  验收标准: ${task.acceptance_criteria}`,
           ``,
-          `使用 clawbeach_get_task_context 获取依赖产出，然后开始工作。`,
-          `完成后使用 clawbeach_submit_task 提交成果。`,
+          `使用 claway_get_task_context 获取依赖产出，然后开始工作。`,
+          `完成后使用 claway_submit_task 提交成果。`,
         ].join("\n");
       }),
   });
 
   api.registerTool({
-    name: "clawbeach_unclaim_task",
+    name: "claway_unclaim_task",
     description:
       "Release a claimed task back to open status. Only the current claimer can unclaim.",
     parameters: {
@@ -280,7 +280,7 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_get_task_context",
+    name: "claway_get_task_context",
     description:
       "Get full context for a task, including task details, acceptance criteria, and all approved dependency outputs. Use this before starting work on a claimed task.",
     parameters: {
@@ -329,7 +329,7 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_submit_task",
+    name: "claway_submit_task",
     description:
       "Submit your completed work for a claimed task. The content should be the full task output. The initiator will review your submission.",
     parameters: {
@@ -357,7 +357,7 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_update_document",
+    name: "claway_update_document",
     description:
       "Update the document content for a task you're working on. Use this for saving in-progress work before final submission.",
     parameters: {
@@ -378,9 +378,9 @@ export function registerTools(api: any, client: ClawBeachClient) {
   // ========== Shared Tools ==========
 
   api.registerTool({
-    name: "clawbeach_my_compute",
+    name: "claway_my_compute",
     description:
-      "View your compute (LLM token) usage on the ClawBeach platform, including total cost and breakdown by idea.",
+      "View your compute (LLM token) usage on the Claway platform, including total cost and breakdown by idea.",
     parameters: { type: "object", properties: {} },
     execute: async (_execId: string, _params: any) =>
       safeExecute(async () => {
@@ -395,9 +395,9 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_my_credits",
+    name: "claway_my_credits",
     description:
-      "View your credits balance and transaction history on the ClawBeach platform.",
+      "View your credits balance and transaction history on the Claway platform.",
     parameters: { type: "object", properties: {} },
     execute: async (_execId: string, _params: any) =>
       safeExecute(async () => {
@@ -420,9 +420,9 @@ export function registerTools(api: any, client: ClawBeachClient) {
   });
 
   api.registerTool({
-    name: "clawbeach_my_contributions",
+    name: "claway_my_contributions",
     description:
-      "View your contribution history on the ClawBeach platform, showing tasks you completed and credits earned.",
+      "View your contribution history on the Claway platform, showing tasks you completed and credits earned.",
     parameters: { type: "object", properties: {} },
     execute: async (_execId: string, _params: any) =>
       safeExecute(async () => {

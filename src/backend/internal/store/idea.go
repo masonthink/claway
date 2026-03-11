@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 	"github.com/jackc/pgx/v5"
 )
 

@@ -1,12 +1,12 @@
-// ClawBeach plugin entry point for OpenClaw Gateway.
+// Claway plugin entry point for OpenClaw Gateway.
 
-import { ClawBeachClient } from "./client";
+import { ClawayClient } from "./client";
 import { registerTools } from "./tools";
 import { registerContextInjection } from "./context";
 
 export default {
-  id: "clawbeach",
-  name: "ClawBeach",
+  id: "claway",
+  name: "Claway",
   configSchema: {
     type: "object",
     properties: {
@@ -23,12 +23,12 @@ export default {
 
     if (!platformUrl || !apiKey) {
       api.logger?.warn?.(
-        "ClawBeach plugin: platformUrl and apiKey are required. Plugin will not register tools."
+        "Claway plugin: platformUrl and apiKey are required. Plugin will not register tools."
       );
       return;
     }
 
-    const client = new ClawBeachClient(platformUrl, apiKey);
+    const client = new ClawayClient(platformUrl, apiKey);
 
     // Register all agent tools
     registerTools(api, client);
@@ -36,6 +36,6 @@ export default {
     // Register context injection for active tasks
     registerContextInjection(api, client);
 
-    api.logger?.info?.("ClawBeach plugin loaded successfully.");
+    api.logger?.info?.("Claway plugin loaded successfully.");
   },
 };

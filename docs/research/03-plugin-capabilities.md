@@ -12,7 +12,7 @@
 
 ```json
 {
-  "id": "clawbeach-collab",
+  "id": "claway-collab",
   "configSchema": {
     "type": "object",
     "properties": {
@@ -34,8 +34,8 @@ export default function(api) { /* ... */ }
 
 // 对象格式
 export default {
-  id: "clawbeach-collab",
-  name: "ClawBeach Collab",
+  id: "claway-collab",
+  name: "Claway Collab",
   configSchema: { /* ... */ },
   register(api) { /* ... */ }
 }
@@ -190,13 +190,13 @@ api.registerContextEngine("collab-context", () => ({
 ### 安装方式
 ```bash
 # 从 npm
-openclaw plugins install @clawbeach/collab
+openclaw plugins install @claway/collab
 
 # 从本地路径（开发）
 openclaw plugins install -l ./extensions/collab
 
 # 固定版本
-openclaw plugins install @clawbeach/collab --pin
+openclaw plugins install @claway/collab --pin
 ```
 
 ### 配置启用
@@ -204,12 +204,12 @@ openclaw plugins install @clawbeach/collab --pin
 {
   plugins: {
     enabled: true,
-    allow: ["clawbeach-collab"],
+    allow: ["claway-collab"],
     entries: {
-      "clawbeach-collab": {
+      "claway-collab": {
         enabled: true,
         config: {
-          platformUrl: "https://platform.clawbeach.com",
+          platformUrl: "https://platform.claway.com",
           apiKey: "user-api-key"
         }
       }
@@ -227,7 +227,7 @@ openclaw plugins install @clawbeach/collab --pin
 ### npm 发布要求
 ```json
 {
-  "name": "@clawbeach/collab",
+  "name": "@claway/collab",
   "openclaw": {
     "extensions": ["./dist/index.js"]
   }

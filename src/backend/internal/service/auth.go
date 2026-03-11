@@ -11,7 +11,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // openClawTokenResponse is the response from OpenClaw token exchange.

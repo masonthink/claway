@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // Model pricing per million tokens (USD).

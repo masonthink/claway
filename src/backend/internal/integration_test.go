@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/clawbeach/server/internal/model"
-	"github.com/clawbeach/server/internal/service"
-	"github.com/clawbeach/server/internal/testutil"
+	"github.com/claway/server/internal/model"
+	"github.com/claway/server/internal/service"
+	"github.com/claway/server/internal/testutil"
 )
 
 func TestFullWorkflow(t *testing.T) {

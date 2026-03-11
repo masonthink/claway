@@ -4,30 +4,39 @@ import type { Task } from "@/lib/api";
 
 export default function TaskList({ tasks }: { tasks: Task[] }) {
   return (
-    <div className="space-y-3">
-      {tasks.map((task) => (
+    <div
+      className="overflow-hidden rounded-[16px]"
+      style={{ border: "1px solid var(--line)", background: "var(--surface)" }}
+    >
+      {tasks.map((task, i) => (
         <div
           key={task.id}
-          className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4"
+          className="flex items-center justify-between gap-3 px-5 py-3.5"
+          style={{
+            borderBottom: i === tasks.length - 1 ? "none" : "1px solid var(--line)",
+          }}
         >
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+          <div className="flex items-center gap-3 min-w-0">
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[0.7rem] font-bold"
+              style={{ background: "rgba(255,107,74,0.1)", color: "var(--accent-deep)" }}
+            >
               {task.code}
             </span>
-            <div>
-              <p className="text-sm font-medium text-gray-900">{task.name}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{task.name}</p>
               {task.claimed_by && (
-                <p className="flex items-center gap-1 text-xs text-gray-400">
+                <p className="flex items-center gap-1 text-xs text-ink-soft">
                   <User className="h-3 w-3" />
-                  {task.claimed_by}
+                  @{task.claimed_by}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2.5">
             {task.token_cost > 0 && (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
+              <span className="flex items-center gap-1 text-xs text-ink-soft">
                 <Cpu className="h-3 w-3" />
                 {task.token_cost.toFixed(2)}
               </span>

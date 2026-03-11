@@ -19,14 +19,11 @@ export default function IdeaDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [idea, setIdea] = useState<Idea | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [leaderboard, setLeaderboard] = useState<ComputeLeaderboard | null>(
-    null
-  );
+  const [leaderboard, setLeaderboard] = useState<ComputeLeaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
-
     Promise.all([
       getIdea(id).then(setIdea),
       getIdeaTasks(id).then((d) => setTasks(d.tasks)),
@@ -36,8 +33,8 @@ export default function IdeaDetailPage() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12">
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+      <div className="mx-auto max-w-[860px] px-7 py-12">
+        <div className="rounded-[12px] p-4 text-sm" style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}>
           Failed to load idea: {error}
         </div>
       </div>
@@ -46,44 +43,59 @@ export default function IdeaDetailPage() {
 
   if (!idea) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12 text-center text-gray-400">
+      <div className="mx-auto max-w-[860px] px-7 py-12 text-center text-ink-soft">
         Loading...
       </div>
     );
   }
 
+  const completed = tasks.filter((t) => t.status === "approved").length;
+  const total = tasks.length;
+  const progress = total > 0 ? (completed / total) * 100 : 0;
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      {/* Back link */}
-      <Link
-        href="/"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
-      >
+    <div className="mx-auto max-w-[860px] px-7 py-8">
+      <Link href="/" className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" />
         返回列表
       </Link>
 
-      {/* Idea header */}
-      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-start justify-between">
+      {/* Header card */}
+      <div
+        className="mb-8 rounded-[20px] p-6"
+        style={{ background: "var(--surface)", border: "1px solid var(--line)", boxShadow: "var(--shadow-sm)" }}
+      >
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{idea.title}</h1>
-            <p className="mt-1 text-sm text-gray-400">
-              by {idea.initiator} &middot;{" "}
-              <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600">
+            <h1 className="font-display text-2xl tracking-[-0.02em]">{idea.title}</h1>
+            <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+              <span>by @{idea.initiator}</span>
+              <span
+                className="rounded-[8px] px-2 py-0.5 text-[0.75rem] font-medium"
+                style={{ background: "rgba(43,198,164,0.12)", color: "rgb(26,107,91)" }}
+              >
                 {idea.package_type}
               </span>
             </p>
           </div>
           <StatusBadge status={idea.status} />
         </div>
-        <p className="text-gray-600">{idea.description}</p>
 
-        {/* View PRD button */}
+        <p className="mb-5 text-[0.95rem] leading-relaxed text-ink-soft">{idea.description}</p>
+
+        {/* Progress */}
+        <div className="mb-4">
+          <div className="progress-bar">
+            <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="mt-1.5 text-xs text-ink-soft">{completed}/{total} 任务完成</p>
+        </div>
+
         {idea.status === "completed" && (
           <Link
             href={`/prd/${idea.id}`}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white hover:-translate-y-0.5"
+            style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
           >
             <FileText className="h-4 w-4" />
             查看 PRD
@@ -93,47 +105,37 @@ export default function IdeaDetailPage() {
 
       {/* Tasks */}
       <div className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">
-          Tasks ({tasks.filter((t) => t.status === "approved").length}/
-          {tasks.length} 已完成)
-        </h2>
+        <h2 className="mb-4 font-display text-lg tracking-[-0.02em]">Tasks</h2>
         <TaskList tasks={tasks} />
       </div>
 
-      {/* Compute leaderboard */}
+      {/* Leaderboard */}
       {leaderboard && leaderboard.entries.length > 0 && (
         <div>
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Trophy className="h-5 w-5 text-yellow-500" />
+          <h2 className="mb-4 flex items-center gap-2 font-display text-lg tracking-[-0.02em]">
+            <Trophy className="h-5 w-5 text-gold" />
             Compute Leaderboard
           </h2>
-          <div className="rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-hidden rounded-[16px]" style={{ border: "1px solid var(--line)", background: "var(--surface)" }}>
             {leaderboard.entries.map((entry, i) => (
               <div
                 key={entry.username}
-                className={`flex items-center justify-between px-5 py-3 ${
-                  i > 0 ? "border-t border-gray-100" : ""
-                }`}
+                className="flex items-center justify-between px-5 py-3"
+                style={{ borderBottom: i === leaderboard.entries.length - 1 ? "none" : "1px solid var(--line)" }}
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                      i === 0
-                        ? "bg-yellow-100 text-yellow-700"
-                        : i === 1
-                          ? "bg-gray-200 text-gray-600"
-                          : i === 2
-                            ? "bg-orange-100 text-orange-700"
-                            : "bg-gray-100 text-gray-500"
-                    }`}
+                    className="flex h-6 w-6 items-center justify-center rounded-lg text-[0.7rem] font-bold"
+                    style={{
+                      background: i === 0 ? "rgba(231,187,103,0.2)" : "rgba(42,31,25,0.06)",
+                      color: i === 0 ? "#92700a" : "var(--ink-soft)",
+                    }}
                   >
                     {i + 1}
                   </span>
-                  <span className="text-sm font-medium text-gray-800">
-                    {entry.username}
-                  </span>
+                  <span className="font-mono text-sm">@{entry.username}</span>
                 </div>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-ink-soft">
                   {entry.total_cost.toFixed(2)} tokens
                 </span>
               </div>

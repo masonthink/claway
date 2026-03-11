@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // CreateContribution records a user's contribution to a task within an idea.

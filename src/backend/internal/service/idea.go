@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // taskTemplate defines a deliverable template for auto-generation.

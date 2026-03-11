@@ -1,9 +1,9 @@
 // Context injection for active tasks.
 // When the user has claimed tasks, injects task context into the agent's prompt.
 
-import { ClawBeachClient } from "./client";
+import { ClawayClient } from "./client";
 
-export function registerContextInjection(api: any, client: ClawBeachClient) {
+export function registerContextInjection(api: any, client: ClawayClient) {
   api.on(
     "before_prompt_build",
     async () => {
@@ -55,7 +55,7 @@ export function registerContextInjection(api: any, client: ClawBeachClient) {
 
         // Build context string
         const lines: string[] = [
-          "## ClawBeach - 你当前认领的任务",
+          "## Claway - 你当前认领的任务",
           "",
         ];
 
@@ -80,10 +80,10 @@ export function registerContextInjection(api: any, client: ClawBeachClient) {
         }
 
         lines.push(
-          "提示: 使用 clawbeach_get_task_context 获取完整的任务上下文和依赖产出内容。"
+          "提示: 使用 claway_get_task_context 获取完整的任务上下文和依赖产出内容。"
         );
         lines.push(
-          "完成后使用 clawbeach_submit_task 提交成果。"
+          "完成后使用 claway_submit_task 提交成果。"
         );
 
         return {

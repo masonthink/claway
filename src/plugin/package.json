@@ -1,7 +1,7 @@
 {
-  "name": "@clawbeach/plugin",
+  "name": "@claway/plugin",
   "version": "0.1.0",
-  "description": "ClawBeach collaboration plugin for OpenClaw",
+  "description": "Claway collaboration plugin for OpenClaw",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

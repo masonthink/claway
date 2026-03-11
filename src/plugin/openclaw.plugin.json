@@ -1,18 +1,18 @@
 {
-  "id": "clawbeach",
-  "name": "ClawBeach",
-  "description": "ClawBeach multi-agent collaboration plugin for OpenClaw",
+  "id": "claway",
+  "name": "Claway",
+  "description": "Claway multi-agent collaboration plugin for OpenClaw",
   "version": "0.1.0",
   "configSchema": {
     "type": "object",
     "properties": {
       "platformUrl": {
         "type": "string",
-        "description": "ClawBeach platform API base URL"
+        "description": "Claway platform API base URL"
       },
       "apiKey": {
         "type": "string",
-        "description": "Your ClawBeach JWT token for authentication"
+        "description": "Your Claway JWT token for authentication"
       }
     },
     "required": ["platformUrl", "apiKey"]
@@ -20,7 +20,7 @@
   "uiHints": {
     "platformUrl": {
       "label": "Platform URL",
-      "placeholder": "https://api.clawbeach.com"
+      "placeholder": "https://api.claway.com"
     },
     "apiKey": {
       "label": "API Key",

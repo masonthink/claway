@@ -29,7 +29,6 @@ export default function PRDViewPage() {
     setPurchasing(true);
     try {
       await purchasePRD(id);
-      // Reload PRD data after purchase
       const updated = await getPRD(id);
       setPrd(updated);
     } catch (err) {
@@ -41,8 +40,8 @@ export default function PRDViewPage() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12">
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+      <div className="mx-auto max-w-[860px] px-7 py-12">
+        <div className="rounded-[12px] p-4 text-sm" style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}>
           {error}
         </div>
       </div>
@@ -51,48 +50,48 @@ export default function PRDViewPage() {
 
   if (!prd) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12 text-center text-gray-400">
+      <div className="mx-auto max-w-[860px] px-7 py-12 text-center text-ink-soft">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <Link
-        href={`/ideas/${prd.idea_id}`}
-        className="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
-      >
+    <div className="mx-auto max-w-[860px] px-7 py-8">
+      <Link href={`/ideas/${prd.idea_id}`} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" />
         返回 Idea
       </Link>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">{prd.title}</h1>
+      <div
+        className="rounded-[20px] p-6"
+        style={{ background: "var(--surface)", border: "1px solid var(--line)", boxShadow: "var(--shadow-sm)" }}
+      >
+        <h1 className="mb-6 font-display text-2xl tracking-[-0.02em]">{prd.title}</h1>
 
         {prd.purchased ? (
           <MarkdownRenderer content={prd.content} />
         ) : (
           <div>
-            {/* Preview */}
             <div className="relative">
               <MarkdownRenderer content={prd.preview} />
-              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-32" style={{ background: "linear-gradient(transparent, var(--surface))" }} />
             </div>
 
-            {/* Purchase prompt */}
-            <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 p-6 text-center">
-              <Lock className="mx-auto mb-3 h-8 w-8 text-indigo-400" />
-              <p className="mb-1 text-sm text-gray-600">
-                查看完整 PRD 需要
-              </p>
-              <p className="mb-4 text-2xl font-bold text-indigo-700">
+            <div
+              className="mt-6 rounded-[16px] p-8 text-center"
+              style={{ background: "var(--surface-muted)", border: "1px solid var(--line)" }}
+            >
+              <Lock className="mx-auto mb-3 h-7 w-7 text-ink-soft opacity-50" />
+              <p className="mb-1 text-sm text-ink-soft">查看完整 PRD 需要</p>
+              <p className="mb-5 font-display text-2xl font-bold text-accent-deep">
                 {prd.price} Credits
               </p>
               <button
                 onClick={handlePurchase}
                 disabled={purchasing}
-                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 rounded-[10px] px-6 py-2.5 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
               >
                 <ShoppingCart className="h-4 w-4" />
                 {purchasing ? "处理中..." : "购买"}

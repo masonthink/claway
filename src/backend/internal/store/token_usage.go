@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/clawbeach/server/internal/model"
+	"github.com/claway/server/internal/model"
 )
 
 // CreateTokenUsageLog records a single LLM API call's token usage.

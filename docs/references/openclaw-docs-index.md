@@ -1,6 +1,6 @@
 # OpenClaw 文档索引
 
-本文件收录与 ClawBeach 项目相关的 OpenClaw 文档链接，方便开发时快速查阅。
+本文件收录与 Claway 项目相关的 OpenClaw 文档链接，方便开发时快速查阅。
 
 ## 核心参考
 

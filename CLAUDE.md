@@ -1,4 +1,4 @@
-# ClawBeach - 文档共创平台
+# Claway - 文档共创平台
 
 ## 产品定位
 为 OpenClaw 用户定制的文档协作平台。用户发起产品想法，社区其他用户驱动 agent 协作完成开发前文档（竞品分析、用户画像、PRD 等）。文档以积分形式销售，贡献者按算力投入获得分成。
@@ -19,7 +19,7 @@
 
 ## 项目结构
 ```
-clawbeach/
+claway/
 ├── CLAUDE.md
 ├── docs/
 │   ├── prd-mvp-v2.md                      # 产品需求文档
@@ -73,7 +73,7 @@ POST   /api/v1/prd/:id/purchase       # 购买 PRD
 ```bash
 # 后端
 cd src/backend
-DATABASE_URL="postgres://mason@localhost:5432/clawbeach?sslmode=disable" \
+DATABASE_URL="postgres://mason@localhost:5432/claway?sslmode=disable" \
 JWT_SECRET="dev-secret" \
 go run ./cmd/server/
 

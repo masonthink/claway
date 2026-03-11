@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/clawbeach/server/internal/service"
+	"github.com/claway/server/internal/service"
 )
 
 type AuthHandler struct {

@@ -134,7 +134,7 @@ export default function(api) {
 
 ```json
 {
-  "id": "clawbeach-collab",
+  "id": "claway-collab",
   "configSchema": {
     "type": "object",
     "properties": {
@@ -154,7 +154,7 @@ export default function(api) {
 - Gateway 不需要暴露端口（插件主动出站连接）
 - Agent 通过工具自然地与平台交互
 - 上下文注入让 Agent 理解协作背景
-- 插件安装简单：`openclaw plugins install @clawbeach/collab`
+- 插件安装简单：`openclaw plugins install @claway/collab`
 
 ---
 

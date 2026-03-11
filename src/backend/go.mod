@@ -1,4 +1,4 @@
-module github.com/clawbeach/server
+module github.com/claway/server
 
 go 1.23
 

@@ -13,11 +13,11 @@ import (
 	echomw "github.com/labstack/echo/v4/middleware"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/clawbeach/server/internal/config"
-	"github.com/clawbeach/server/internal/handler"
-	"github.com/clawbeach/server/internal/middleware"
-	"github.com/clawbeach/server/internal/service"
-	"github.com/clawbeach/server/internal/store"
+	"github.com/claway/server/internal/config"
+	"github.com/claway/server/internal/handler"
+	"github.com/claway/server/internal/middleware"
+	"github.com/claway/server/internal/service"
+	"github.com/claway/server/internal/store"
 )
 
 func main() {

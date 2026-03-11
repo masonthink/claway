@@ -20,7 +20,6 @@ function CallbackHandler() {
       return;
     }
 
-    // Exchange code for JWT via backend
     fetch(`${API_BASE}/auth/callback?code=${encodeURIComponent(code)}`)
       .then((res) => {
         if (!res.ok) throw new Error("Authentication failed");
@@ -38,12 +37,9 @@ function CallbackHandler() {
   if (error) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="rounded-lg bg-red-50 p-6 text-center">
-          <p className="text-sm text-red-600">{error}</p>
-          <a
-            href="/"
-            className="mt-4 inline-block text-sm text-indigo-600 hover:underline"
-          >
+        <div className="rounded-[14px] p-6 text-center" style={{ background: "var(--surface)", border: "1px solid var(--line)" }}>
+          <p className="text-sm" style={{ color: "#dc2626" }}>{error}</p>
+          <a href="/" className="mt-4 inline-block text-sm text-ink-soft underline decoration-accent/30 underline-offset-2 hover:text-ink">
             返回首页
           </a>
         </div>
@@ -53,18 +49,17 @@ function CallbackHandler() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <p className="text-gray-400">正在登录...</p>
+      <p className="text-ink-soft">正在登录...</p>
     </div>
   );
 }
 
-// Wrap in Suspense because useSearchParams requires it in Next.js App Router
 export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
         <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-ink-soft">Loading...</p>
         </div>
       }
     >

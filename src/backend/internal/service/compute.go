@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/clawbeach/server/internal/store"
+	"github.com/claway/server/internal/store"
 )
 
 // UserComputeResponse contains a user's total compute usage.

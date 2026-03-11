@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/clawbeach/server/internal/config"
-	"github.com/clawbeach/server/internal/store"
+	"github.com/claway/server/internal/config"
+	"github.com/claway/server/internal/store"
 )
 
 // Service contains business logic and delegates to store for data access.

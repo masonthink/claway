@@ -1,5 +1,5 @@
 #!/bin/bash
-# Smoke test for ClawBeach backend API
+# Smoke test for Claway backend API
 set -e
 
 BASE="http://localhost:8080/api/v1"
@@ -7,16 +7,16 @@ PSQL="/opt/homebrew/opt/postgresql@16/bin/psql"
 JWT_SECRET="dev-secret-key-123"
 
 echo "=== 1. Insert test users ==="
-$PSQL -d clawbeach -c "INSERT INTO users (openclaw_id, username) VALUES ('test-oc-001', 'testuser1') ON CONFLICT (openclaw_id) DO NOTHING;"
-$PSQL -d clawbeach -c "INSERT INTO users (openclaw_id, username) VALUES ('test-oc-002', 'testuser2') ON CONFLICT (openclaw_id) DO NOTHING;"
-USER1_ID=$($PSQL -d clawbeach -t -A -c "SELECT id FROM users WHERE openclaw_id='test-oc-001';")
-USER2_ID=$($PSQL -d clawbeach -t -A -c "SELECT id FROM users WHERE openclaw_id='test-oc-002';")
+$PSQL -d claway -c "INSERT INTO users (openclaw_id, username) VALUES ('test-oc-001', 'testuser1') ON CONFLICT (openclaw_id) DO NOTHING;"
+$PSQL -d claway -c "INSERT INTO users (openclaw_id, username) VALUES ('test-oc-002', 'testuser2') ON CONFLICT (openclaw_id) DO NOTHING;"
+USER1_ID=$($PSQL -d claway -t -A -c "SELECT id FROM users WHERE openclaw_id='test-oc-001';")
+USER2_ID=$($PSQL -d claway -t -A -c "SELECT id FROM users WHERE openclaw_id='test-oc-002';")
 echo "User1 ID: $USER1_ID, User2 ID: $USER2_ID"
 
 echo ""
 echo "=== 2. Generate JWT tokens ==="
-TOKEN1=$(cd ~/Documents/03-projects/clawbeach/src/backend && go run scripts/gen_jwt.go "$USER1_ID" "$JWT_SECRET")
-TOKEN2=$(cd ~/Documents/03-projects/clawbeach/src/backend && go run scripts/gen_jwt.go "$USER2_ID" "$JWT_SECRET")
+TOKEN1=$(cd ~/Documents/03-projects/claway/src/backend && go run scripts/gen_jwt.go "$USER1_ID" "$JWT_SECRET")
+TOKEN2=$(cd ~/Documents/03-projects/claway/src/backend && go run scripts/gen_jwt.go "$USER2_ID" "$JWT_SECRET")
 echo "Token1: ${TOKEN1:0:30}..."
 echo "Token2: ${TOKEN2:0:30}..."
 
@@ -68,8 +68,8 @@ curl -s -H "Authorization: Bearer $TOKEN2" -H "Content-Type: application/json" \
 
 echo ""
 echo "=== 11. Simulate token usage + approve D1 ==="
-$PSQL -d clawbeach -c "INSERT INTO token_usage_logs (user_id, task_id, model, tokens_in, tokens_out, cost_usd) VALUES ($USER2_ID, $TASK_D1_ID, 'claude-sonnet-4-5', 50000, 10000, 0.30);"
-$PSQL -d clawbeach -c "UPDATE tasks SET cost_usd_accumulated = 0.30 WHERE id = $TASK_D1_ID;"
+$PSQL -d claway -c "INSERT INTO token_usage_logs (user_id, task_id, model, tokens_in, tokens_out, cost_usd) VALUES ($USER2_ID, $TASK_D1_ID, 'claude-sonnet-4-5', 50000, 10000, 0.30);"
+$PSQL -d claway -c "UPDATE tasks SET cost_usd_accumulated = 0.30 WHERE id = $TASK_D1_ID;"
 curl -s -H "Authorization: Bearer $TOKEN1" -H "Content-Type: application/json" \
   -d '{"action":"approve","quality_score":1.2}' \
   "$BASE/tasks/$TASK_D1_ID/review" | python3 -m json.tool
