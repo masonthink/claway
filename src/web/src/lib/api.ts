@@ -3,7 +3,7 @@
 import { getToken } from "./auth";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
 
 async function request<T>(
   path: string,

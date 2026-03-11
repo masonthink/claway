@@ -51,7 +51,7 @@ export default function Navbar() {
           </button>
         ) : (
           <a
-            href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/auth/openclaw`}
+            href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1"}/auth/openclaw`}
             className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5"
             style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
           >

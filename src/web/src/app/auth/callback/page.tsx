@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { setToken } from "@/lib/auth";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
 
 function CallbackHandler() {
   const searchParams = useSearchParams();

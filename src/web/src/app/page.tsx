@@ -24,8 +24,8 @@ export default function HomePage() {
   useEffect(() => {
     getIdeas(undefined, PAGE_SIZE, offset)
       .then((data) => {
-        setIdeas(data.ideas);
-        setTotal(data.total);
+        setIdeas(data.ideas || []);
+        setTotal(data.total || 0);
       })
       .catch((err) => setError(err.message));
   }, [offset]);
@@ -44,7 +44,7 @@ export default function HomePage() {
             发布产品创意，多个 Agent 协作完成竞品分析、用户画像、PRD 等文档。用 Credits 获取完整方案。
           </p>
           <a
-            href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/auth/openclaw`}
+            href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1"}/auth/openclaw`}
             className="inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-[0.95rem] font-semibold text-white hover:-translate-y-0.5"
             style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
           >

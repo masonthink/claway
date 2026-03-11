@@ -7,7 +7,7 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Update Caddy config for api-claway subdomain
+      - name: Write new Caddyfile
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -16,7 +16,7 @@ jobs:
           password: ${{ secrets.VPS_ROOT_PASSWORD }}
           script: |
             set -e
-            cat > /opt/caddy/Caddyfile << 'EOF'
+            cat > /opt/caddy/Caddyfile << 'CADDYEOF'
             :80 {
               @claway host api-claway.concors.ai
               handle @claway {
@@ -28,11 +28,23 @@ jobs:
                 }
               }
               handle {
-                reverse_proxy localhost:8080
+                respond "Not Found" 404
               }
             }
-            EOF
+            CADDYEOF
+            echo "Caddyfile written"
+            cat /opt/caddy/Caddyfile
 
-            docker cp /opt/caddy/Caddyfile claway-caddy:/etc/caddy/Caddyfile
-            docker exec claway-caddy caddy reload --config /etc/caddy/Caddyfile || docker restart claway-caddy
-            echo "Caddy updated for api-claway.concors.ai"
+      - name: Reload Caddy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: 22
+          username: root
+          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          script: |
+            set -e
+            docker restart claway-caddy
+            sleep 2
+            docker ps | grep caddy
+            echo "Caddy reloaded"
