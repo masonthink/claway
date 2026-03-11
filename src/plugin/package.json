@@ -1,0 +1,16 @@
+{
+  "name": "@clawbeach/plugin",
+  "version": "0.1.0",
+  "description": "ClawBeach collaboration plugin for OpenClaw",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "openclaw": {
+    "extensions": ["./dist/index.js"]
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
