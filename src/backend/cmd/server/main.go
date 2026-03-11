@@ -89,23 +89,23 @@ func main() {
 	// API v1 routes
 	v1 := e.Group("/api/v1")
 
-	// Auth (public)
+	// Public routes (no auth required)
 	v1.GET("/auth/openclaw/callback", authH.OpenClawCallback)
+	v1.GET("/ideas", ideaH.ListIdeas)
+	v1.GET("/ideas/:id", ideaH.GetIdea)
+	v1.GET("/ideas/:id/tasks", taskH.ListTasks)
+	v1.GET("/tasks/:id", taskH.GetTask)
+	v1.GET("/ideas/:id/compute", computeH.GetIdeaCompute)
+	v1.GET("/platform/compute", computeH.GetPlatformCompute)
 
 	// Auth-protected routes
 	auth := v1.Group("", middleware.RequireAuth(cfg.JWTSecret))
 
 	auth.GET("/auth/me", authH.GetMe)
 
-	// Ideas
+	// Ideas (write operations)
 	auth.POST("/ideas", ideaH.CreateIdea)
-	auth.GET("/ideas", ideaH.ListIdeas)
-	auth.GET("/ideas/:id", ideaH.GetIdea)
 	auth.GET("/ideas/:id/context", ideaH.GetIdeaContext)
-
-	// Tasks
-	auth.GET("/ideas/:id/tasks", taskH.ListTasks)
-	auth.GET("/tasks/:id", taskH.GetTask)
 	auth.POST("/tasks/:id/claim", taskH.ClaimTask)
 	auth.DELETE("/tasks/:id/claim", taskH.UnclaimTask)
 	auth.POST("/tasks/:id/submit", taskH.SubmitTask)
@@ -126,9 +126,7 @@ func main() {
 	// Compute
 	auth.GET("/me/compute", computeH.GetMyCompute)
 	auth.GET("/me/compute/ideas/:id", computeH.GetMyIdeaCompute)
-	auth.GET("/ideas/:id/compute", computeH.GetIdeaCompute)
 	auth.GET("/tasks/:id/compute", computeH.GetTaskCompute)
-	auth.GET("/platform/compute", computeH.GetPlatformCompute)
 
 	// Credits
 	auth.GET("/me/credits", creditH.GetMyCredits)
