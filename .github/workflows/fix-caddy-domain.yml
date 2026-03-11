@@ -1,0 +1,38 @@
+name: Fix Caddy Domain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Caddy config for api-claway subdomain
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: 22
+          username: root
+          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          script: |
+            set -e
+            cat > /opt/caddy/Caddyfile << 'EOF'
+            :80 {
+              @claway host api-claway.concors.ai
+              handle @claway {
+                reverse_proxy localhost:8081
+                header {
+                  X-Content-Type-Options "nosniff"
+                  X-Frame-Options "DENY"
+                  -Server
+                }
+              }
+              handle {
+                reverse_proxy localhost:8080
+              }
+            }
+            EOF
+
+            docker cp /opt/caddy/Caddyfile claway-caddy:/etc/caddy/Caddyfile
+            docker exec claway-caddy caddy reload --config /etc/caddy/Caddyfile || docker restart claway-caddy
+            echo "Caddy updated for api-claway.concors.ai"
