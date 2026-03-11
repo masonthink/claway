@@ -1,0 +1,147 @@
+name: VPS Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    name: Configure VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup VPS via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          port: 8443
+          script: |
+            set -e
+
+            echo "=== 1. Fix SSH: restore port 22 + keep 8443 ==="
+            sed -i 's/^Port 8443/Port 22/' /etc/ssh/sshd_config
+            echo "Port 8443" >> /etc/ssh/sshd_config
+            systemctl restart sshd
+
+            echo "=== 2. Install Docker ==="
+            if ! command -v docker &> /dev/null; then
+              apt-get update
+              apt-get install -y ca-certificates curl gnupg
+              install -m 0755 -d /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+              chmod a+r /etc/apt/keyrings/docker.gpg
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources-list.d/docker.list
+              apt-get update
+              apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+            fi
+            echo "Docker: $(docker --version)"
+
+            echo "=== 3. Create deploy user ==="
+            if ! id deploy &>/dev/null; then
+              useradd -m -s /bin/bash deploy
+              echo "deploy ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/deploy
+              mkdir -p /home/deploy/.ssh
+              chmod 700 /home/deploy/.ssh
+            fi
+
+            # Add SSH key for deploy user
+            cat > /home/deploy/.ssh/authorized_keys << 'KEYEOF'
+            ${{ secrets.VPS_DEPLOY_PUBKEY }}
+            KEYEOF
+            chmod 600 /home/deploy/.ssh/authorized_keys
+            chown -R deploy:deploy /home/deploy/.ssh
+            usermod -aG docker deploy
+
+            echo "=== 4. Create Claway directory ==="
+            mkdir -p /opt/claway
+            chown -R deploy:deploy /opt/claway
+
+            echo "=== 5. Install PostgreSQL ==="
+            docker pull postgres:16-alpine
+            docker run -d \
+              --name claway-postgres \
+              --restart always \
+              -e POSTGRES_USER=claway \
+              -e POSTGRES_PASSWORD=${{ secrets.CLAWAY_DB_PASSWORD }} \
+              -e POSTGRES_DB=claway \
+              -p 5432:5432 \
+              -v claway_pgdata:/var/lib/postgresql/data \
+              postgres:16-alpine
+
+            echo "=== 6. Install Caddy ==="
+            docker pull caddy:2-alpine
+
+            mkdir -p /opt/caddy
+            cat > /opt/caddy/Caddyfile << 'CADDYEOF'
+            {
+                trusted_proxies static \
+                    173.245.48.0/20 \
+                    103.21.244.0/22 \
+                    103.22.200.0/22 \
+                    103.31.4.0/22 \
+                    141.101.64.0/18 \
+                    108.162.192.0/18 \
+                    190.93.240.0/20 \
+                    188.114.96.0/20 \
+                    197.234.240.0/22 \
+                    198.41.128.0/17 \
+                    162.158.0.0/15 \
+                    104.16.0.0/13 \
+                    104.24.0.0/14 \
+                    172.64.0.0/13 \
+                    131.0.72.0/22
+            }
+
+            claway.concors.ai {
+                reverse_proxy localhost:8081 {
+                    health_uri      /health
+                    health_interval 10s
+                    health_timeout  5s
+
+                    header_up X-Real-IP        {http.request.header.CF-Connecting-IP}
+                    header_up X-Forwarded-For  {http.request.header.CF-Connecting-IP}
+                }
+
+                log {
+                    output stdout
+                    format json
+                }
+
+                header {
+                    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+                    X-Content-Type-Options    "nosniff"
+                    X-Frame-Options           "DENY"
+                    Referrer-Policy           "strict-origin-when-cross-origin"
+                    -Server
+                }
+            }
+            CADDYEOF
+
+            docker run -d \
+              --name claway-caddy \
+              --restart always \
+              --network host \
+              -v /opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
+              -v caddy_data:/data \
+              -v caddy_config:/config \
+              caddy:2-alpine
+
+            echo "=== 7. Create .env.prod ==="
+            cat > /opt/claway/.env.prod << ENVEOF
+            DATABASE_URL=postgresql://claway:${{ secrets.CLAWAY_DB_PASSWORD }}@localhost:5432/claway?sslmode=disable
+            JWT_SECRET=${{ secrets.CLAWAY_JWT_SECRET }}
+            PORT=8081
+            OPENCLAW_BASE_URL=https://api.openclaw.ai
+            UPSTREAM_LLM_BASE_URL=https://api.openai.com
+            BACKEND_IMAGE=ghcr.io/mason2047/claway-backend:latest
+            ENVEOF
+            chown deploy:deploy /opt/claway/.env.prod
+
+            echo "=== 8. Copy docker-compose.prod.yml ==="
+            # Will be handled by deploy workflow
+
+            echo "=== SETUP COMPLETE ==="
+            docker ps
