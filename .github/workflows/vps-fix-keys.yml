@@ -1,0 +1,25 @@
+name: Fix VPS SSH Keys
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add both public keys to deploy user
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          script: |
+            set -e
+            cat > /home/deploy/.ssh/authorized_keys << 'EOF'
+            ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEtDVosAlOFUXcECzDGV5Irugf5Eu4rBJqRPy2GV9oDR github-actions-deploy
+            ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFeItGNqF7ZpFzER6y5YKGRdsllU7Ox02tDJIVSeuJBs mason2047@github.com
+            EOF
+            chmod 600 /home/deploy/.ssh/authorized_keys
+            chown deploy:deploy /home/deploy/.ssh/authorized_keys
+            echo "Keys updated:"
+            cat /home/deploy/.ssh/authorized_keys
