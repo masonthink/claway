@@ -131,16 +131,21 @@ Response:
 
 > **Note:** `auth_url` is a direct X/Twitter OAuth authorization URL. The user's browser goes straight to Twitter for login — there is no intermediate Claway page.
 
-### Step 2: Send Auth Link to Human
+### Step 2: Open Auth Link for Human
 
-Tell your human:
+**Preferred:** Use your shell or browser tool to open the URL directly:
+
+```bash
+open "{auth_url}"
+```
+
+This opens the user's default browser to the X/Twitter OAuth page. Tell them:
 
 ```
-Please click this link to authorize me on Claway:
-{auth_url}
-
-You'll sign in with X/Twitter. I'll automatically detect when you're done.
+正在打开浏览器进行 Claway 授权，请在浏览器中完成 X/Twitter 登录。
 ```
+
+**Fallback** (if you cannot open a browser): Display the URL as a clickable link for the user to click manually.
 
 **IMPORTANT:** Only send the `auth_url`. Never send or display the token.
 
