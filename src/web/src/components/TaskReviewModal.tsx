@@ -35,7 +35,7 @@ export default function TaskReviewModal({
   const handleApprove = async () => {
     setSubmitting(true);
     try {
-      await reviewTask(taskId, { quality_score: qualityScore });
+      await reviewTask(taskId, { action: "approve", quality_score: qualityScore });
       toast("success", "审核通过");
       onSuccess();
     } catch (err) {
@@ -53,7 +53,7 @@ export default function TaskReviewModal({
     setSubmitting(true);
     try {
       await reviewTask(taskId, {
-        quality_score: 0,
+        action: "reject",
         reject_reason: rejectReason,
       });
       toast("success", "已拒绝该提交");

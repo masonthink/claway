@@ -6,6 +6,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
   submitted: { bg: "rgba(59,130,246,0.1)", color: "#2563eb" },
   approved: { bg: "rgba(34,197,94,0.1)", color: "rgb(22,163,74)" },
   rejected: { bg: "rgba(239,68,68,0.1)", color: "rgb(220,38,38)" },
+  revision: { bg: "rgba(251,146,60,0.14)", color: "#c2410c" },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -16,6 +17,7 @@ const STATUS_LABELS: Record<string, string> = {
   submitted: "已提交",
   approved: "已通过",
   rejected: "已拒绝",
+  revision: "需修改",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

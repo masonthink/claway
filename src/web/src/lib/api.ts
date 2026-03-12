@@ -27,7 +27,9 @@ async function request<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    const body = await res.json().catch(() => null);
+    const msg = body?.error || `${res.status} ${res.statusText}`;
+    throw new Error(msg);
   }
 
   return res.json();
@@ -53,8 +55,9 @@ export interface Task {
   idea_id: string;
   title: string;
   type: string; // D1-D4
-  status: "open" | "claimed" | "submitted" | "approved" | "rejected";
+  status: "open" | "claimed" | "submitted" | "approved" | "rejected" | "revision";
   claimed_by?: number | null;
+  review_feedback?: string | null;
   cost_usd_accumulated: number;
 }
 
@@ -147,10 +150,6 @@ export function getPRD(id: string): Promise<PRD> {
   return request(`/prd/${id}`);
 }
 
-export function purchasePRD(id: string): Promise<{ success: boolean }> {
-  return request(`/prd/${id}/purchase`, { method: "POST" });
-}
-
 export function getMe(): Promise<User> {
   return request("/me");
 }
@@ -189,7 +188,16 @@ export function unclaimTask(taskId: string): Promise<{ success: boolean }> {
 
 export function submitTask(
   taskId: string,
-  data: { output_content: string; output_note: string }
+  data: {
+    content: string;
+    note: string;
+    token_usage?: {
+      model: string;
+      tokens_in: number;
+      tokens_out: number;
+      cost_usd: number;
+    };
+  }
 ): Promise<{ success: boolean }> {
   return request(`/tasks/${taskId}/submit`, {
     method: "POST",
@@ -199,7 +207,12 @@ export function submitTask(
 
 export function reviewTask(
   taskId: string,
-  data: { quality_score: number; reject_reason?: string }
+  data: {
+    action: "approve" | "reject" | "revision";
+    quality_score?: number;
+    reject_reason?: string;
+    feedback?: string;
+  }
 ): Promise<{ success: boolean }> {
   return request(`/tasks/${taskId}/review`, {
     method: "POST",

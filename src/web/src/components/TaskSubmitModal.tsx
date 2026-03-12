@@ -32,8 +32,8 @@ export default function TaskSubmitModal({
     setSubmitting(true);
     try {
       await submitTask(taskId, {
-        output_content: content,
-        output_note: note,
+        content,
+        note,
       });
       toast("success", "提交成功");
       onSuccess();
