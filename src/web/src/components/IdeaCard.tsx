@@ -3,10 +3,6 @@ import StatusBadge from "./StatusBadge";
 import type { Idea } from "@/lib/api";
 
 export default function IdeaCard({ idea }: { idea: Idea }) {
-  const completed = idea.tasks_completed ?? 0;
-  const total = idea.tasks_total ?? 1;
-  const progress = total > 0 ? (completed / total) * 100 : 0;
-
   return (
     <Link
       href={`/ideas/${idea.id}`}
@@ -28,18 +24,8 @@ export default function IdeaCard({ idea }: { idea: Idea }) {
         {idea.description}
       </p>
 
-      {/* Progress bar */}
-      <div className="mb-3">
-        <div className="progress-bar">
-          <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
-        </div>
-        <p className="mt-1.5 text-xs text-ink-soft">
-          {completed}/{total} 任务完成
-        </p>
-      </div>
-
       <div className="flex items-center justify-between text-xs text-ink-soft">
-        <span>by @{idea.initiator}</span>
+        <span>{new Date(idea.created_at).toLocaleDateString("zh-CN")}</span>
         <span
           className="rounded-[8px] px-2 py-0.5 text-[0.75rem] font-medium"
           style={{ background: "rgba(43,198,164,0.12)", color: "rgb(26,107,91)" }}

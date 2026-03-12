@@ -11,14 +11,14 @@ import { useToast } from "./Toast";
 
 interface TaskListProps {
   tasks: Task[];
-  currentUsername?: string;
+  currentUserId?: string;
   isInitiator?: boolean;
   onRefresh?: () => void;
 }
 
 export default function TaskList({
   tasks,
-  currentUsername,
+  currentUserId,
   isInitiator,
   onRefresh,
 }: TaskListProps) {
@@ -66,7 +66,7 @@ export default function TaskList({
       >
         {tasks.map((task, i) => {
           const isClaimedByMe =
-            currentUsername && task.claimed_by === currentUsername;
+            currentUserId && task.claimed_by != null && String(task.claimed_by) === currentUserId;
 
           return (
             <div

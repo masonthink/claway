@@ -36,15 +36,15 @@ async function request<T>(
 // Types
 
 export interface Idea {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  status: "active" | "completed";
+  target_user_hint: string;
+  problem_definition: string;
+  initiator_id: number;
+  initiator_cut_percent: number;
   package_type: string;
-  initiator: string;
-  tasks_completed: number;
-  tasks_total: number;
-  total_compute_cost: number;
+  status: "active" | "completed";
   created_at: string;
 }
 

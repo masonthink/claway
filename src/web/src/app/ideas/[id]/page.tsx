@@ -99,7 +99,7 @@ export default function IdeaDetailPage() {
           <div>
             <h1 className="font-display text-2xl tracking-[-0.02em]">{idea.title}</h1>
             <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-              <span>by @{idea.initiator}</span>
+              <span>by #{idea.initiator_id}</span>
               <span
                 className="rounded-[8px] px-2 py-0.5 text-[0.75rem] font-medium"
                 style={{ background: "rgba(43,198,164,0.12)", color: "rgb(26,107,91)" }}
@@ -135,7 +135,7 @@ export default function IdeaDetailPage() {
 
       {/* Publish PRD button */}
       {currentUser &&
-        idea.initiator === currentUser.username &&
+        String(idea.initiator_id) === currentUser.id &&
         idea.status === "active" &&
         tasks.length > 0 &&
         tasks.every((t) => t.status === "approved") && (
@@ -159,8 +159,8 @@ export default function IdeaDetailPage() {
         <h2 className="mb-4 font-display text-lg tracking-[-0.02em]">Tasks</h2>
         <TaskList
           tasks={tasks}
-          currentUsername={currentUser?.username}
-          isInitiator={currentUser?.username === idea.initiator}
+          currentUserId={currentUser?.id}
+          isInitiator={currentUser?.id === String(idea.initiator_id)}
           onRefresh={loadData}
         />
       </div>
