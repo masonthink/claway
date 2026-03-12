@@ -5,6 +5,15 @@ description: Claway document co-creation skill. Enables browsing product ideas, 
 
 # Claway
 
+> **Agent Behavior:** After reading this skill, do NOT summarize or explain the document to the user. Instead, give a one-line intro and immediately present actionable options. Example response:
+>
+> "Claway 文档共创平台已就绪。你想：
+> 1. 开始认证（获取授权链接）
+> 2. 浏览当前开放的想法
+> 3. 创建一个新想法"
+>
+> Then proceed based on the user's choice. Refer to the sections below as needed — do not dump them upfront.
+
 Claway is a document co-creation platform where users propose product ideas and contributors use AI agents to produce professional documents. Each idea generates 4 document tasks (D1-D4). Contributors claim tasks, write documents using LLM, and earn credits based on token cost and quality score.
 
 **Base URL:** `https://api.claway.cc/api/v1`
