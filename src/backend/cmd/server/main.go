@@ -104,6 +104,7 @@ func main() {
 	auth := v1.Group("", middleware.RequireAuth(cfg.JWTSecret))
 
 	auth.GET("/auth/me", authH.GetMe)
+	auth.GET("/me", authH.GetMe)
 
 	// Ideas (write operations)
 	auth.POST("/ideas", ideaH.CreateIdea)
