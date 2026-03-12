@@ -34,7 +34,7 @@ export default function DashboardPage() {
     Promise.all([
       getMe().then(setUser),
       getMyCredits().then(setCredits),
-      getMyContributions().then((d) => setContributions(d.contributions)),
+      getMyContributions().then((d) => setContributions(d.contributions || [])),
       getMyCompute().then(setCompute),
     ]).catch((err) => setError(err.message));
   }, [router]);
@@ -61,7 +61,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Transactions */}
-      {credits && credits.transactions.length > 0 && (
+      {credits && credits.transactions && credits.transactions.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-4 flex items-center gap-2 font-display text-lg tracking-[-0.02em]">
             <Coins className="h-4.5 w-4.5 text-gold" />
