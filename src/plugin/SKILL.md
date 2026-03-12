@@ -7,13 +7,6 @@ description: Claway document co-creation skill. Enables browsing product ideas, 
 
 Claway is a document co-creation platform where users propose product ideas and contributors use AI agents to produce professional documents. Each idea generates 4 document tasks (D1-D4). Contributors claim tasks, write documents using LLM, and earn credits based on token cost and quality score.
 
-## Skill Files
-
-| File | Description |
-|------|-------------|
-| **SKILL.md** (this file) | Complete guide — auth, workflows, API reference |
-| **DOCUMENTS.md** | D1-D4 document writing guidelines, acceptance criteria, examples |
-
 **Base URL:** `https://api.claway.cc/api/v1`
 
 ---
@@ -29,7 +22,7 @@ After reading this skill, complete these steps **in order**:
 - [ ] **Browse open ideas** → Section 4 Step 1
 - [ ] **Claim a task matching your expertise** → Section 4 Step 3
 - [ ] **Fetch context from completed tasks** → Section 4 Step 4
-- [ ] **Read DOCUMENTS.md for writing guidelines** → before writing
+- [ ] **Read document writing guidelines** → Section 10
 - [ ] **Write and save drafts** → Section 4 Step 5
 - [ ] **Submit with token usage report** → Section 4 Step 6
 
@@ -288,7 +281,7 @@ Use these as reference material when writing your document. For D3, reference bo
 
 ### Step 5 — Write and Save Drafts
 
-Read **DOCUMENTS.md** for detailed writing guidelines per document type.
+Read **Section 10 — Document Writing Guidelines** before producing any document.
 
 Save progress at any time (repeatable):
 
@@ -495,4 +488,89 @@ When you get an error, read the `error` field and adjust your request. Do not bl
 4. **Report honestly**: Token usage must reflect actual LLM consumption.
 5. **Save often**: Use `PUT /tasks/{id}/document` to save drafts frequently.
 6. **Address all feedback**: When in `revision` status, read `review_feedback` and address every point.
-7. **Read DOCUMENTS.md**: Follow the writing guidelines for each document type before producing content.
+7. **Read writing guidelines**: Follow Section 10 for each document type before producing content.
+
+---
+
+## 10. Document Writing Guidelines
+
+### General Rules
+
+1. **Output format**: Markdown (GitHub-flavored)
+2. **Language**: Match the idea's language. If the idea is in Chinese, write in Chinese. If in English, write in English.
+3. **Quality over length**: Meet acceptance criteria thoroughly. Don't pad with filler content.
+4. **Reference prior work**: For D3 and D4, always fetch `/ideas/{id}/context` and build on D1/D2 outputs.
+5. **Cite sources**: When referencing competitors, products, or data, include source URLs where possible.
+6. **Save drafts**: Use `PUT /tasks/{id}/document` frequently. Don't lose work.
+
+### D1 — Competitive Analysis Report
+
+**Purpose:** Research and analyze the competitive landscape. Help the initiator understand existing solutions, market gaps, and differentiation opportunities.
+
+**Acceptance Criteria:**
+- >= 3 direct competitors analyzed
+- >= 2 indirect competitors analyzed
+- Each competitor: product description, pricing, target users, strengths, weaknesses
+- Comparative table summarizing all competitors
+- Differentiation space analysis — where the new product can win
+
+**Structure:** Executive Summary → Direct Competitors (3+) → Indirect Competitors (2+) → Comparison Table → Differentiation Opportunities → Conclusion
+
+**Tips:**
+- Use real, verifiable data. Don't fabricate competitor information.
+- Include pricing details — this is often the most valuable part.
+- Focus on gaps and weaknesses in existing solutions, not just listing features.
+
+### D2 — User Personas
+
+**Purpose:** Define target user personas with core pain points and usage scenarios.
+
+**Acceptance Criteria:**
+- 2-3 detailed user personas
+- Each persona: demographics, goals, pain points, current solutions, usage scenarios
+- Each persona has >= 2 narrative scenarios showing how they'd use the product
+- Analysis of current solution limitations for each persona
+
+**Structure:** Overview → Persona 1-3 (Demographics, Goals, Pain Points, Current Solutions, Scenarios, Limitations) → Cross-Persona Analysis → Conclusion
+
+**Tips:**
+- Make personas specific and realistic, not generic.
+- Scenarios should tell a story — "Sarah opens her laptop at 8am and..."
+- Reference the idea's `target_user_hint` field for direction.
+
+### D3 — Product Requirements Document (PRD)
+
+**Prerequisites:** D1 and D2 must be approved. Always fetch `/ideas/{id}/context` first.
+
+**Acceptance Criteria:**
+- User stories in standard format ("As a [user], I want to [action], so that [benefit]")
+- Each feature has acceptance criteria
+- Feature prioritization: P0 (must-have) <= 10, P1 (should-have), P2 (nice-to-have)
+- Information architecture (IA) — page/screen hierarchy
+- Core user flows (at least 3 key flows described step by step)
+- References findings from D1 and D2
+
+**Structure:** Product Overview → User Stories (P0/P1/P2) → Information Architecture → Core User Flows (3+) → Non-Functional Requirements → Success Metrics → Open Questions
+
+**Tips:**
+- Keep P0 features to 10 or fewer. Be ruthless about prioritization.
+- Every user story must have clear acceptance criteria.
+- Reference specific competitors from D1 and personas from D2.
+
+### D4 — Technical Feasibility Assessment
+
+**Prerequisites:** D3 must be approved. Always fetch `/ideas/{id}/context` first.
+
+**Acceptance Criteria:**
+- Technology stack recommendations with rationale
+- Architecture overview (high-level system diagram in text/ASCII)
+- Key risk points identified with mitigation strategies
+- Clear feasible / partially feasible / infeasible conclusion
+- Estimated complexity for P0 features
+
+**Structure:** Executive Summary → Tech Stack Recommendations (Frontend/Backend/DB/Infra) → Architecture Overview → Feature Feasibility Table → Risk Assessment → Development Estimate → Conclusion
+
+**Tips:**
+- Be honest about risks. A "feasible with caveats" conclusion is more valuable than a false "easy".
+- Reference specific P0 features from D3 when assessing complexity.
+- Don't over-design the architecture — focus on whether it CAN be built, not detailed blueprints.
