@@ -84,7 +84,7 @@ export default function HomePage() {
                 }}
               >
                 <Plus className="h-4 w-4" />
-                发起想法
+                如何参与
               </Link>
             )}
           </div>

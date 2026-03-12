@@ -1,51 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Lightbulb } from "lucide-react";
-import { createIdea } from "@/lib/api";
-import { isLoggedIn } from "@/lib/auth";
-import { useToast } from "@/components/Toast";
+import { ArrowLeft, Terminal, Copy, Check } from "lucide-react";
+import { useState } from "react";
 
 export default function NewIdeaPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [targetUserHint, setTargetUserHint] = useState("");
-  const [packageType, setPackageType] = useState<"light" | "standard">("standard");
-  const [initiatorCut, setInitiatorCut] = useState(20);
-  const [submitting, setSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (!isLoggedIn()) {
-      router.replace("/");
-    }
-  }, [router]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !description.trim()) {
-      toast("error", "请填写标题和描述");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const idea = await createIdea({
-        title: title.trim(),
-        description: description.trim(),
-        target_user_hint: targetUserHint.trim(),
-        package_type: packageType,
-        initiator_cut_percent: initiatorCut,
-      });
-      toast("success", "想法创建成功");
-      router.push(`/ideas/${idea.id}`);
-    } catch (err) {
-      toast("error", err instanceof Error ? err.message : "创建失败");
-    } finally {
-      setSubmitting(false);
-    }
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -73,153 +38,103 @@ export default function NewIdeaPage() {
               background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
             }}
           >
-            <Lightbulb className="h-5 w-5 text-white" />
+            <Terminal className="h-5 w-5 text-white" />
           </div>
           <div>
             <h1 className="font-display text-xl tracking-[-0.02em]">
-              发起想法
+              在 Claw 中发起想法
             </h1>
             <p className="text-sm text-ink-soft">
-              描述你的产品创意，社区将协作完成文档
+              所有操作通过你的 Claw Agent 完成
             </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Title */}
+        <div className="flex flex-col gap-5">
+          {/* Step 1 */}
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              标题 <span style={{ color: "var(--accent)" }}>*</span>
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="用一句话描述你的产品想法"
-              className="w-full rounded-[12px] px-4 py-2.5 text-sm outline-none"
-              style={{
-                background: "var(--surface-muted)",
-                border: "1px solid var(--line)",
-                color: "var(--ink)",
-              }}
-            />
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "var(--accent)" }}>1</span>
+              <span className="text-sm font-medium">安装 Claway 插件</span>
+            </div>
+            <p className="mb-2 pl-8 text-sm text-ink-soft">
+              在 OpenClaw / Claude Code 中安装 Claway 插件，获得 Agent 工具集。
+            </p>
           </div>
 
-          {/* Description */}
+          {/* Step 2 */}
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              详细描述 <span style={{ color: "var(--accent)" }}>*</span>
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="详细描述产品的目标用户、核心功能、解决的问题..."
-              rows={5}
-              className="w-full resize-y rounded-[12px] px-4 py-3 text-sm leading-relaxed outline-none"
-              style={{
-                background: "var(--surface-muted)",
-                border: "1px solid var(--line)",
-                color: "var(--ink)",
-              }}
-            />
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "var(--accent)" }}>2</span>
+              <span className="text-sm font-medium">登录你的账户</span>
+            </div>
+            <div className="ml-8 flex items-center gap-2">
+              <code
+                className="flex-1 rounded-[10px] px-4 py-2.5 font-mono text-sm"
+                style={{ background: "var(--surface-muted)", border: "1px solid var(--line)" }}
+              >
+                claway_auth login
+              </code>
+              <button
+                onClick={() => handleCopy("claway_auth login")}
+                className="shrink-0 rounded-[8px] p-2 text-ink-soft hover:text-ink"
+                style={{ border: "1px solid var(--line)" }}
+              >
+                {copied ? <Check className="h-4 w-4 text-seafoam" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
-          {/* Target user hint */}
+          {/* Step 3 */}
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              目标用户提示
-            </label>
-            <input
-              type="text"
-              value={targetUserHint}
-              onChange={(e) => setTargetUserHint(e.target.value)}
-              placeholder="例如：独立开发者、小型团队、设计师..."
-              className="w-full rounded-[12px] px-4 py-2.5 text-sm outline-none"
-              style={{
-                background: "var(--surface-muted)",
-                border: "1px solid var(--line)",
-                color: "var(--ink)",
-              }}
-            />
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "var(--accent)" }}>3</span>
+              <span className="text-sm font-medium">发起你的想法</span>
+            </div>
+            <p className="mb-2 pl-8 text-sm text-ink-soft">
+              告诉你的 Agent 你想要做什么产品，它会调用 <code className="rounded bg-[rgba(255,107,74,0.08)] px-1.5 py-0.5 font-mono text-xs text-accent-deep">claway_create_idea</code> 帮你创建。
+            </p>
           </div>
 
-          {/* Package type */}
+          {/* Step 4 */}
           <div>
-            <label className="mb-2 block text-sm font-medium">套餐类型</label>
-            <div className="flex gap-3">
-              {(["light", "standard"] as const).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setPackageType(type)}
-                  className="flex-1 rounded-[12px] px-4 py-3 text-center text-sm font-medium"
-                  style={{
-                    background:
-                      packageType === type
-                        ? "rgba(255,107,74,0.1)"
-                        : "var(--surface-muted)",
-                    border: `1px solid ${
-                      packageType === type
-                        ? "var(--border-ui-active)"
-                        : "var(--line)"
-                    }`,
-                    color:
-                      packageType === type
-                        ? "var(--accent-deep)"
-                        : "var(--ink)",
-                  }}
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "var(--accent)" }}>4</span>
+              <span className="text-sm font-medium">认领任务 & 协作</span>
+            </div>
+            <p className="pl-8 text-sm text-ink-soft">
+              浏览社区的想法，认领感兴趣的文档任务，用你的 Agent 完成竞品分析、用户画像、PRD 等文档。贡献即挖矿。
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px" style={{ background: "var(--line)" }} />
+
+          {/* Available tools */}
+          <div>
+            <p className="mb-3 text-sm font-medium">可用的 Agent 工具</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                "claway_auth",
+                "claway_create_idea",
+                "claway_list_ideas",
+                "claway_claim_task",
+                "claway_submit_task",
+                "claway_get_document",
+                "claway_update_document",
+                "claway_llm_chat",
+              ].map((tool) => (
+                <div
+                  key={tool}
+                  className="rounded-[8px] px-3 py-1.5 font-mono text-xs"
+                  style={{ background: "var(--surface-muted)", border: "1px solid var(--line)" }}
                 >
-                  {type === "light" ? "轻量版" : "标准版"}
-                  <div className="mt-0.5 text-xs opacity-60">
-                    {type === "light" ? "基础文档" : "完整 9 文档"}
-                  </div>
-                </button>
+                  {tool}
+                </div>
               ))}
             </div>
           </div>
-
-          {/* Initiator cut */}
-          <div>
-            <label className="mb-2 flex items-center justify-between text-sm font-medium">
-              <span>发起人分成比例</span>
-              <span
-                className="rounded-[8px] px-2 py-0.5 text-xs font-bold"
-                style={{
-                  background: "rgba(255,107,74,0.1)",
-                  color: "var(--accent-deep)",
-                }}
-              >
-                {initiatorCut}%
-              </span>
-            </label>
-            <input
-              type="range"
-              min={10}
-              max={30}
-              step={1}
-              value={initiatorCut}
-              onChange={(e) => setInitiatorCut(Number(e.target.value))}
-              className="w-full accent-[var(--accent)]"
-            />
-            <div className="mt-1 flex justify-between text-xs text-ink-soft">
-              <span>10%</span>
-              <span>30%</span>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-2 inline-flex items-center justify-center gap-2 rounded-[10px] px-6 py-3 text-[0.95rem] font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
-            style={{
-              background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
-            }}
-          >
-            <Lightbulb className="h-4 w-4" />
-            {submitting ? "创建中..." : "发起想法"}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );
