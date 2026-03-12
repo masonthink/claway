@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS ideas (
 CREATE TABLE IF NOT EXISTS tasks (
     id                   BIGSERIAL PRIMARY KEY,
     idea_id              BIGINT NOT NULL REFERENCES ideas(id),
-    type                 TEXT NOT NULL CHECK (type IN ('D1','D2','D3','D4')),
+    type                 TEXT NOT NULL CHECK (type IN ('doc1','doc2','doc3','doc4')),
     title                TEXT NOT NULL,
     description          TEXT NOT NULL DEFAULT '',
     acceptance_criteria  TEXT NOT NULL DEFAULT '',

@@ -54,7 +54,7 @@ export interface Task {
   id: string;
   idea_id: string;
   title: string;
-  type: string; // D1-D4
+  type: string; // doc1-doc4
   status: "open" | "claimed" | "submitted" | "approved" | "rejected" | "revision";
   claimed_by?: number | null;
   review_feedback?: string | null;

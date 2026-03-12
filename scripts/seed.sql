@@ -1,4 +1,4 @@
--- Seed data for Claway (4 tasks per idea: D1-D4)
+-- Seed data for Claway (4 tasks per idea: doc1-doc4)
 -- 10 users, 8 ideas, diverse statuses, 2 published PRDs
 BEGIN;
 
@@ -20,7 +20,7 @@ INSERT INTO users (id, openclaw_id, username, display_name, avatar_url, credits_
 SELECT setval('users_id_seq', 10);
 
 -- ============================================================
--- Idea 1: AI 笔记助手 (active, D1+D2 approved, D3 in revision, D4 open)
+-- Idea 1: AI 笔记助手 (active, doc1+doc2 approved, doc3 in revision, doc4 open)
 -- ============================================================
 INSERT INTO ideas (id, title, description, target_user_hint, problem_definition, initiator_id, initiator_cut_percent, package_type, status, created_at) VALUES
 (1,
@@ -31,34 +31,34 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  1, 20.00, 'standard', 'active', '2026-01-18 10:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, claimed_by, claimed_at, submitted_at, approved_at, output_content, quality_score, review_feedback, cost_usd_accumulated) VALUES
-(1, 1, 'D1', '竞品分析报告',
+(1, 1, 'doc1', '竞品分析报告',
  'Research and analyze the competitive landscape for AI-powered note-taking tools.',
  '>=3 direct competitors + >=2 indirect competitors analyzed',
  '', 80000, 'approved', 2, '2026-01-19 09:00:00+08', '2026-01-20 18:00:00+08', '2026-01-21 10:00:00+08',
  'Completed competitive analysis covering Notion AI, Mem, Reflect, Obsidian, and Apple Notes.',
  1.20, NULL, 0.850000),
 
-(2, 1, 'D2', '目标用户画像',
+(2, 1, 'doc2', '目标用户画像',
  'Define target user personas with core pain points and usage scenarios.',
  '2-3 user personas with narrative scenarios',
  '', 60000, 'approved', 3, '2026-01-20 14:00:00+08', '2026-01-22 11:00:00+08', '2026-01-23 09:00:00+08',
  'Created 3 detailed personas: indie developer, graduate student, product manager.',
  1.50, NULL, 0.620000),
 
-(3, 1, 'D3', '产品需求文档',
+(3, 1, 'doc3', '产品需求文档',
  'Create a product requirements document with user stories, acceptance criteria, and feature prioritization.',
  'User story format, P0 features <=10, includes IA and core flow diagrams',
- 'D1,D2', 120000, 'revision', 4, '2026-02-01 09:00:00+08', '2026-02-05 17:00:00+08', NULL,
+ 'doc1,doc2', 120000, 'revision', 4, '2026-02-01 09:00:00+08', '2026-02-05 17:00:00+08', NULL,
  'PRD with 8 P0 features, 12 P1 features, information architecture, and 4 core user flows.',
  NULL, '用户故事的验收标准不够具体，请为每个 P0 功能补充可量化的验收标准。另外信息架构图缺少设置页面的子结构。', 0.980000),
 
-(4, 1, 'D4', '技术可行性评估',
+(4, 1, 'doc4', '技术可行性评估',
  'Evaluate technical feasibility including technology stack recommendations and key risk points.',
  'Tech stack recommendations + architecture overview + risk points + feasibility conclusion',
- 'D3', 80000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0);
+ 'doc3', 80000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0);
 
 -- ============================================================
--- Idea 2: 社区团购小程序 (active, D1 approved, D2 submitted)
+-- Idea 2: 社区团购小程序 (active, doc1 approved, doc2 submitted)
 -- ============================================================
 INSERT INTO ideas (id, title, description, target_user_hint, problem_definition, initiator_id, initiator_cut_percent, package_type, status, created_at) VALUES
 (2,
@@ -69,28 +69,28 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  2, 15.00, 'standard', 'active', '2026-01-25 14:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, claimed_by, claimed_at, submitted_at, approved_at, output_content, quality_score, cost_usd_accumulated) VALUES
-(5, 2, 'D1', '竞品分析报告',
+(5, 2, 'doc1', '竞品分析报告',
  'Analyze community group-buying platforms.',
  '>=3 direct competitors analyzed',
  '', 80000, 'approved', 4, '2026-01-26 10:00:00+08', '2026-01-28 15:00:00+08', '2026-02-01 09:00:00+08',
  'Analyzed 美团优选, 多多买菜, 淘菜菜, 兴盛优选, and 3 indie WeChat mini-programs.',
  1.00, 0.720000),
 
-(6, 2, 'D2', '目标用户画像',
+(6, 2, 'doc2', '目标用户画像',
  'Define personas for group-buying participants.',
  '2-3 user personas with scenarios',
  '', 60000, 'submitted', 5, '2026-02-02 11:00:00+08', '2026-02-06 16:00:00+08', NULL,
  'Created personas for community leader, busy parent, and fresh produce supplier.', NULL, 0.480000),
 
-(7, 2, 'D3', '产品需求文档',
+(7, 2, 'doc3', '产品需求文档',
  'Create PRD for the group-buying mini-program.',
  'User stories with acceptance criteria, P0 features <=10',
- 'D1,D2', 120000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, 0),
+ 'doc1,doc2', 120000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, 0),
 
-(8, 2, 'D4', '技术可行性评估',
+(8, 2, 'doc4', '技术可行性评估',
  'Evaluate tech stack for WeChat mini-program.',
  'Tech stack recommendations + risk points + feasibility conclusion',
- 'D3', 80000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, 0);
+ 'doc3', 80000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, 0);
 
 -- ============================================================
 -- Idea 3: 宠物健康管理 App (completed, all 4 approved, PRD published)
@@ -104,10 +104,10 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  3, 25.00, 'standard', 'completed', '2026-01-05 09:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, claimed_by, claimed_at, submitted_at, approved_at, quality_score, cost_usd_accumulated) VALUES
-(9,  3, 'D1', '竞品分析报告', 'Analyze pet health management apps.', '>=3 competitors', '', 80000, 'approved', 2, '2026-01-06 10:00:00+08', '2026-01-08 16:00:00+08', '2026-01-09 09:00:00+08', 1.20, 0.900000),
-(10, 3, 'D2', '目标用户画像', 'Define pet owner personas.', '2-3 personas', '', 60000, 'approved', 6, '2026-01-07 14:00:00+08', '2026-01-10 11:00:00+08', '2026-01-11 10:00:00+08', 1.50, 0.550000),
-(11, 3, 'D3', '产品需求文档', 'Create PRD for pet health app.', 'User stories, P0 <=10, IA + flows', 'D1,D2', 120000, 'approved', 2, '2026-01-12 09:00:00+08', '2026-01-16 17:00:00+08', '2026-01-17 11:00:00+08', 1.20, 1.100000),
-(12, 3, 'D4', '技术可行性评估', 'Evaluate tech stack for pet health platform.', 'Tech recommendations + risks', 'D3', 80000, 'approved', 7, '2026-01-18 10:00:00+08', '2026-01-22 15:00:00+08', '2026-01-23 09:00:00+08', 1.00, 0.650000);
+(9,  3, 'doc1', '竞品分析报告', 'Analyze pet health management apps.', '>=3 competitors', '', 80000, 'approved', 2, '2026-01-06 10:00:00+08', '2026-01-08 16:00:00+08', '2026-01-09 09:00:00+08', 1.20, 0.900000),
+(10, 3, 'doc2', '目标用户画像', 'Define pet owner personas.', '2-3 personas', '', 60000, 'approved', 6, '2026-01-07 14:00:00+08', '2026-01-10 11:00:00+08', '2026-01-11 10:00:00+08', 1.50, 0.550000),
+(11, 3, 'doc3', '产品需求文档', 'Create PRD for pet health app.', 'User stories, P0 <=10, IA + flows', 'doc1,doc2', 120000, 'approved', 2, '2026-01-12 09:00:00+08', '2026-01-16 17:00:00+08', '2026-01-17 11:00:00+08', 1.20, 1.100000),
+(12, 3, 'doc4', '技术可行性评估', 'Evaluate tech stack for pet health platform.', 'Tech recommendations + risks', 'doc3', 80000, 'approved', 7, '2026-01-18 10:00:00+08', '2026-01-22 15:00:00+08', '2026-01-23 09:00:00+08', 1.00, 0.650000);
 
 -- ============================================================
 -- Idea 4: 自由职业者接单平台 (active, all open — fresh idea)
@@ -121,13 +121,13 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  4, 18.00, 'standard', 'active', '2026-03-08 11:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, cost_usd_accumulated) VALUES
-(13, 4, 'D1', '竞品分析报告', 'Analyze freelance platforms.', '>=3 competitors', '', 80000, 'open', 0),
-(14, 4, 'D2', '目标用户画像', 'Define freelancer and client personas.', '2-3 personas', '', 60000, 'open', 0),
-(15, 4, 'D3', '产品需求文档', 'Create PRD for freelance matching platform.', 'User stories, P0 <=10', 'D1,D2', 120000, 'open', 0),
-(16, 4, 'D4', '技术可行性评估', 'Evaluate tech stack for matching and payment.', 'Tech recommendations + risks', 'D3', 80000, 'open', 0);
+(13, 4, 'doc1', '竞品分析报告', 'Analyze freelance platforms.', '>=3 competitors', '', 80000, 'open', 0),
+(14, 4, 'doc2', '目标用户画像', 'Define freelancer and client personas.', '2-3 personas', '', 60000, 'open', 0),
+(15, 4, 'doc3', '产品需求文档', 'Create PRD for freelance matching platform.', 'User stories, P0 <=10', 'doc1,doc2', 120000, 'open', 0),
+(16, 4, 'doc4', '技术可行性评估', 'Evaluate tech stack for matching and payment.', 'Tech recommendations + risks', 'doc3', 80000, 'open', 0);
 
 -- ============================================================
--- Idea 5: 商标交易平台 (active, D1+D2 approved, D3 claimed)
+-- Idea 5: 商标交易平台 (active, doc1+doc2 approved, doc3 claimed)
 -- ============================================================
 INSERT INTO ideas (id, title, description, target_user_hint, problem_definition, initiator_id, initiator_cut_percent, package_type, status, created_at) VALUES
 (5,
@@ -138,30 +138,30 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  1, 22.00, 'standard', 'active', '2026-02-05 09:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, claimed_by, claimed_at, submitted_at, approved_at, output_content, quality_score, cost_usd_accumulated) VALUES
-(17, 5, 'D1', '竞品分析报告',
+(17, 5, 'doc1', '竞品分析报告',
  'Research and analyze existing trademark trading platforms.',
  '>=3 direct competitors + >=2 indirect competitors analyzed',
  '', 80000, 'approved', 3, '2026-02-06 10:00:00+08', '2026-02-08 16:00:00+08', '2026-02-09 09:00:00+08',
  'Analyzed 中华商标超市, 八戒知产, 权大师, 标天下, and indirect competitors.',
  1.20, 0.880000),
 
-(18, 5, 'D2', '目标用户画像',
+(18, 5, 'doc2', '目标用户画像',
  'Define target user personas for trademark buyers, sellers, and IP agencies.',
  '2-3 user personas with narrative scenarios',
  '', 60000, 'approved', 8, '2026-02-07 14:00:00+08', '2026-02-09 11:00:00+08', '2026-02-10 10:00:00+08',
  'Created 3 personas: startup founder, retiring merchant, IP agency.',
  1.50, 0.590000),
 
-(19, 5, 'D3', '产品需求文档',
+(19, 5, 'doc3', '产品需求文档',
  'Create PRD including AI valuation, smart matching, and online transfer features.',
  'User stories, P0 features <=10, IA + core flows',
- 'D1,D2', 120000, 'claimed', 10, '2026-02-11 09:00:00+08', NULL, NULL,
+ 'doc1,doc2', 120000, 'claimed', 10, '2026-02-11 09:00:00+08', NULL, NULL,
  NULL, NULL, 0.320000),
 
-(20, 5, 'D4', '技术可行性评估',
+(20, 5, 'doc4', '技术可行性评估',
  'Evaluate tech stack for trademark data integration and AI valuation model.',
  'Tech stack recommendations + risk points + feasibility conclusion',
- 'D3', 80000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, 0);
+ 'doc3', 80000, 'open', NULL, NULL, NULL, NULL, NULL, NULL, 0);
 
 -- ============================================================
 -- Idea 6: 在线教育直播平台 (completed, all 4 approved, PRD published)
@@ -175,13 +175,13 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  6, 20.00, 'standard', 'completed', '2025-12-15 09:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, claimed_by, claimed_at, submitted_at, approved_at, quality_score, cost_usd_accumulated) VALUES
-(21, 6, 'D1', '竞品分析报告', 'Analyze online education live streaming platforms.', '>=3 competitors', '', 80000, 'approved', 4, '2025-12-16 10:00:00+08', '2025-12-18 16:00:00+08', '2025-12-19 09:00:00+08', 1.00, 0.780000),
-(22, 6, 'D2', '目标用户画像', 'Define personas for teachers, students, and institutions.', '2-3 personas', '', 60000, 'approved', 7, '2025-12-17 14:00:00+08', '2025-12-20 11:00:00+08', '2025-12-21 10:00:00+08', 1.20, 0.520000),
-(23, 6, 'D3', '产品需求文档', 'Create PRD for live education platform.', 'User stories, P0 <=10, IA + flows', 'D1,D2', 120000, 'approved', 10, '2025-12-22 09:00:00+08', '2025-12-26 17:00:00+08', '2025-12-27 11:00:00+08', 1.50, 1.250000),
-(24, 6, 'D4', '技术可行性评估', 'Evaluate tech stack for live streaming and real-time interaction.', 'Tech recommendations + risks', 'D3', 80000, 'approved', 2, '2025-12-28 10:00:00+08', '2026-01-02 15:00:00+08', '2026-01-03 09:00:00+08', 1.20, 0.750000);
+(21, 6, 'doc1', '竞品分析报告', 'Analyze online education live streaming platforms.', '>=3 competitors', '', 80000, 'approved', 4, '2025-12-16 10:00:00+08', '2025-12-18 16:00:00+08', '2025-12-19 09:00:00+08', 1.00, 0.780000),
+(22, 6, 'doc2', '目标用户画像', 'Define personas for teachers, students, and institutions.', '2-3 personas', '', 60000, 'approved', 7, '2025-12-17 14:00:00+08', '2025-12-20 11:00:00+08', '2025-12-21 10:00:00+08', 1.20, 0.520000),
+(23, 6, 'doc3', '产品需求文档', 'Create PRD for live education platform.', 'User stories, P0 <=10, IA + flows', 'doc1,doc2', 120000, 'approved', 10, '2025-12-22 09:00:00+08', '2025-12-26 17:00:00+08', '2025-12-27 11:00:00+08', 1.50, 1.250000),
+(24, 6, 'doc4', '技术可行性评估', 'Evaluate tech stack for live streaming and real-time interaction.', 'Tech recommendations + risks', 'doc3', 80000, 'approved', 2, '2025-12-28 10:00:00+08', '2026-01-02 15:00:00+08', '2026-01-03 09:00:00+08', 1.20, 0.750000);
 
 -- ============================================================
--- Idea 7: 健身饮食规划 App (active, D1 claimed, D2 open)
+-- Idea 7: 健身饮食规划 App (active, doc1 claimed, doc2 open)
 -- ============================================================
 INSERT INTO ideas (id, title, description, target_user_hint, problem_definition, initiator_id, initiator_cut_percent, package_type, status, created_at) VALUES
 (7,
@@ -192,10 +192,10 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  5, 15.00, 'standard', 'active', '2026-03-01 09:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, claimed_by, claimed_at, cost_usd_accumulated) VALUES
-(25, 7, 'D1', '竞品分析报告', 'Analyze fitness and diet planning apps.', '>=3 competitors', '', 80000, 'claimed', 6, '2026-03-02 10:00:00+08', 0.150000),
-(26, 7, 'D2', '目标用户画像', 'Define fitness enthusiast personas.', '2-3 personas', '', 60000, 'open', NULL, NULL, 0),
-(27, 7, 'D3', '产品需求文档', 'Create PRD for diet planning features.', 'User stories, P0 <=10', 'D1,D2', 120000, 'open', NULL, NULL, 0),
-(28, 7, 'D4', '技术可行性评估', 'Evaluate tech stack for AI diet recommendations.', 'Tech recommendations + risks', 'D3', 80000, 'open', NULL, NULL, 0);
+(25, 7, 'doc1', '竞品分析报告', 'Analyze fitness and diet planning apps.', '>=3 competitors', '', 80000, 'claimed', 6, '2026-03-02 10:00:00+08', 0.150000),
+(26, 7, 'doc2', '目标用户画像', 'Define fitness enthusiast personas.', '2-3 personas', '', 60000, 'open', NULL, NULL, 0),
+(27, 7, 'doc3', '产品需求文档', 'Create PRD for diet planning features.', 'User stories, P0 <=10', 'doc1,doc2', 120000, 'open', NULL, NULL, 0),
+(28, 7, 'doc4', '技术可行性评估', 'Evaluate tech stack for AI diet recommendations.', 'Tech recommendations + risks', 'doc3', 80000, 'open', NULL, NULL, 0);
 
 -- ============================================================
 -- Idea 8: 二手车估价平台 (cancelled)
@@ -209,10 +209,10 @@ INSERT INTO ideas (id, title, description, target_user_hint, problem_definition,
  8, 20.00, 'standard', 'cancelled', '2026-02-20 09:00:00+08');
 
 INSERT INTO tasks (id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint, status, cost_usd_accumulated) VALUES
-(29, 8, 'D1', '竞品分析报告', 'Analyze used car valuation platforms.', '>=3 competitors', '', 80000, 'open', 0),
-(30, 8, 'D2', '目标用户画像', 'Define buyer and seller personas.', '2-3 personas', '', 60000, 'open', 0),
-(31, 8, 'D3', '产品需求文档', 'Create PRD for car valuation features.', 'User stories, P0 <=10', 'D1,D2', 120000, 'open', 0),
-(32, 8, 'D4', '技术可行性评估', 'Evaluate tech stack for AI valuation model.', 'Tech recommendations + risks', 'D3', 80000, 'open', 0);
+(29, 8, 'doc1', '竞品分析报告', 'Analyze used car valuation platforms.', '>=3 competitors', '', 80000, 'open', 0),
+(30, 8, 'doc2', '目标用户画像', 'Define buyer and seller personas.', '2-3 personas', '', 60000, 'open', 0),
+(31, 8, 'doc3', '产品需求文档', 'Create PRD for car valuation features.', 'User stories, P0 <=10', 'doc1,doc2', 120000, 'open', 0),
+(32, 8, 'doc4', '技术可行性评估', 'Evaluate tech stack for AI valuation model.', 'Tech recommendations + risks', 'doc3', 80000, 'open', 0);
 
 SELECT setval('ideas_id_seq', 8);
 SELECT setval('tasks_id_seq', 32);
@@ -227,7 +227,7 @@ INSERT INTO documents (id, task_id, content, current_version) VALUES
 
 (2, 2, E'# 目标用户画像 — AI 笔记助手\n\n## 概述\n\n基于竞品分析和目标市场调研，定义三类核心用户画像。主要目标用户是「有大量碎片化知识需要整理，但缺乏时间和工具」的知识工作者。\n\n## Persona 1: 独立开发者 Alex\n\n### 人口统计\n- **角色**: 全栈独立开发者\n- **年龄**: 25-32 岁\n- **技术素养**: 高\n- **收入**: ¥15,000-30,000/月\n\n### 目标\n- 高效记录技术学习笔记和 debug 经验\n- 跨项目复用知识片段\n- 减少重复踩坑\n\n### 痛点\n- 笔记分散在 Notion、VS Code snippets、浏览器书签多处\n- 花大量时间学习工具本身而非专注内容\n- 搜索「那个之前解决过的 bug」总是找不到\n\n### 当前方案\n- Obsidian（主力） + 微信收藏（临时） + GitHub Issues（项目相关）\n\n### 场景 A: 学习新框架\nAlex 在 YouTube 看 React Server Components 教程，边看边用语音记录关键点。AI 自动将语音转为结构化笔记，并关联他之前写的 Next.js 笔记。三天后写代码时搜索「RSC data fetching」，直接找到当时的学习笔记。\n\n### 场景 B: Debug 日志\n凌晨 2 点定位到一个诡异的 CORS 问题。Alex 用语音快速描述问题和解决方案。两个月后遇到类似问题，AI 自动推荐「你之前解决过类似的 CORS 问题」。\n\n### 当前方案局限\n- Obsidian 需要手动整理和打标签，学习新插件成本高\n- 没有语音入口，灵感稍纵即逝\n- 跨工具搜索几乎不可能\n\n## Persona 2: 研究生 小林\n\n### 人口统计\n- **角色**: 计算机科学硕士研究生\n- **年龄**: 22-26 岁\n- **技术素养**: 中高\n- **预算**: ¥15-25/月\n\n### 目标\n- 高效整理论文阅读笔记\n- 课堂录音自动转文字\n- 为毕业论文积累素材\n\n### 痛点\n- 论文阅读笔记量大但缺乏系统整理\n- 课堂上来不及记笔记，课后又忘了重点\n- 临近毕业论文时发现之前的阅读笔记散落各处\n\n### 场景 A: 论文精读\n小林在 iPad 上阅读一篇关于 Transformer 优化的论文，用语音记录自己的理解和疑问。AI 自动提取关键发现，并关联他之前读过的 5 篇相关论文的笔记，生成一份「Transformer 优化技术演进」的知识图谱。\n\n### 场景 B: 课堂录音\n导师组会上，小林开启录音。会后 AI 自动生成会议纪要，提取 action items，并标记与自己课题相关的讨论点。\n\n### 当前方案局限\n- Zotero 管理论文但笔记功能弱\n- 手动整理耗时，经常「存了就忘」\n- 缺乏跨论文的知识关联能力\n\n## Persona 3: 产品经理 Jenny\n\n### 人口统计\n- **角色**: 中型 SaaS 公司产品经理\n- **年龄**: 28-35 岁\n- **技术素养**: 中\n- **预算**: ¥50-100/月（可报销）\n\n### 目标\n- 高效整理需求调研、用户访谈、竞品分析笔记\n- 会议纪要自动生成 action items\n- 快速回顾历史决策背景\n\n### 痛点\n- 需求调研、用户访谈、竞品分析散落在飞书文档、Notion、微信消息里\n- 开会记笔记影响参与讨论\n- 半年后回顾「为什么当时做了这个决定」很难找到原始讨论记录\n\n### 场景 A: 用户访谈\nJenny 和客户进行 60 分钟视频访谈。全程录音，AI 自动提取用户反馈要点、情感倾向和产品改进建议。访谈结束后 5 分钟就能分享整理好的访谈摘要给团队。\n\n### 场景 B: 需求评审\n在需求评审会上，Jenny 发现设计师对某个交互方案有疑问。她搜索「登录页改版讨论」，AI 找到三个月前的会议记录和当时的决策理由，当场解答。\n\n### 当前方案局限\n- 飞书会议纪要需要手动整理\n- 跨工具搜索不可能（飞书 + Notion + 微信）\n- 缺乏结构化的知识积累\n\n## 跨画像分析\n\n### 共同痛点\n1. 知识碎片化——信息散落在多个工具中\n2. 手动整理成本高——缺乏自动化\n3. 搜索能力弱——找不到「曾经记过的东西」\n\n### 差异化需求\n- Alex: 代码片段支持、技术搜索\n- 小林: 学术论文集成、知识图谱\n- Jenny: 团队共享、会议纪要\n\n## 结论\n\n首选主打 **Alex（独立开发者）** 作为初始用户群体。原因：\n1. 对新工具接受度最高\n2. 能产生口碑传播\n3. 付费意愿明确\n4. 使用场景清晰（学习 + debug）', 3),
 
-(3, 3, E'# 产品需求文档 — AI 笔记助手（修订中）\n\n## 产品概述\n基于竞品分析（D1）发现的市场空白和用户画像（D2）定义的核心需求...\n\n## P0 功能\n1. 语音输入转结构化笔记\n2. AI 智能分类和标签\n3. 全文搜索 + 语义搜索\n4. 笔记间自动关联\n5. 移动端 + Web 端同步\n6. Markdown 编辑器\n7. 导入/导出（Markdown, JSON）\n8. 用户账户和登录\n\n（待补充验收标准和信息架构...）', 2),
+(3, 3, E'# 产品需求文档 — AI 笔记助手（修订中）\n\n## 产品概述\n基于竞品分析（doc1）发现的市场空白和用户画像（doc2）定义的核心需求...\n\n## P0 功能\n1. 语音输入转结构化笔记\n2. AI 智能分类和标签\n3. 全文搜索 + 语义搜索\n4. 笔记间自动关联\n5. 移动端 + Web 端同步\n6. Markdown 编辑器\n7. 导入/导出（Markdown, JSON）\n8. 用户账户和登录\n\n（待补充验收标准和信息架构...）', 2),
 
 (4, 4, '', 1);
 
@@ -290,18 +290,18 @@ SELECT setval('documents_id_seq', 32);
 -- Document versions (for documents that have been edited)
 -- ============================================================
 INSERT INTO document_versions (document_id, version, content, diff_from_previous, created_at, created_by) VALUES
--- Idea 1, D1 had 3 versions
+-- Idea 1, doc1 had 3 versions
 (1, 1, '', NULL, '2026-01-19 09:00:00+08', 2),
 (1, 2, 'Draft competitive analysis...', 'Initial draft', '2026-01-20 14:00:00+08', 2),
 (1, 3, '# 竞品分析报告 — AI 笔记助手...', 'Final version', '2026-01-20 18:00:00+08', 2),
--- Idea 1, D2 had 3 versions
+-- Idea 1, doc2 had 3 versions
 (2, 1, '', NULL, '2026-01-20 14:00:00+08', 3),
 (2, 2, 'Draft personas...', 'Initial draft', '2026-01-21 16:00:00+08', 3),
 (2, 3, '# 目标用户画像...', 'Final version', '2026-01-22 11:00:00+08', 3),
--- Idea 1, D3 had 2 versions (still in revision)
+-- Idea 1, doc3 had 2 versions (still in revision)
 (3, 1, '', NULL, '2026-02-01 09:00:00+08', 4),
 (3, 2, '# 产品需求文档...', 'First draft', '2026-02-05 17:00:00+08', 4),
--- Idea 2, D2 had 2 versions
+-- Idea 2, doc2 had 2 versions
 (6, 1, '', NULL, '2026-02-02 11:00:00+08', 5),
 (6, 2, '# 目标用户画像 — 社区团购...', 'Completed draft', '2026-02-06 16:00:00+08', 5);
 
@@ -344,11 +344,11 @@ INSERT INTO token_usage_logs (user_id, task_id, model, tokens_in, tokens_out, co
 -- Contributions (for approved tasks)
 -- ============================================================
 INSERT INTO contributions (idea_id, task_id, user_id, cost_usd, quality_score, weighted_score, weight_percent) VALUES
--- Idea 1 (D1 and D2 approved)
+-- Idea 1 (doc1 and doc2 approved)
 (1, 1, 2, 0.850000, 1.20, 1.020000, 0),
 (1, 2, 3, 0.620000, 1.50, 0.930000, 0),
 
--- Idea 2 (D1 approved)
+-- Idea 2 (doc1 approved)
 (2, 5, 4, 0.720000, 1.00, 0.720000, 100.0000),
 
 -- Idea 3 (all approved, weights calculated)
@@ -357,7 +357,7 @@ INSERT INTO contributions (idea_id, task_id, user_id, cost_usd, quality_score, w
 (3, 11, 2, 1.100000, 1.20, 1.320000, 34.1000),
 (3, 12, 7, 0.650000, 1.00, 0.650000, 16.7000),
 
--- Idea 5 (D1 and D2 approved)
+-- Idea 5 (doc1 and doc2 approved)
 (5, 17, 3, 0.880000, 1.20, 1.056000, 0),
 (5, 18, 8, 0.590000, 1.50, 0.885000, 0),
 
@@ -372,11 +372,11 @@ INSERT INTO contributions (idea_id, task_id, user_id, cost_usd, quality_score, w
 -- ============================================================
 INSERT INTO prds (id, idea_id, content, published_at, price_credits, read_count) VALUES
 (1, 3,
- E'# PetCare+ — 宠物健康管理 App 完整产品需求文档\n\n帮助宠物主人记录宠物的饮食、运动、疫苗、体检等健康数据，AI 分析异常指标并提醒就医。\n\n---\n\n# D1 - 竞品分析报告\n\n## 直接竞品\n1. 小壹管家 — 国内宠物综合管理\n2. PetDesk — 美国市场兽医预约\n3. 11pets — 欧洲健康记录\n\n---\n\n# D2 - 目标用户画像\n\n新手铲屎官、多宠家庭、宠物店主\n\n---\n\n# D3 - 产品需求文档\n\n## 核心功能\n1. 宠物档案管理（多宠物）\n2. 健康数据记录\n3. 疫苗提醒\n4. AI 异常预警\n5. 兽医问诊入口\n\n## 商业模式\n- 基础版免费\n- Pro 版 ¥25/月\n\n---\n\n# D4 - 技术可行性评估\n\n可行。React Native + Go + PostgreSQL。MVP 3 个月。',
+ E'# PetCare+ — 宠物健康管理 App 完整产品需求文档\n\n帮助宠物主人记录宠物的饮食、运动、疫苗、体检等健康数据，AI 分析异常指标并提醒就医。\n\n---\n\n# doc1 - 竞品分析报告\n\n## 直接竞品\n1. 小壹管家 — 国内宠物综合管理\n2. PetDesk — 美国市场兽医预约\n3. 11pets — 欧洲健康记录\n\n---\n\n# doc2 - 目标用户画像\n\n新手铲屎官、多宠家庭、宠物店主\n\n---\n\n# doc3 - 产品需求文档\n\n## 核心功能\n1. 宠物档案管理（多宠物）\n2. 健康数据记录\n3. 疫苗提醒\n4. AI 异常预警\n5. 兽医问诊入口\n\n## 商业模式\n- 基础版免费\n- Pro 版 ¥25/月\n\n---\n\n# doc4 - 技术可行性评估\n\n可行。React Native + Go + PostgreSQL。MVP 3 个月。',
  '2026-01-25 09:00:00+08', 6400.0000, 5),
 
 (2, 6,
- E'# LiveClass — 在线教育直播平台完整产品需求文档\n\n面向 K12 和成人教育的互动直播教学平台。\n\n---\n\n# D1 - 竞品分析报告\n\n腾讯课堂、ClassIn、钉钉课堂分析。差异化: AI 助教 + 低价。\n\n---\n\n# D2 - 目标用户画像\n\nK12 数学老师、独立培训讲师。\n\n---\n\n# D3 - 产品需求文档\n\n直播间管理、白板协作、弹幕答题、AI 课堂总结、学生签到。\n\n---\n\n# D4 - 技术可行性评估\n\n可行。Next.js + Go + 声网 Agora SDK。',
+ E'# LiveClass — 在线教育直播平台完整产品需求文档\n\n面向 K12 和成人教育的互动直播教学平台。\n\n---\n\n# doc1 - 竞品分析报告\n\n腾讯课堂、ClassIn、钉钉课堂分析。差异化: AI 助教 + 低价。\n\n---\n\n# doc2 - 目标用户画像\n\nK12 数学老师、独立培训讲师。\n\n---\n\n# doc3 - 产品需求文档\n\n直播间管理、白板协作、弹幕答题、AI 课堂总结、学生签到。\n\n---\n\n# doc4 - 技术可行性评估\n\n可行。Next.js + Go + 声网 Agora SDK。',
  '2026-01-05 09:00:00+08', 6600.0000, 8);
 
 SELECT setval('prds_id_seq', 2);
@@ -386,27 +386,27 @@ SELECT setval('prds_id_seq', 2);
 -- ============================================================
 INSERT INTO credit_transactions (user_id, type, amount, reference_type, reference_id, description, created_at) VALUES
 -- Contribution rewards (Idea 1)
-(2, 'earn_contribute', 1020.0000, 'task', 1, 'D1 竞品分析 — AI 笔记助手 (quality: 1.2)', '2026-01-21 10:00:00+08'),
-(3, 'earn_contribute', 930.0000, 'task', 2, 'D2 用户画像 — AI 笔记助手 (quality: 1.5)', '2026-01-23 09:00:00+08'),
+(2, 'earn_contribute', 1020.0000, 'task', 1, 'doc1 竞品分析 — AI 笔记助手 (quality: 1.2)', '2026-01-21 10:00:00+08'),
+(3, 'earn_contribute', 930.0000, 'task', 2, 'doc2 用户画像 — AI 笔记助手 (quality: 1.5)', '2026-01-23 09:00:00+08'),
 
 -- Contribution rewards (Idea 2)
-(4, 'earn_contribute', 720.0000, 'task', 5, 'D1 竞品分析 — 社区团购 (quality: 1.0)', '2026-02-01 09:00:00+08'),
+(4, 'earn_contribute', 720.0000, 'task', 5, 'doc1 竞品分析 — 社区团购 (quality: 1.0)', '2026-02-01 09:00:00+08'),
 
 -- Contribution rewards (Idea 3 - all 4 tasks)
-(2, 'earn_contribute', 1080.0000, 'task', 9,  'D1 竞品分析 — 宠物健康管理 (quality: 1.2)', '2026-01-09 09:00:00+08'),
-(6, 'earn_contribute', 825.0000,  'task', 10, 'D2 用户画像 — 宠物健康管理 (quality: 1.5)', '2026-01-11 10:00:00+08'),
-(2, 'earn_contribute', 1320.0000, 'task', 11, 'D3 产品需求文档 — 宠物健康管理 (quality: 1.2)', '2026-01-17 11:00:00+08'),
-(7, 'earn_contribute', 650.0000,  'task', 12, 'D4 技术可行性 — 宠物健康管理 (quality: 1.0)', '2026-01-23 09:00:00+08'),
+(2, 'earn_contribute', 1080.0000, 'task', 9,  'doc1 竞品分析 — 宠物健康管理 (quality: 1.2)', '2026-01-09 09:00:00+08'),
+(6, 'earn_contribute', 825.0000,  'task', 10, 'doc2 用户画像 — 宠物健康管理 (quality: 1.5)', '2026-01-11 10:00:00+08'),
+(2, 'earn_contribute', 1320.0000, 'task', 11, 'doc3 产品需求文档 — 宠物健康管理 (quality: 1.2)', '2026-01-17 11:00:00+08'),
+(7, 'earn_contribute', 650.0000,  'task', 12, 'doc4 技术可行性 — 宠物健康管理 (quality: 1.0)', '2026-01-23 09:00:00+08'),
 
 -- Contribution rewards (Idea 5)
-(3, 'earn_contribute', 1056.0000, 'task', 17, 'D1 竞品分析 — 商标交易 (quality: 1.2)', '2026-02-09 09:00:00+08'),
-(8, 'earn_contribute', 885.0000,  'task', 18, 'D2 用户画像 — 商标交易 (quality: 1.5)', '2026-02-10 10:00:00+08'),
+(3, 'earn_contribute', 1056.0000, 'task', 17, 'doc1 竞品分析 — 商标交易 (quality: 1.2)', '2026-02-09 09:00:00+08'),
+(8, 'earn_contribute', 885.0000,  'task', 18, 'doc2 用户画像 — 商标交易 (quality: 1.5)', '2026-02-10 10:00:00+08'),
 
 -- Contribution rewards (Idea 6 - all 4 tasks)
-(4,  'earn_contribute', 780.0000,  'task', 21, 'D1 竞品分析 — 在线教育 (quality: 1.0)', '2025-12-19 09:00:00+08'),
-(7,  'earn_contribute', 624.0000,  'task', 22, 'D2 用户画像 — 在线教育 (quality: 1.2)', '2025-12-21 10:00:00+08'),
-(10, 'earn_contribute', 1875.0000, 'task', 23, 'D3 产品需求文档 — 在线教育 (quality: 1.5)', '2025-12-27 11:00:00+08'),
-(2,  'earn_contribute', 900.0000,  'task', 24, 'D4 技术可行性 — 在线教育 (quality: 1.2)', '2026-01-03 09:00:00+08'),
+(4,  'earn_contribute', 780.0000,  'task', 21, 'doc1 竞品分析 — 在线教育 (quality: 1.0)', '2025-12-19 09:00:00+08'),
+(7,  'earn_contribute', 624.0000,  'task', 22, 'doc2 用户画像 — 在线教育 (quality: 1.2)', '2025-12-21 10:00:00+08'),
+(10, 'earn_contribute', 1875.0000, 'task', 23, 'doc3 产品需求文档 — 在线教育 (quality: 1.5)', '2025-12-27 11:00:00+08'),
+(2,  'earn_contribute', 900.0000,  'task', 24, 'doc4 技术可行性 — 在线教育 (quality: 1.2)', '2026-01-03 09:00:00+08'),
 
 -- PRD purchases
 (5, 'spend_read', -6400.0000, 'prd', 1, '购买 PetCare+ PRD', '2026-02-05 14:00:00+08'),

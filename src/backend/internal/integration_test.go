@@ -568,7 +568,7 @@ func TestFullWorkflow(t *testing.T) {
 			t.Fatal("expected PRD content to contain idea title")
 		}
 		// Should contain content from each deliverable
-		for _, tt := range []string{"D1", "D2", "D3", "D4"} {
+		for _, tt := range []string{"doc1", "doc2", "doc3", "doc4"} {
 			if !strings.Contains(prd.Content, tt) {
 				t.Fatalf("expected PRD content to reference %s", tt)
 			}

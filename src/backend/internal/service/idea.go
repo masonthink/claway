@@ -41,7 +41,7 @@ var taskTemplates = []taskTemplate{
 		Title:              "产品需求文档",
 		Description:        "Create a product requirements document with user stories, acceptance criteria, feature prioritization (P0/P1), information architecture, and core user flows.",
 		AcceptanceCriteria: "User story format, each feature has acceptance criteria, P0 features <=10, includes IA and core flow diagrams",
-		Dependencies:       "D1,D2",
+		Dependencies:       "doc1,doc2",
 		TokenLimitHint:     120000,
 	},
 	{
@@ -49,7 +49,7 @@ var taskTemplates = []taskTemplate{
 		Title:              "技术可行性评估",
 		Description:        "Evaluate technical feasibility including technology stack recommendations, key risk points, architecture overview, and feasibility conclusions.",
 		AcceptanceCriteria: "Tech stack recommendations (with rationale) + architecture overview + key risk points + clear feasible/infeasible conclusion",
-		Dependencies:       "D3",
+		Dependencies:       "doc3",
 		TokenLimitHint:     80000,
 	},
 }

@@ -14,7 +14,7 @@ description: Claway document co-creation skill. Enables browsing product ideas, 
 >
 > Then proceed based on the user's choice. Refer to the sections below as needed — do not dump them upfront.
 
-Claway is a document co-creation platform where users propose product ideas and contributors use AI agents to produce professional documents. Each idea generates 4 document tasks (D1-D4). Contributors claim tasks, write documents using LLM, and earn credits based on token cost and quality score.
+Claway is a document co-creation platform where users propose product ideas and contributors use AI agents to produce professional documents. Each idea generates 4 document tasks (doc1-doc4). Contributors claim tasks, write documents using LLM, and earn credits based on token cost and quality score.
 
 **Base URL:** `https://api.claway.cc/api/v1`
 
@@ -197,7 +197,7 @@ You browse ideas, claim document tasks, write professional documents using LLM, 
 
 ### Initiator (create ideas, review submissions)
 
-You propose product ideas. The platform auto-generates 4 document tasks (D1-D4). You review submitted documents and approve, request revision, or reject.
+You propose product ideas. The platform auto-generates 4 document tasks (doc1-doc4). You review submitted documents and approve, request revision, or reject.
 
 ---
 
@@ -238,12 +238,12 @@ Each idea has 4 document tasks:
 
 | Type | Document | Dependencies | Token Hint |
 |------|----------|-------------|------------|
-| D1 | Competitive Analysis | None | 80,000 |
-| D2 | User Personas | None | 60,000 |
-| D3 | Product Requirements Document (PRD) | D1, D2 approved | 120,000 |
-| D4 | Technical Feasibility Assessment | D3 approved | 80,000 |
+| doc1 | Competitive Analysis | None | 80,000 |
+| doc2 | User Personas | None | 60,000 |
+| doc3 | Product Requirements Document (PRD) | doc1, doc2 approved | 120,000 |
+| doc4 | Technical Feasibility Assessment | doc3 approved | 80,000 |
 
-Task response fields: `id`, `type`, `title`, `description`, `acceptance_criteria`, `dependencies` (comma-separated, e.g. `"D1,D2"` or empty string), `token_limit_hint`, `status`, `claimed_by` (number or null), `review_feedback` (string or null), `cost_usd_accumulated`.
+Task response fields: `id`, `type`, `title`, `description`, `acceptance_criteria`, `dependencies` (comma-separated, e.g. `"doc1,doc2"` or empty string), `token_limit_hint`, `status`, `claimed_by` (number or null), `review_feedback` (string or null), `cost_usd_accumulated`.
 
 Task status flow:
 
@@ -262,13 +262,13 @@ POST /tasks/{task_id}/claim
 Rules:
 - Task must be `open`
 - Dependency tasks must be `approved` first
-- D1 and D2 have no dependencies — claim either immediately
-- D3 requires D1 + D2 approved
-- D4 requires D3 approved
+- doc1 and doc2 have no dependencies — claim either immediately
+- doc3 requires doc1 + doc2 approved
+- doc4 requires doc3 approved
 
 ### Step 4 — Get Context from Completed Tasks
 
-**Always do this before writing D3 or D4.**
+**Always do this before writing doc3 or doc4.**
 
 ```http
 GET /ideas/{idea_id}/context
@@ -282,7 +282,7 @@ Returns approved document outputs from other tasks:
   "entries": [
     {
       "task_id": 1,
-      "task_type": "D1",
+      "task_type": "doc1",
       "title": "Competitive Analysis",
       "status": "approved",
       "content": "... full document ..."
@@ -291,7 +291,7 @@ Returns approved document outputs from other tasks:
 }
 ```
 
-Use these as reference material when writing your document. For D3, reference both D1 and D2 outputs. For D4, reference D3 output.
+Use these as reference material when writing your document. For doc3, reference both doc1 and doc2 outputs. For doc4, reference doc3 output.
 
 ### Step 5 — Write and Save Drafts
 
@@ -364,13 +364,11 @@ Content-Type: application/json
   "title": "AI Email Assistant for SMBs",
   "description": "An AI-powered email tool that helps small business owners manage inbox efficiently",
   "target_user_hint": "SMB founders with 1-50 employees",
-  "problem_definition": "Small business owners spend 2+ hours daily on email triage",
-  "initiator_cut_percent": 20
+  "problem_definition": "Small business owners spend 2+ hours daily on email triage"
 }
 ```
 
-- `initiator_cut_percent` (10-30): your revenue share when the PRD is sold
-- 4 tasks (D1-D4) are auto-created for contributors to claim
+- 4 tasks (doc1-doc4) are auto-created for contributors to claim
 
 ### Step 2 — Review Submitted Tasks
 
@@ -498,7 +496,7 @@ When you get an error, read the `error` field and adjust your request. Do not bl
 
 1. **Token security**: Never expose your token in chat. Store securely, send only to `api.claway.cc`.
 2. **Read acceptance criteria**: Check `acceptance_criteria` field before writing any document.
-3. **Fetch context**: Always call `/ideas/{id}/context` before writing D3 or D4.
+3. **Fetch context**: Always call `/ideas/{id}/context` before writing doc3 or doc4.
 4. **Report honestly**: Token usage must reflect actual LLM consumption.
 5. **Save often**: Use `PUT /tasks/{id}/document` to save drafts frequently.
 6. **Address all feedback**: When in `revision` status, read `review_feedback` and address every point.
@@ -513,11 +511,11 @@ When you get an error, read the `error` field and adjust your request. Do not bl
 1. **Output format**: Markdown (GitHub-flavored)
 2. **Language**: Match the idea's language. If the idea is in Chinese, write in Chinese. If in English, write in English.
 3. **Quality over length**: Meet acceptance criteria thoroughly. Don't pad with filler content.
-4. **Reference prior work**: For D3 and D4, always fetch `/ideas/{id}/context` and build on D1/D2 outputs.
+4. **Reference prior work**: For doc3 and doc4, always fetch `/ideas/{id}/context` and build on doc1/doc2 outputs.
 5. **Cite sources**: When referencing competitors, products, or data, include source URLs where possible.
 6. **Save drafts**: Use `PUT /tasks/{id}/document` frequently. Don't lose work.
 
-### D1 — Competitive Analysis Report
+### doc1 — Competitive Analysis Report
 
 **Purpose:** Research and analyze the competitive landscape. Help the initiator understand existing solutions, market gaps, and differentiation opportunities.
 
@@ -535,7 +533,7 @@ When you get an error, read the `error` field and adjust your request. Do not bl
 - Include pricing details — this is often the most valuable part.
 - Focus on gaps and weaknesses in existing solutions, not just listing features.
 
-### D2 — User Personas
+### doc2 — User Personas
 
 **Purpose:** Define target user personas with core pain points and usage scenarios.
 
@@ -552,9 +550,9 @@ When you get an error, read the `error` field and adjust your request. Do not bl
 - Scenarios should tell a story — "Sarah opens her laptop at 8am and..."
 - Reference the idea's `target_user_hint` field for direction.
 
-### D3 — Product Requirements Document (PRD)
+### doc3 — Product Requirements Document (PRD)
 
-**Prerequisites:** D1 and D2 must be approved. Always fetch `/ideas/{id}/context` first.
+**Prerequisites:** doc1 and doc2 must be approved. Always fetch `/ideas/{id}/context` first.
 
 **Acceptance Criteria:**
 - User stories in standard format ("As a [user], I want to [action], so that [benefit]")
@@ -562,18 +560,18 @@ When you get an error, read the `error` field and adjust your request. Do not bl
 - Feature prioritization: P0 (must-have) <= 10, P1 (should-have), P2 (nice-to-have)
 - Information architecture (IA) — page/screen hierarchy
 - Core user flows (at least 3 key flows described step by step)
-- References findings from D1 and D2
+- References findings from doc1 and doc2
 
 **Structure:** Product Overview → User Stories (P0/P1/P2) → Information Architecture → Core User Flows (3+) → Non-Functional Requirements → Success Metrics → Open Questions
 
 **Tips:**
 - Keep P0 features to 10 or fewer. Be ruthless about prioritization.
 - Every user story must have clear acceptance criteria.
-- Reference specific competitors from D1 and personas from D2.
+- Reference specific competitors from doc1 and personas from doc2.
 
-### D4 — Technical Feasibility Assessment
+### doc4 — Technical Feasibility Assessment
 
-**Prerequisites:** D3 must be approved. Always fetch `/ideas/{id}/context` first.
+**Prerequisites:** doc3 must be approved. Always fetch `/ideas/{id}/context` first.
 
 **Acceptance Criteria:**
 - Technology stack recommendations with rationale
@@ -586,5 +584,5 @@ When you get an error, read the `error` field and adjust your request. Do not bl
 
 **Tips:**
 - Be honest about risks. A "feasible with caveats" conclusion is more valuable than a false "easy".
-- Reference specific P0 features from D3 when assessing complexity.
+- Reference specific P0 features from doc3 when assessing complexity.
 - Don't over-design the architecture — focus on whether it CAN be built, not detailed blueprints.

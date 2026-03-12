@@ -40,14 +40,14 @@ curl -s -H "Authorization: Bearer $TOKEN1" "$BASE/ideas" | python3 -c "import sy
 echo ""
 echo "=== 6. GET /ideas/:id/tasks ==="
 TASKS_RESP=$(curl -s -H "Authorization: Bearer $TOKEN1" "$BASE/ideas/$IDEA_ID/tasks")
-TASK_D1_ID=$(echo "$TASKS_RESP" | python3 -c "import sys,json; tasks=json.load(sys.stdin)['tasks']; print([t['id'] for t in tasks if t['type']=='D1'][0])")
-TASK_D2_ID=$(echo "$TASKS_RESP" | python3 -c "import sys,json; tasks=json.load(sys.stdin)['tasks']; print([t['id'] for t in tasks if t['type']=='D2'][0])")
+TASK_D1_ID=$(echo "$TASKS_RESP" | python3 -c "import sys,json; tasks=json.load(sys.stdin)['tasks']; print([t['id'] for t in tasks if t['type']=='doc1'][0])")
+TASK_D2_ID=$(echo "$TASKS_RESP" | python3 -c "import sys,json; tasks=json.load(sys.stdin)['tasks']; print([t['id'] for t in tasks if t['type']=='doc2'][0])")
 TASK_COUNT=$(echo "$TASKS_RESP" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['tasks']))")
-echo "Tasks created: $TASK_COUNT (expected 9)"
-echo "D1 ID: $TASK_D1_ID, D2 ID: $TASK_D2_ID"
+echo "Tasks created: $TASK_COUNT (expected 4)"
+echo "doc1 ID: $TASK_D1_ID, doc2 ID: $TASK_D2_ID"
 
 echo ""
-echo "=== 7. POST /tasks/:id/claim (user2 claims D1) ==="
+echo "=== 7. POST /tasks/:id/claim (user2 claims doc1) ==="
 curl -s -H "Authorization: Bearer $TOKEN2" -X POST "$BASE/tasks/$TASK_D1_ID/claim" | python3 -m json.tool
 
 echo ""
@@ -67,7 +67,7 @@ curl -s -H "Authorization: Bearer $TOKEN2" -H "Content-Type: application/json" \
   "$BASE/tasks/$TASK_D1_ID/submit" | python3 -m json.tool
 
 echo ""
-echo "=== 11. Simulate token usage + approve D1 ==="
+echo "=== 11. Simulate token usage + approve doc1 ==="
 $PSQL -d claway -c "INSERT INTO token_usage_logs (user_id, task_id, model, tokens_in, tokens_out, cost_usd) VALUES ($USER2_ID, $TASK_D1_ID, 'claude-sonnet-4-5', 50000, 10000, 0.30);"
 $PSQL -d claway -c "UPDATE tasks SET cost_usd_accumulated = 0.30 WHERE id = $TASK_D1_ID;"
 curl -s -H "Authorization: Bearer $TOKEN1" -H "Content-Type: application/json" \
