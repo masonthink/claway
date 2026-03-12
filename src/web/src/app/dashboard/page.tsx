@@ -125,9 +125,9 @@ export default function DashboardPage() {
           </h2>
           <div className="mb-4 rounded-[12px] px-5 py-3" style={{ background: "rgba(255,107,74,0.08)" }}>
             <span className="text-sm text-ink-soft">总消耗: </span>
-            <span className="text-lg font-bold text-accent-deep">{compute.total_cost.toFixed(2)} tokens</span>
+            <span className="text-lg font-bold text-accent-deep">{(compute.total_cost || 0).toFixed(2)} tokens</span>
           </div>
-          {compute.breakdown.length > 0 && (
+          {compute.breakdown && compute.breakdown.length > 0 && (
             <div className="overflow-hidden rounded-[16px]" style={{ border: "1px solid var(--line)", background: "var(--surface)" }}>
               {compute.breakdown.map((item, i) => (
                 <Link
