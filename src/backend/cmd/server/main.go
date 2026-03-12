@@ -60,6 +60,11 @@ func main() {
 	st := store.New(dbpool)
 	svc := service.New(st, cfg)
 
+	// Start background cleanup for expired auth sessions
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
+	defer cleanupCancel()
+	svc.StartAuthSessionCleanup(cleanupCtx)
+
 	// Echo instance
 	e := echo.New()
 	e.HideBanner = true
@@ -93,6 +98,8 @@ func main() {
 	v1.GET("/auth/x", authH.XLogin)
 	v1.GET("/auth/x/callback", authH.XCallback)
 	v1.GET("/auth/openclaw/callback", authH.OpenClawCallback) // legacy
+	v1.POST("/auth/session", authH.CreateAuthSession)         // agent session flow
+	v1.GET("/auth/session/:sid", authH.GetAuthSession)        // agent session polling
 	v1.GET("/ideas", ideaH.ListIdeas)
 	v1.GET("/ideas/:id", ideaH.GetIdea)
 	v1.GET("/ideas/:id/tasks", taskH.ListTasks)

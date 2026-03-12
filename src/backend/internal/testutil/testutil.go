@@ -22,12 +22,14 @@ const defaultTestDatabaseURL = "postgres://mason@localhost:5432/claway_test?sslm
 const adminDatabaseURL = "postgres://mason@localhost:5432/postgres?sslmode=disable"
 
 // migrationSQL is the schema used to initialize the test database.
-// Kept in sync with migrations/001_init.up.sql.
+// Kept in sync with migrations/001_init.up.sql + 002 + 003.
 const migrationSQL = `
 CREATE TABLE IF NOT EXISTS users (
     id              BIGSERIAL PRIMARY KEY,
-    openclaw_id     TEXT NOT NULL UNIQUE,
+    openclaw_id     TEXT DEFAULT '',
     username        TEXT NOT NULL,
+    display_name    TEXT NOT NULL DEFAULT '',
+    avatar_url      TEXT NOT NULL DEFAULT '',
     agent_api_key   TEXT,
     credits_balance NUMERIC(12, 4) NOT NULL DEFAULT 0,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -51,13 +53,13 @@ CREATE TABLE IF NOT EXISTS ideas (
 CREATE TABLE IF NOT EXISTS tasks (
     id                   BIGSERIAL PRIMARY KEY,
     idea_id              BIGINT NOT NULL REFERENCES ideas(id),
-    type                 TEXT NOT NULL CHECK (type IN ('D1','D2','D3','D4','D5','D6','D7','D8','D9')),
+    type                 TEXT NOT NULL CHECK (type IN ('D1','D2','D3','D4')),
     title                TEXT NOT NULL,
     description          TEXT NOT NULL DEFAULT '',
     acceptance_criteria  TEXT NOT NULL DEFAULT '',
     dependencies         TEXT NOT NULL DEFAULT '',
     token_limit_hint     INT NOT NULL DEFAULT 0,
-    status               TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','claimed','submitted','approved','rejected')),
+    status               TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','claimed','submitted','approved','rejected','revision')),
     claimed_by           BIGINT REFERENCES users(id),
     claimed_at           TIMESTAMPTZ,
     submitted_at         TIMESTAMPTZ,
@@ -66,6 +68,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     output_note          TEXT,
     quality_score        NUMERIC(5, 2),
     reject_reason        TEXT,
+    review_feedback      TEXT,
     cost_usd_accumulated NUMERIC(12, 6) NOT NULL DEFAULT 0
 );
 
@@ -130,6 +133,21 @@ CREATE TABLE IF NOT EXISTS prds (
     price_credits NUMERIC(12, 4) NOT NULL DEFAULT 0,
     read_count    INT NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS user_oauth_accounts (
+    id                BIGSERIAL PRIMARY KEY,
+    user_id           BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider          TEXT NOT NULL,
+    provider_user_id  TEXT NOT NULL,
+    provider_username TEXT NOT NULL DEFAULT '',
+    provider_email    TEXT NOT NULL DEFAULT '',
+    access_token      TEXT NOT NULL DEFAULT '',
+    refresh_token     TEXT NOT NULL DEFAULT '',
+    token_expires_at  TIMESTAMPTZ,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(provider, provider_user_id)
+);
 `
 
 // testDatabaseURL returns the test database connection string.
@@ -173,6 +191,20 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 		t.Fatalf("failed to connect to test database: %v", err)
 	}
 
+	// Drop all tables first to ensure clean schema (test DB only).
+	_, _ = pool.Exec(ctx, `
+		DROP TABLE IF EXISTS user_oauth_accounts CASCADE;
+		DROP TABLE IF EXISTS credit_transactions CASCADE;
+		DROP TABLE IF EXISTS contributions CASCADE;
+		DROP TABLE IF EXISTS token_usage_logs CASCADE;
+		DROP TABLE IF EXISTS document_versions CASCADE;
+		DROP TABLE IF EXISTS documents CASCADE;
+		DROP TABLE IF EXISTS prds CASCADE;
+		DROP TABLE IF EXISTS tasks CASCADE;
+		DROP TABLE IF EXISTS ideas CASCADE;
+		DROP TABLE IF EXISTS users CASCADE;
+	`)
+
 	// Run migration.
 	_, err = pool.Exec(ctx, migrationSQL)
 	if err != nil {
@@ -191,6 +223,7 @@ func CleanupDB(t *testing.T, pool *pgxpool.Pool) {
 	// Truncate in reverse dependency order using CASCADE.
 	_, err := pool.Exec(ctx, `
 		TRUNCATE TABLE
+			user_oauth_accounts,
 			credit_transactions,
 			contributions,
 			token_usage_logs,

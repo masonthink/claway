@@ -67,7 +67,7 @@ func (s *Service) UpdateDocument(ctx context.Context, taskID, userID int64, req 
 		return fmt.Errorf("you are not the claimer of this task")
 	}
 
-	if task.Status != model.TaskStatusClaimed && task.Status != model.TaskStatusRejected {
+	if task.Status != model.TaskStatusClaimed && task.Status != model.TaskStatusRejected && task.Status != model.TaskStatusRevision {
 		return fmt.Errorf("task document cannot be updated in status: %s", task.Status)
 	}
 

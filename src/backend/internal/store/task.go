@@ -17,14 +17,14 @@ func (s *Store) CreateTask(ctx context.Context, task *model.Task) (*model.Task, 
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		 RETURNING id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint,
 		           status, claimed_by, claimed_at, submitted_at, approved_at, output_content, output_note,
-		           quality_score, reject_reason, cost_usd_accumulated`,
+		           quality_score, reject_reason, review_feedback, cost_usd_accumulated`,
 		task.IdeaID, task.Type, task.Title, task.Description, task.AcceptanceCriteria,
 		task.Dependencies, task.TokenLimitHint, task.Status,
 	).Scan(
 		&t.ID, &t.IdeaID, &t.Type, &t.Title, &t.Description, &t.AcceptanceCriteria,
 		&t.Dependencies, &t.TokenLimitHint, &t.Status, &t.ClaimedBy, &t.ClaimedAt,
 		&t.SubmittedAt, &t.ApprovedAt, &t.OutputContent, &t.OutputNote,
-		&t.QualityScore, &t.RejectReason, &t.CostUSDAccumulated,
+		&t.QualityScore, &t.RejectReason, &t.ReviewFeedback, &t.CostUSDAccumulated,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create task: %w", err)
@@ -38,13 +38,13 @@ func (s *Store) GetTaskByID(ctx context.Context, id int64) (*model.Task, error) 
 	err := s.db.QueryRow(ctx,
 		`SELECT id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint,
 		        status, claimed_by, claimed_at, submitted_at, approved_at, output_content, output_note,
-		        quality_score, reject_reason, cost_usd_accumulated
+		        quality_score, reject_reason, review_feedback, cost_usd_accumulated
 		 FROM tasks WHERE id = $1`, id,
 	).Scan(
 		&t.ID, &t.IdeaID, &t.Type, &t.Title, &t.Description, &t.AcceptanceCriteria,
 		&t.Dependencies, &t.TokenLimitHint, &t.Status, &t.ClaimedBy, &t.ClaimedAt,
 		&t.SubmittedAt, &t.ApprovedAt, &t.OutputContent, &t.OutputNote,
-		&t.QualityScore, &t.RejectReason, &t.CostUSDAccumulated,
+		&t.QualityScore, &t.RejectReason, &t.ReviewFeedback, &t.CostUSDAccumulated,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -60,7 +60,7 @@ func (s *Store) ListTasksByIdeaID(ctx context.Context, ideaID int64) ([]*model.T
 	rows, err := s.db.Query(ctx,
 		`SELECT id, idea_id, type, title, description, acceptance_criteria, dependencies, token_limit_hint,
 		        status, claimed_by, claimed_at, submitted_at, approved_at, output_content, output_note,
-		        quality_score, reject_reason, cost_usd_accumulated
+		        quality_score, reject_reason, review_feedback, cost_usd_accumulated
 		 FROM tasks WHERE idea_id = $1
 		 ORDER BY id ASC`, ideaID,
 	)
@@ -76,7 +76,7 @@ func (s *Store) ListTasksByIdeaID(ctx context.Context, ideaID int64) ([]*model.T
 			&t.ID, &t.IdeaID, &t.Type, &t.Title, &t.Description, &t.AcceptanceCriteria,
 			&t.Dependencies, &t.TokenLimitHint, &t.Status, &t.ClaimedBy, &t.ClaimedAt,
 			&t.SubmittedAt, &t.ApprovedAt, &t.OutputContent, &t.OutputNote,
-			&t.QualityScore, &t.RejectReason, &t.CostUSDAccumulated,
+			&t.QualityScore, &t.RejectReason, &t.ReviewFeedback, &t.CostUSDAccumulated,
 		); err != nil {
 			return nil, fmt.Errorf("list tasks scan: %w", err)
 		}
@@ -122,7 +122,7 @@ func (s *Store) UnclaimTask(ctx context.Context, taskID int64) error {
 func (s *Store) SubmitTask(ctx context.Context, taskID int64, content, note string) error {
 	tag, err := s.db.Exec(ctx,
 		`UPDATE tasks SET status = 'submitted', output_content = $1, output_note = $2, submitted_at = NOW()
-		 WHERE id = $3 AND status IN ('claimed', 'rejected')`, content, note, taskID,
+		 WHERE id = $3 AND status IN ('claimed', 'rejected', 'revision')`, content, note, taskID,
 	)
 	if err != nil {
 		return fmt.Errorf("submit task: %w", err)
@@ -156,6 +156,21 @@ func (s *Store) RejectTask(ctx context.Context, taskID int64, reason string) err
 	)
 	if err != nil {
 		return fmt.Errorf("reject task: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrConflict
+	}
+	return nil
+}
+
+// RevisionTask marks a submitted task as needing revision with feedback.
+func (s *Store) RevisionTask(ctx context.Context, taskID int64, feedback string) error {
+	tag, err := s.db.Exec(ctx,
+		`UPDATE tasks SET status = 'revision', review_feedback = $1
+		 WHERE id = $2 AND status = 'submitted'`, feedback, taskID,
+	)
+	if err != nil {
+		return fmt.Errorf("revision task: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrConflict

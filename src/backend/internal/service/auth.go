@@ -26,6 +26,7 @@ import (
 type oauthState struct {
 	CodeVerifier string
 	CLIPort      string // empty for web flow
+	SessionID    string // non-empty for agent session flow
 	CreatedAt    time.Time
 }
 
@@ -34,12 +35,13 @@ var (
 	oauthStatesMu sync.Mutex
 )
 
-func saveOAuthState(state, codeVerifier, cliPort string) {
+func saveOAuthState(state, codeVerifier, cliPort, sessionID string) {
 	oauthStatesMu.Lock()
 	defer oauthStatesMu.Unlock()
 	oauthStates[state] = &oauthState{
 		CodeVerifier: codeVerifier,
 		CLIPort:      cliPort,
+		SessionID:    sessionID,
 		CreatedAt:    time.Now(),
 	}
 }
@@ -94,7 +96,7 @@ func (s *Service) GetXAuthURL(cliPort string) (string, error) {
 	}
 	state := base64.RawURLEncoding.EncodeToString(stateBytes)
 
-	saveOAuthState(state, codeVerifier, cliPort)
+	saveOAuthState(state, codeVerifier, cliPort, "")
 
 	params := url.Values{
 		"response_type":         {"code"},
@@ -141,6 +143,14 @@ func (s *Service) HandleXCallback(ctx context.Context, code, state string) (redi
 	}
 
 	// Redirect based on flow type
+	if saved.SessionID != "" {
+		// Agent session flow: store token in session, redirect to success page
+		if err := s.store.CompleteAuthSession(ctx, saved.SessionID, jwtToken); err != nil {
+			return "", fmt.Errorf("complete auth session: %w", err)
+		}
+		return fmt.Sprintf("%s/auth/session-success", s.cfg.FrontendURL), nil
+	}
+
 	if saved.CLIPort != "" {
 		// CLI flow: redirect to localhost
 		return fmt.Sprintf("http://127.0.0.1:%s/callback?token=%s", saved.CLIPort, url.QueryEscape(jwtToken)), nil
@@ -351,6 +361,106 @@ func (s *Service) HandleOpenClawCallback(ctx context.Context, code string) (*Aut
 		Token: token,
 		User:  user,
 	}, nil
+}
+
+// --- Agent Auth Sessions ---
+
+const authSessionTTL = 5 * time.Minute
+
+// CreateAuthSession generates a new pending auth session and returns it along
+// with the X OAuth authorization URL that includes the session ID.
+func (s *Service) CreateAuthSession(ctx context.Context) (*model.AuthSession, string, error) {
+	// Generate session ID (UUID v4 via crypto/rand)
+	idBytes := make([]byte, 16)
+	if _, err := rand.Read(idBytes); err != nil {
+		return nil, "", fmt.Errorf("generate session id: %w", err)
+	}
+	// Format as UUID v4
+	idBytes[6] = (idBytes[6] & 0x0f) | 0x40 // version 4
+	idBytes[8] = (idBytes[8] & 0x3f) | 0x80 // variant 10
+	sessionID := fmt.Sprintf("%x-%x-%x-%x-%x",
+		idBytes[0:4], idBytes[4:6], idBytes[6:8], idBytes[8:10], idBytes[10:16])
+
+	now := time.Now()
+	session := &model.AuthSession{
+		ID:        sessionID,
+		Status:    "pending",
+		ExpiresAt: now.Add(authSessionTTL),
+		CreatedAt: now,
+	}
+
+	if err := s.store.CreateAuthSession(ctx, session); err != nil {
+		return nil, "", fmt.Errorf("create auth session: %w", err)
+	}
+
+	// Generate an X OAuth URL that carries the session ID through the state flow.
+	authURL, err := s.getXAuthURLForSession(sessionID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return session, authURL, nil
+}
+
+// getXAuthURLForSession is like GetXAuthURL but tags the OAuth state with a session ID.
+func (s *Service) getXAuthURLForSession(sessionID string) (string, error) {
+	if s.cfg.XClientID == "" {
+		return "", fmt.Errorf("X_CLIENT_ID not configured")
+	}
+
+	verifierBytes := make([]byte, 32)
+	if _, err := rand.Read(verifierBytes); err != nil {
+		return "", fmt.Errorf("generate code verifier: %w", err)
+	}
+	codeVerifier := base64.RawURLEncoding.EncodeToString(verifierBytes)
+	challengeHash := sha256.Sum256([]byte(codeVerifier))
+	codeChallenge := base64.RawURLEncoding.EncodeToString(challengeHash[:])
+
+	stateBytes := make([]byte, 16)
+	if _, err := rand.Read(stateBytes); err != nil {
+		return "", fmt.Errorf("generate state: %w", err)
+	}
+	state := base64.RawURLEncoding.EncodeToString(stateBytes)
+
+	saveOAuthState(state, codeVerifier, "", sessionID)
+
+	params := url.Values{
+		"response_type":         {"code"},
+		"client_id":             {s.cfg.XClientID},
+		"redirect_uri":          {s.cfg.XRedirectURI},
+		"scope":                 {"tweet.read users.read offline.access"},
+		"state":                 {state},
+		"code_challenge":        {codeChallenge},
+		"code_challenge_method": {"S256"},
+	}
+
+	return "https://twitter.com/i/oauth2/authorize?" + params.Encode(), nil
+}
+
+// GetAuthSession returns the current state of an auth session.
+func (s *Service) GetAuthSession(ctx context.Context, id string) (*model.AuthSession, error) {
+	session, err := s.store.GetAuthSession(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return session, nil
+}
+
+// StartAuthSessionCleanup starts a background goroutine that periodically
+// removes expired auth sessions. It stops when the context is cancelled.
+func (s *Service) StartAuthSessionCleanup(ctx context.Context) {
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				s.store.CleanupExpiredAuthSessions()
+			}
+		}
+	}()
 }
 
 // --- JWT ---

@@ -79,6 +79,44 @@ func (h *AuthHandler) GetMe(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+// CreateAuthSession handles POST /api/v1/auth/session
+// Creates a new auth session for agent-based login flows.
+func (h *AuthHandler) CreateAuthSession(c echo.Context) error {
+	session, authURL, err := h.svc.CreateAuthSession(c.Request().Context())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"session_id": session.ID,
+		"auth_url":   authURL,
+		"expires_at": session.ExpiresAt.Format("2006-01-02T15:04:05Z"),
+	})
+}
+
+// GetAuthSession handles GET /api/v1/auth/session/:sid
+// Returns the current status of an auth session.
+func (h *AuthHandler) GetAuthSession(c echo.Context) error {
+	sid := c.Param("sid")
+	if sid == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "session id is required"})
+	}
+
+	session, err := h.svc.GetAuthSession(c.Request().Context(), sid)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "session not found or expired"})
+	}
+
+	resp := map[string]string{
+		"status": session.Status,
+	}
+	if session.Status == "completed" && session.Token != "" {
+		resp["token"] = session.Token
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
 func authErrorHTML(msg string) string {
 	return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Claway - Auth Error</title>

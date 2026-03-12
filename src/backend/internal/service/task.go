@@ -71,10 +71,19 @@ func (s *Service) UnclaimTask(ctx context.Context, taskID, userID int64) error {
 	return nil
 }
 
+// TokenUsageReport is the self-reported LLM usage for a task submission.
+type TokenUsageReport struct {
+	Model    string  `json:"model"`
+	TokensIn int     `json:"tokens_in"`
+	TokensOut int    `json:"tokens_out"`
+	CostUSD  float64 `json:"cost_usd"`
+}
+
 // SubmitTaskRequest represents the request body for submitting a task.
 type SubmitTaskRequest struct {
-	Content string `json:"content"`
-	Note    string `json:"note"`
+	Content    string            `json:"content"`
+	Note       string            `json:"note"`
+	TokenUsage *TokenUsageReport `json:"token_usage"`
 }
 
 // SubmitTask submits a task's output. Only the claimer can submit.
@@ -85,7 +94,7 @@ func (s *Service) SubmitTask(ctx context.Context, taskID, userID int64, req Subm
 		return fmt.Errorf("failed to get task: %w", err)
 	}
 
-	if task.Status != model.TaskStatusClaimed && task.Status != model.TaskStatusRejected {
+	if task.Status != model.TaskStatusClaimed && task.Status != model.TaskStatusRejected && task.Status != model.TaskStatusRevision {
 		return fmt.Errorf("task cannot be submitted (current status: %s)", task.Status)
 	}
 
@@ -127,14 +136,35 @@ func (s *Service) SubmitTask(ctx context.Context, taskID, userID int64, req Subm
 		return fmt.Errorf("failed to create document version: %w", err)
 	}
 
+	// Record self-reported token usage
+	if req.TokenUsage != nil && req.TokenUsage.CostUSD > 0 {
+		log := &model.TokenUsageLog{
+			UserID:    userID,
+			TaskID:    taskID,
+			Model:     req.TokenUsage.Model,
+			TokensIn:  req.TokenUsage.TokensIn,
+			TokensOut: req.TokenUsage.TokensOut,
+			CostUSD:   req.TokenUsage.CostUSD,
+		}
+		if err := s.store.CreateTokenUsageLog(ctx, log); err != nil {
+			return fmt.Errorf("failed to record token usage: %w", err)
+		}
+
+		// Accumulate cost on the task
+		if err := s.store.AccumulateTaskCost(ctx, taskID, req.TokenUsage.CostUSD); err != nil {
+			return fmt.Errorf("failed to update task cost: %w", err)
+		}
+	}
+
 	return nil
 }
 
 // ReviewTaskRequest represents the request body for reviewing a task.
 type ReviewTaskRequest struct {
-	Action       string  `json:"action"`        // "approve" or "reject"
+	Action       string  `json:"action"`        // "approve", "reject", or "revision"
 	QualityScore float64 `json:"quality_score"` // 1.0, 1.2, or 1.5 (for approve)
 	RejectReason string  `json:"reject_reason"` // required for reject
+	Feedback     string  `json:"feedback"`      // required for revision
 }
 
 // ReviewTask allows the idea initiator to approve or reject a submitted task.
@@ -205,6 +235,15 @@ func (s *Service) ReviewTask(ctx context.Context, taskID, userID int64, req Revi
 			}
 		}
 
+	case "revision":
+		if req.Feedback == "" {
+			return fmt.Errorf("feedback is required when requesting revision")
+		}
+
+		if err := s.store.RevisionTask(ctx, taskID, req.Feedback); err != nil {
+			return fmt.Errorf("failed to set task to revision: %w", err)
+		}
+
 	case "reject":
 		if req.RejectReason == "" {
 			return fmt.Errorf("reject_reason is required when rejecting")
@@ -215,7 +254,7 @@ func (s *Service) ReviewTask(ctx context.Context, taskID, userID int64, req Revi
 		}
 
 	default:
-		return fmt.Errorf("action must be 'approve' or 'reject'")
+		return fmt.Errorf("action must be 'approve', 'reject', or 'revision'")
 	}
 
 	return nil

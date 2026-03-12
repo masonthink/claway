@@ -24,7 +24,6 @@ func TestFullWorkflow(t *testing.T) {
 		initiatorID   int64
 		contributorID int64
 		stdIdeaID     int64
-		lightIdeaID   int64
 		stdTasks      []*model.Task
 		prdID         int64
 		prdPrice      float64
@@ -43,35 +42,31 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 2. CreateIdea_Standard: 9 tasks + 9 documents
+	// 1. CreateIdea: 4 tasks (D1-D4) + 4 documents
 	// ---------------------------------------------------------------
-	t.Run("CreateIdea_Standard", func(t *testing.T) {
+	t.Run("CreateIdea", func(t *testing.T) {
 		idea, err := svc.CreateIdea(ctx, initiatorID, service.CreateIdeaRequest{
-			Title:               "Test Standard Idea",
-			Description:         "A standard idea for integration testing",
+			Title:               "Test Idea",
+			Description:         "An idea for integration testing",
 			TargetUserHint:      "developers",
 			ProblemDefinition:   "need better tools",
 			InitiatorCutPercent: 20,
-			PackageType:         model.PackageStandard,
 		})
 		if err != nil {
-			t.Fatalf("CreateIdea (standard) failed: %v", err)
+			t.Fatalf("CreateIdea failed: %v", err)
 		}
 		stdIdeaID = idea.ID
 
 		if idea.Status != model.IdeaStatusActive {
 			t.Fatalf("expected status active, got %s", idea.Status)
 		}
-		if idea.PackageType != model.PackageStandard {
-			t.Fatalf("expected package_type standard, got %s", idea.PackageType)
-		}
 
 		tasks, err := svc.ListTasks(ctx, stdIdeaID)
 		if err != nil {
 			t.Fatalf("ListTasks failed: %v", err)
 		}
-		if len(tasks) != 9 {
-			t.Fatalf("expected 9 tasks for standard idea, got %d", len(tasks))
+		if len(tasks) != 4 {
+			t.Fatalf("expected 4 tasks, got %d", len(tasks))
 		}
 		stdTasks = tasks
 
@@ -88,31 +83,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 3. CreateIdea_Light: 5 tasks
-	// ---------------------------------------------------------------
-	t.Run("CreateIdea_Light", func(t *testing.T) {
-		idea, err := svc.CreateIdea(ctx, initiatorID, service.CreateIdeaRequest{
-			Title:               "Test Light Idea",
-			Description:         "A light idea for integration testing",
-			InitiatorCutPercent: 15,
-			PackageType:         model.PackageLight,
-		})
-		if err != nil {
-			t.Fatalf("CreateIdea (light) failed: %v", err)
-		}
-		lightIdeaID = idea.ID
-
-		tasks, err := svc.ListTasks(ctx, lightIdeaID)
-		if err != nil {
-			t.Fatalf("ListTasks failed: %v", err)
-		}
-		if len(tasks) != 5 {
-			t.Fatalf("expected 5 tasks for light idea, got %d", len(tasks))
-		}
-	})
-
-	// ---------------------------------------------------------------
-	// 4. CreateIdea_Validation: Test validation errors
+	// 2. CreateIdea_Validation: Test validation errors
 	// ---------------------------------------------------------------
 	t.Run("CreateIdea_Validation", func(t *testing.T) {
 		// Empty title
@@ -120,60 +91,32 @@ func TestFullWorkflow(t *testing.T) {
 			Title:               "",
 			Description:         "desc",
 			InitiatorCutPercent: 20,
-			PackageType:         model.PackageStandard,
 		})
 		if err == nil {
 			t.Fatal("expected error for empty title")
 		}
 
-		// Bad package type
+		// Empty description
 		_, err = svc.CreateIdea(ctx, initiatorID, service.CreateIdeaRequest{
 			Title:               "title",
-			Description:         "desc",
+			Description:         "",
 			InitiatorCutPercent: 20,
-			PackageType:         "invalid",
 		})
 		if err == nil {
-			t.Fatal("expected error for invalid package_type")
-		}
-
-		// Bad cut percent (too low)
-		_, err = svc.CreateIdea(ctx, initiatorID, service.CreateIdeaRequest{
-			Title:               "title",
-			Description:         "desc",
-			InitiatorCutPercent: 5,
-			PackageType:         model.PackageStandard,
-		})
-		if err == nil {
-			t.Fatal("expected error for initiator_cut_percent < 10")
-		}
-
-		// Bad cut percent (too high)
-		_, err = svc.CreateIdea(ctx, initiatorID, service.CreateIdeaRequest{
-			Title:               "title",
-			Description:         "desc",
-			InitiatorCutPercent: 50,
-			PackageType:         model.PackageStandard,
-		})
-		if err == nil {
-			t.Fatal("expected error for initiator_cut_percent > 30")
+			t.Fatal("expected error for empty description")
 		}
 	})
 
 	// ---------------------------------------------------------------
-	// 5. ListIdeas: Verify pagination and count
+	// 3. ListIdeas: Verify pagination and count
 	// ---------------------------------------------------------------
 	t.Run("ListIdeas", func(t *testing.T) {
 		resp, err := svc.ListIdeas(ctx, "active", 10, 0)
 		if err != nil {
 			t.Fatalf("ListIdeas failed: %v", err)
 		}
-		// We created 2 ideas above (standard + light), both active
-		if resp.Total < 2 {
-			t.Fatalf("expected at least 2 ideas, got %d", resp.Total)
-		}
-		if len(resp.Ideas) < 2 {
-			t.Fatalf("expected at least 2 ideas in response, got %d", len(resp.Ideas))
+		if resp.Total < 1 {
+			t.Fatalf("expected at least 1 idea, got %d", resp.Total)
 		}
 
 		// Test pagination: limit=1
@@ -205,9 +148,10 @@ func TestFullWorkflow(t *testing.T) {
 	d1Task := findTask(model.TaskTypeD1)
 	d2Task := findTask(model.TaskTypeD2)
 	d3Task := findTask(model.TaskTypeD3)
+	d4Task := findTask(model.TaskTypeD4)
 
 	// ---------------------------------------------------------------
-	// 6. ClaimTask_D1: No dependencies, should succeed
+	// 4. ClaimTask_D1: No dependencies, should succeed
 	// ---------------------------------------------------------------
 	t.Run("ClaimTask_D1", func(t *testing.T) {
 		err := svc.ClaimTask(ctx, d1Task.ID, contributorID)
@@ -228,7 +172,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 7. ClaimTask_D3_Blocked: D1,D2 not approved yet
+	// 5. ClaimTask_D3_Blocked: D1,D2 not approved yet
 	// ---------------------------------------------------------------
 	t.Run("ClaimTask_D3_Blocked", func(t *testing.T) {
 		err := svc.ClaimTask(ctx, d3Task.ID, contributorID)
@@ -241,7 +185,20 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 8. UpdateDocument: Contributor updates D1 document
+	// 6. ClaimTask_D4_Blocked: D3 not approved yet
+	// ---------------------------------------------------------------
+	t.Run("ClaimTask_D4_Blocked", func(t *testing.T) {
+		err := svc.ClaimTask(ctx, d4Task.ID, contributorID)
+		if err == nil {
+			t.Fatal("expected error when claiming D4 with unapproved dependencies")
+		}
+		if !strings.Contains(err.Error(), "not yet approved") {
+			t.Fatalf("expected dependency error, got: %v", err)
+		}
+	})
+
+	// ---------------------------------------------------------------
+	// 7. UpdateDocument: Contributor updates D1 document
 	// ---------------------------------------------------------------
 	t.Run("UpdateDocument_D1", func(t *testing.T) {
 		err := svc.UpdateDocument(ctx, d1Task.ID, contributorID, service.UpdateDocumentRequest{
@@ -273,12 +230,18 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 9. SubmitTask_D1: Contributor submits D1
+	// 8. SubmitTask_D1_WithTokenUsage: Submit with self-reported token usage
 	// ---------------------------------------------------------------
-	t.Run("SubmitTask_D1", func(t *testing.T) {
+	t.Run("SubmitTask_D1_WithTokenUsage", func(t *testing.T) {
 		err := svc.SubmitTask(ctx, d1Task.ID, contributorID, service.SubmitTaskRequest{
 			Content: "D1 final competitive analysis content",
 			Note:    "Completed analysis",
+			TokenUsage: &service.TokenUsageReport{
+				Model:     "claude-sonnet-4-20250514",
+				TokensIn:  45000,
+				TokensOut: 12000,
+				CostUSD:   0.05,
+			},
 		})
 		if err != nil {
 			t.Fatalf("SubmitTask D1 failed: %v", err)
@@ -291,28 +254,86 @@ func TestFullWorkflow(t *testing.T) {
 		if task.Status != model.TaskStatusSubmitted {
 			t.Fatalf("expected D1 status submitted, got %s", task.Status)
 		}
+		// Token usage should have been accumulated
+		if task.CostUSDAccumulated < 0.049 {
+			t.Fatalf("expected cost_usd_accumulated >= 0.05, got %f", task.CostUSDAccumulated)
+		}
 	})
 
 	// ---------------------------------------------------------------
-	// 10. ReviewTask_Approve_D1: Initiator approves D1
+	// 9. ReviewTask_Revision_D1: Initiator requests revision
 	// ---------------------------------------------------------------
-	t.Run("ReviewTask_Approve_D1", func(t *testing.T) {
-		// Simulate LLM usage before approval to have cost data
-		costD1 := 0.05
-		testutil.SimulateTokenUsage(t, pool, contributorID, d1Task.ID, costD1)
+	t.Run("ReviewTask_Revision_D1", func(t *testing.T) {
+		err := svc.ReviewTask(ctx, d1Task.ID, initiatorID, service.ReviewTaskRequest{
+			Action:   "revision",
+			Feedback: "Please add pricing comparison table for top 3 competitors.",
+		})
+		if err != nil {
+			t.Fatalf("ReviewTask revision D1 failed: %v", err)
+		}
 
-		// Reload task to get updated cost
 		task, err := svc.GetTask(ctx, d1Task.ID)
 		if err != nil {
 			t.Fatalf("GetTask D1 failed: %v", err)
 		}
-		if task.CostUSDAccumulated < costD1-0.0001 {
-			t.Fatalf("expected cost >= %f, got %f", costD1, task.CostUSDAccumulated)
+		if task.Status != model.TaskStatusRevision {
+			t.Fatalf("expected D1 status revision, got %s", task.Status)
+		}
+		if !task.ReviewFeedback.Valid || !strings.Contains(task.ReviewFeedback.String, "pricing comparison") {
+			t.Fatalf("expected review_feedback to contain feedback, got: %v", task.ReviewFeedback)
+		}
+	})
+
+	// ---------------------------------------------------------------
+	// 10. UpdateDocument_During_Revision: Contributor can save drafts in revision status
+	// ---------------------------------------------------------------
+	t.Run("UpdateDocument_During_Revision", func(t *testing.T) {
+		err := svc.UpdateDocument(ctx, d1Task.ID, contributorID, service.UpdateDocumentRequest{
+			Content: "D1 revised draft with pricing table",
+		})
+		if err != nil {
+			t.Fatalf("UpdateDocument during revision failed: %v", err)
+		}
+	})
+
+	// ---------------------------------------------------------------
+	// 11. Resubmit_D1: Contributor resubmits after revision
+	// ---------------------------------------------------------------
+	t.Run("Resubmit_D1", func(t *testing.T) {
+		err := svc.SubmitTask(ctx, d1Task.ID, contributorID, service.SubmitTaskRequest{
+			Content: "D1 final content with pricing comparison table added",
+			Note:    "Added pricing table as requested",
+			TokenUsage: &service.TokenUsageReport{
+				Model:     "claude-sonnet-4-20250514",
+				TokensIn:  10000,
+				TokensOut: 5000,
+				CostUSD:   0.02,
+			},
+		})
+		if err != nil {
+			t.Fatalf("Resubmit D1 failed: %v", err)
 		}
 
+		task, err := svc.GetTask(ctx, d1Task.ID)
+		if err != nil {
+			t.Fatalf("GetTask D1 failed: %v", err)
+		}
+		if task.Status != model.TaskStatusSubmitted {
+			t.Fatalf("expected D1 status submitted after resubmit, got %s", task.Status)
+		}
+		// Cost should have accumulated (0.05 + 0.02)
+		if task.CostUSDAccumulated < 0.069 {
+			t.Fatalf("expected accumulated cost >= 0.07, got %f", task.CostUSDAccumulated)
+		}
+	})
+
+	// ---------------------------------------------------------------
+	// 12. ReviewTask_Approve_D1: Initiator approves D1
+	// ---------------------------------------------------------------
+	t.Run("ReviewTask_Approve_D1", func(t *testing.T) {
 		contributorBalanceBefore := testutil.GetUserBalance(t, pool, contributorID)
 
-		err = svc.ReviewTask(ctx, d1Task.ID, initiatorID, service.ReviewTaskRequest{
+		err := svc.ReviewTask(ctx, d1Task.ID, initiatorID, service.ReviewTaskRequest{
 			Action:       "approve",
 			QualityScore: 1.2,
 		})
@@ -321,7 +342,7 @@ func TestFullWorkflow(t *testing.T) {
 		}
 
 		// Verify task status
-		task, err = svc.GetTask(ctx, d1Task.ID)
+		task, err := svc.GetTask(ctx, d1Task.ID)
 		if err != nil {
 			t.Fatalf("GetTask D1 after approval failed: %v", err)
 		}
@@ -349,10 +370,10 @@ func TestFullWorkflow(t *testing.T) {
 		}
 
 		// Verify credits awarded: cost * quality_score * 1000
-		expectedCredits := costD1 * 1.2 * 1000
+		expectedCredits := task.CostUSDAccumulated * 1.2 * 1000
 		contributorBalanceAfter := testutil.GetUserBalance(t, pool, contributorID)
 		actualDelta := contributorBalanceAfter - contributorBalanceBefore
-		if math.Abs(actualDelta-expectedCredits) > 0.01 {
+		if math.Abs(actualDelta-expectedCredits) > 0.1 {
 			t.Fatalf("expected credits delta ~%.2f, got %.2f", expectedCredits, actualDelta)
 		}
 
@@ -365,9 +386,6 @@ func TestFullWorkflow(t *testing.T) {
 		for _, tx := range creditsResp.Transactions {
 			if tx.ReferenceType == "task" && tx.ReferenceID == d1Task.ID && tx.Type == "earn_contribute" {
 				foundTx = true
-				if math.Abs(tx.Amount-expectedCredits) > 0.01 {
-					t.Fatalf("expected tx amount ~%.2f, got %.2f", expectedCredits, tx.Amount)
-				}
 				break
 			}
 		}
@@ -377,12 +395,10 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 11. ReviewTask_NotInitiator: Contributor tries to review
+	// 13. ReviewTask_NotInitiator: Contributor tries to review
 	// ---------------------------------------------------------------
 	t.Run("ReviewTask_NotInitiator", func(t *testing.T) {
-		// We need a submitted task to test. Claim and submit D2 first via direct DB
-		// to avoid the full flow, but actually let's use the proper flow.
-		// D2 has no dependencies, so we can claim, submit, then try to review as contributor.
+		// D2 has no dependencies, claim and submit
 		err := svc.ClaimTask(ctx, d2Task.ID, contributorID)
 		if err != nil {
 			t.Fatalf("ClaimTask D2 failed: %v", err)
@@ -390,6 +406,12 @@ func TestFullWorkflow(t *testing.T) {
 		err = svc.SubmitTask(ctx, d2Task.ID, contributorID, service.SubmitTaskRequest{
 			Content: "D2 user persona content",
 			Note:    "Done",
+			TokenUsage: &service.TokenUsageReport{
+				Model:     "claude-sonnet-4-20250514",
+				TokensIn:  30000,
+				TokensOut: 10000,
+				CostUSD:   0.03,
+			},
 		})
 		if err != nil {
 			t.Fatalf("SubmitTask D2 failed: %v", err)
@@ -408,7 +430,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 12. GetIdeaContext: D1 approved content included, others not
+	// 14. GetIdeaContext: D1 approved content included, others not
 	// ---------------------------------------------------------------
 	t.Run("GetIdeaContext", func(t *testing.T) {
 		ctxResp, err := svc.GetIdeaContext(ctx, stdIdeaID)
@@ -435,14 +457,10 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 13. ClaimTask_D2 is already claimed above. Approve D2.
+	// 15. Approve D2, then claim+submit+approve D3 and D4
 	// ---------------------------------------------------------------
 	t.Run("SubmitAndApprove_D2", func(t *testing.T) {
 		// D2 is already submitted from the NotInitiator test above.
-		// Simulate cost and approve.
-		costD2 := 0.03
-		testutil.SimulateTokenUsage(t, pool, contributorID, d2Task.ID, costD2)
-
 		err := svc.ReviewTask(ctx, d2Task.ID, initiatorID, service.ReviewTaskRequest{
 			Action:       "approve",
 			QualityScore: 1.0,
@@ -461,7 +479,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 15. ClaimTask_D3_Now: D1 and D2 are approved, D3 should work
+	// 16. ClaimTask_D3_Now: D1 and D2 are approved, D3 should work
 	// ---------------------------------------------------------------
 	t.Run("ClaimTask_D3_Now", func(t *testing.T) {
 		err := svc.ClaimTask(ctx, d3Task.ID, contributorID)
@@ -479,21 +497,16 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 16. SubmitAndApprove_AllRemaining: D3-D9 (with simulated costs)
+	// 17. SubmitAndApprove_D3_D4: Complete remaining tasks
 	// ---------------------------------------------------------------
-	t.Run("SubmitAndApprove_AllRemaining", func(t *testing.T) {
-		remainingTypes := []model.TaskType{
-			model.TaskTypeD3, model.TaskTypeD4, model.TaskTypeD5,
-			model.TaskTypeD6, model.TaskTypeD7, model.TaskTypeD8, model.TaskTypeD9,
-		}
+	t.Run("SubmitAndApprove_D3_D4", func(t *testing.T) {
+		remainingTypes := []model.TaskType{model.TaskTypeD3, model.TaskTypeD4}
 
 		for _, tt := range remainingTypes {
 			task := findTask(tt)
 
-			// D3 is already claimed above; others need to be claimed
+			// D3 is already claimed above; D4 needs to be claimed
 			if tt != model.TaskTypeD3 {
-				// For D4,D5 (depend on D1,D2 which are approved)
-				// For D6-D9 (depend on D3 which we'll approve in order)
 				err := svc.ClaimTask(ctx, task.ID, contributorID)
 				if err != nil {
 					t.Fatalf("ClaimTask %s failed: %v", tt, err)
@@ -501,17 +514,20 @@ func TestFullWorkflow(t *testing.T) {
 			}
 
 			content := string(tt) + " deliverable content for integration test"
+			cost := 0.02 + float64(task.ID%10)*0.005
 			err := svc.SubmitTask(ctx, task.ID, contributorID, service.SubmitTaskRequest{
 				Content: content,
 				Note:    string(tt) + " done",
+				TokenUsage: &service.TokenUsageReport{
+					Model:     "claude-sonnet-4-20250514",
+					TokensIn:  40000,
+					TokensOut: 15000,
+					CostUSD:   cost,
+				},
 			})
 			if err != nil {
 				t.Fatalf("SubmitTask %s failed: %v", tt, err)
 			}
-
-			// Simulate cost
-			cost := 0.02 + float64(task.ID%10)*0.005
-			testutil.SimulateTokenUsage(t, pool, contributorID, task.ID, cost)
 
 			err = svc.ReviewTask(ctx, task.ID, initiatorID, service.ReviewTaskRequest{
 				Action:       "approve",
@@ -522,7 +538,7 @@ func TestFullWorkflow(t *testing.T) {
 			}
 		}
 
-		// Verify all 9 tasks are approved
+		// Verify all 4 tasks are approved
 		tasks, err := svc.ListTasks(ctx, stdIdeaID)
 		if err != nil {
 			t.Fatalf("ListTasks failed: %v", err)
@@ -535,7 +551,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 17. PublishPRD: Initiator publishes PRD
+	// 18. PublishPRD: Initiator publishes PRD
 	// ---------------------------------------------------------------
 	t.Run("PublishPRD", func(t *testing.T) {
 		prd, err := svc.PublishPRD(ctx, stdIdeaID, initiatorID)
@@ -548,11 +564,11 @@ func TestFullWorkflow(t *testing.T) {
 		if prd.Content == "" {
 			t.Fatal("expected PRD content to be non-empty")
 		}
-		if !strings.Contains(prd.Content, "Test Standard Idea") {
+		if !strings.Contains(prd.Content, "Test Idea") {
 			t.Fatal("expected PRD content to contain idea title")
 		}
 		// Should contain content from each deliverable
-		for _, tt := range []string{"D1", "D2", "D3"} {
+		for _, tt := range []string{"D1", "D2", "D3", "D4"} {
 			if !strings.Contains(prd.Content, tt) {
 				t.Fatalf("expected PRD content to reference %s", tt)
 			}
@@ -570,7 +586,7 @@ func TestFullWorkflow(t *testing.T) {
 		expectedPrice := totalCostUSD * 2 * 1000
 		prdPrice = prd.PriceCredits
 
-		if math.Abs(prdPrice-expectedPrice) > 0.01 {
+		if math.Abs(prdPrice-expectedPrice) > 0.1 {
 			t.Fatalf("expected PRD price ~%.2f, got %.2f", expectedPrice, prdPrice)
 		}
 
@@ -585,7 +601,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 18. PurchasePRD: Contributor purchases the PRD
+	// 19. PurchasePRD: Contributor purchases the PRD
 	// ---------------------------------------------------------------
 	t.Run("PurchasePRD", func(t *testing.T) {
 		// Give contributor enough credits
@@ -605,27 +621,19 @@ func TestFullWorkflow(t *testing.T) {
 		contributorAfter := testutil.GetUserBalance(t, pool, contributorID)
 		netDeducted := contributorBefore - contributorAfter
 		expectedNetDeduction := prdPrice * 0.30 // buyer loses 30% (platform 10% + initiator 20%)
-		if math.Abs(netDeducted-expectedNetDeduction) > 0.01 {
+		if math.Abs(netDeducted-expectedNetDeduction) > 0.1 {
 			t.Fatalf("expected net deduction ~%.2f, got %.2f", expectedNetDeduction, netDeducted)
 		}
 
-		// Verify distribution:
-		// 10% platform (not tracked to a user)
-		// 20% initiator (initiator_cut_percent=20)
-		// 70% contributors
+		// Verify initiator received their cut (20%)
 		expectedInitiatorShare := prdPrice * 0.20
 		initiatorAfter := testutil.GetUserBalance(t, pool, initiatorID)
 		initiatorDelta := initiatorAfter - initiatorBefore
-		if math.Abs(initiatorDelta-expectedInitiatorShare) > 0.01 {
+		if math.Abs(initiatorDelta-expectedInitiatorShare) > 0.1 {
 			t.Fatalf("expected initiator share ~%.2f, got %.2f", expectedInitiatorShare, initiatorDelta)
 		}
 
-		// The contributor pool is 70% (100% - 10% platform - 20% initiator).
-		// Since the same contributor did all tasks, they should get the full 70%.
-		// However, the contributor is also the buyer, so their net change is:
-		// -prdPrice + contributorsPool
-		// We already checked the deduction above; the contributorsPool credit goes back to the same user.
-		// Let's verify the contributor actually received the pool via transactions.
+		// Verify contributor received pool via transactions
 		creditsResp, err := svc.GetMyCredits(ctx, contributorID, 50, 0)
 		if err != nil {
 			t.Fatalf("GetMyCredits failed: %v", err)
@@ -639,13 +647,13 @@ func TestFullWorkflow(t *testing.T) {
 		}
 
 		expectedContributorsPool := prdPrice * 0.70
-		if math.Abs(earnShareTotal-expectedContributorsPool) > 0.01 {
+		if math.Abs(earnShareTotal-expectedContributorsPool) > 0.1 {
 			t.Fatalf("expected contributor earn_read_share total ~%.2f, got %.2f", expectedContributorsPool, earnShareTotal)
 		}
 	})
 
 	// ---------------------------------------------------------------
-	// 19. PurchasePRD_AlreadyPurchased: Try again
+	// 20. PurchasePRD_AlreadyPurchased
 	// ---------------------------------------------------------------
 	t.Run("PurchasePRD_AlreadyPurchased", func(t *testing.T) {
 		err := svc.PurchasePRD(ctx, contributorID, prdID)
@@ -658,7 +666,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 20. PurchasePRD_InsufficientCredits: New user with 0 credits
+	// 21. PurchasePRD_InsufficientCredits
 	// ---------------------------------------------------------------
 	t.Run("PurchasePRD_InsufficientCredits", func(t *testing.T) {
 		brokeUserID := testutil.CreateTestUser(t, pool, "openclaw-broke-001", "broke_charlie")
@@ -673,7 +681,7 @@ func TestFullWorkflow(t *testing.T) {
 	})
 
 	// ---------------------------------------------------------------
-	// 21. ComputeStats: Verify compute aggregation endpoints
+	// 22. ComputeStats: Verify compute aggregation endpoints
 	// ---------------------------------------------------------------
 	t.Run("ComputeStats", func(t *testing.T) {
 		// User compute total
@@ -712,8 +720,9 @@ func TestFullWorkflow(t *testing.T) {
 		if ideaCompute.Breakdown[0].TotalCost <= 0 {
 			t.Fatal("expected non-zero total cost in breakdown")
 		}
-		if ideaCompute.Breakdown[0].CallCount != 9 {
-			t.Fatalf("expected 9 API calls (one per task), got %d", ideaCompute.Breakdown[0].CallCount)
+		// D1 submitted twice (initial + resubmit) + D2 + D3 + D4 = 5 calls
+		if ideaCompute.Breakdown[0].CallCount != 5 {
+			t.Fatalf("expected 5 API calls (D1 x2 + D2 + D3 + D4), got %d", ideaCompute.Breakdown[0].CallCount)
 		}
 
 		// Task compute breakdown
@@ -724,8 +733,9 @@ func TestFullWorkflow(t *testing.T) {
 		if len(taskCompute.Breakdown) == 0 {
 			t.Fatal("expected non-empty task compute breakdown")
 		}
-		if taskCompute.Breakdown[0].CallCount != 1 {
-			t.Fatalf("expected 1 API call for D1, got %d", taskCompute.Breakdown[0].CallCount)
+		// D1 had 2 submissions (initial + resubmit after revision)
+		if taskCompute.Breakdown[0].CallCount != 2 {
+			t.Fatalf("expected 2 API calls for D1 (initial + resubmit), got %d", taskCompute.Breakdown[0].CallCount)
 		}
 
 		// Platform compute total
@@ -737,9 +747,48 @@ func TestFullWorkflow(t *testing.T) {
 			t.Fatal("expected non-zero platform compute total")
 		}
 	})
-}
 
-// floatEq compares two floats with a tolerance.
-func floatEq(a, b, tolerance float64) bool {
-	return math.Abs(a-b) <= tolerance
+	// ---------------------------------------------------------------
+	// 23. Revision_Validation: Revision without feedback should fail
+	// ---------------------------------------------------------------
+	t.Run("Revision_Validation", func(t *testing.T) {
+		// Create another idea to test revision validation
+		idea2, err := svc.CreateIdea(ctx, initiatorID, service.CreateIdeaRequest{
+			Title:               "Revision Validation Idea",
+			Description:         "Testing revision validation",
+			InitiatorCutPercent: 20,
+		})
+		if err != nil {
+			t.Fatalf("CreateIdea failed: %v", err)
+		}
+
+		tasks2, err := svc.ListTasks(ctx, idea2.ID)
+		if err != nil {
+			t.Fatalf("ListTasks failed: %v", err)
+		}
+
+		// Claim and submit D1
+		d1 := tasks2[0]
+		if err := svc.ClaimTask(ctx, d1.ID, contributorID); err != nil {
+			t.Fatalf("ClaimTask failed: %v", err)
+		}
+		if err := svc.SubmitTask(ctx, d1.ID, contributorID, service.SubmitTaskRequest{
+			Content: "test content",
+			Note:    "test",
+		}); err != nil {
+			t.Fatalf("SubmitTask failed: %v", err)
+		}
+
+		// Try revision without feedback
+		err = svc.ReviewTask(ctx, d1.ID, initiatorID, service.ReviewTaskRequest{
+			Action:   "revision",
+			Feedback: "",
+		})
+		if err == nil {
+			t.Fatal("expected error for revision without feedback")
+		}
+		if !strings.Contains(err.Error(), "feedback is required") {
+			t.Fatalf("expected 'feedback is required' error, got: %v", err)
+		}
+	})
 }

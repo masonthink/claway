@@ -23,11 +23,12 @@ const (
 type TaskStatus string
 
 const (
-	TaskStatusOpen     TaskStatus = "open"
-	TaskStatusClaimed  TaskStatus = "claimed"
+	TaskStatusOpen      TaskStatus = "open"
+	TaskStatusClaimed   TaskStatus = "claimed"
 	TaskStatusSubmitted TaskStatus = "submitted"
-	TaskStatusApproved TaskStatus = "approved"
-	TaskStatusRejected TaskStatus = "rejected"
+	TaskStatusApproved  TaskStatus = "approved"
+	TaskStatusRejected  TaskStatus = "rejected"
+	TaskStatusRevision  TaskStatus = "revision"
 )
 
 type TaskType string
@@ -96,8 +97,9 @@ type Task struct {
 	OutputContent      NullString `json:"output_content"`
 	OutputNote         NullString `json:"output_note"`
 	QualityScore       NullFloat64 `json:"quality_score"`
-	RejectReason       NullString `json:"reject_reason"`
-	CostUSDAccumulated float64        `json:"cost_usd_accumulated"`
+	RejectReason       NullString  `json:"reject_reason"`
+	ReviewFeedback     NullString  `json:"review_feedback"`
+	CostUSDAccumulated float64     `json:"cost_usd_accumulated"`
 }
 
 type Document struct {
@@ -159,4 +161,15 @@ type PRD struct {
 	PublishedAt  NullTime `json:"published_at"`
 	PriceCredits float64      `json:"price_credits"`
 	ReadCount    int          `json:"read_count"`
+}
+
+// AuthSession represents a pending authentication session for agent-based flows.
+// Sessions are stored in-memory (not in the database) because they are short-lived
+// (5 minute expiry) and do not need to survive server restarts.
+type AuthSession struct {
+	ID        string    `json:"id"`
+	Token     string    `json:"token,omitempty"` // empty until OAuth completes
+	Status    string    `json:"status"`          // "pending" or "completed"
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
 }

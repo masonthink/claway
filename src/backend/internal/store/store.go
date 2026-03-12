@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -25,6 +26,10 @@ type ComputeEntry struct {
 // Store wraps database access.
 type Store struct {
 	db *pgxpool.Pool
+
+	// authSessions holds in-memory auth sessions for agent-based login flows.
+	// Using sync.Map because sessions are short-lived (5 min) and don't need persistence.
+	authSessions sync.Map
 }
 
 // New creates a new Store instance.
