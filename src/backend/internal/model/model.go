@@ -33,15 +33,10 @@ const (
 type TaskType string
 
 const (
-	TaskTypeD1 TaskType = "D1"
-	TaskTypeD2 TaskType = "D2"
-	TaskTypeD3 TaskType = "D3"
-	TaskTypeD4 TaskType = "D4"
-	TaskTypeD5 TaskType = "D5"
-	TaskTypeD6 TaskType = "D6"
-	TaskTypeD7 TaskType = "D7"
-	TaskTypeD8 TaskType = "D8"
-	TaskTypeD9 TaskType = "D9"
+	TaskTypeD1 TaskType = "D1" // 竞品分析
+	TaskTypeD2 TaskType = "D2" // 用户画像
+	TaskTypeD3 TaskType = "D3" // 产品需求文档 (PRD)
+	TaskTypeD4 TaskType = "D4" // 技术可行性评估
 )
 
 type User struct {

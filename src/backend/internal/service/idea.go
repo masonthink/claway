@@ -18,8 +18,8 @@ type taskTemplate struct {
 	TokenLimitHint     int
 }
 
-// lightTemplates are the task templates for the light package (D1-D5).
-var lightTemplates = []taskTemplate{
+// taskTemplates are the 4 core document tasks for every idea.
+var taskTemplates = []taskTemplate{
 	{
 		Type:               model.TaskTypeD1,
 		Title:              "竞品分析报告",
@@ -38,74 +38,30 @@ var lightTemplates = []taskTemplate{
 	},
 	{
 		Type:               model.TaskTypeD3,
-		Title:              "用户旅程地图",
-		Description:        "Create a product requirements document with user stories, acceptance criteria, and P0/P1 priority classification.",
-		AcceptanceCriteria: "User story format, each feature has acceptance criteria, P0 features <=10",
+		Title:              "产品需求文档",
+		Description:        "Create a product requirements document with user stories, acceptance criteria, feature prioritization (P0/P1), information architecture, and core user flows.",
+		AcceptanceCriteria: "User story format, each feature has acceptance criteria, P0 features <=10, includes IA and core flow diagrams",
 		Dependencies:       "D1,D2",
-		TokenLimitHint:     100000,
+		TokenLimitHint:     120000,
 	},
 	{
 		Type:               model.TaskTypeD4,
-		Title:              "功能需求文档",
-		Description:        "Design the business model including revenue model, pricing strategy, and cold-start path.",
-		AcceptanceCriteria: "Revenue model + pricing rationale + cold-start path",
-		Dependencies:       "D1,D2",
-		TokenLimitHint:     60000,
-	},
-	{
-		Type:               model.TaskTypeD5,
-		Title:              "信息架构图",
-		Description:        "Define success metrics including north star metric, process metrics, and measurement plans.",
-		AcceptanceCriteria: "1 north star metric + 3-5 process metrics, each with target value and measurement plan",
-		Dependencies:       "D1,D2",
-		TokenLimitHint:     40000,
-	},
-}
-
-// standardExtraTemplates are the additional templates for standard package (D6-D9).
-var standardExtraTemplates = []taskTemplate{
-	{
-		Type:               model.TaskTypeD6,
-		Title:              "页面流程图",
-		Description:        "Design information architecture including page structure, navigation system, and permission matrix.",
-		AcceptanceCriteria: "Complete page list (routes + content) + navigation structure + permission matrix",
-		Dependencies:       "D3",
-		TokenLimitHint:     60000,
-	},
-	{
-		Type:               model.TaskTypeD7,
-		Title:              "交互设计规范",
-		Description:        "Map core user flows covering all P0 features with normal paths and exception paths.",
-		AcceptanceCriteria: "Covers all P0 features, normal path + >=2 exception paths, includes empty/error/loading states",
+		Title:              "技术可行性评估",
+		Description:        "Evaluate technical feasibility including technology stack recommendations, key risk points, architecture overview, and feasibility conclusions.",
+		AcceptanceCriteria: "Tech stack recommendations (with rationale) + architecture overview + key risk points + clear feasible/infeasible conclusion",
 		Dependencies:       "D3",
 		TokenLimitHint:     80000,
-	},
-	{
-		Type:               model.TaskTypeD8,
-		Title:              "视觉设计规范",
-		Description:        "Create design specifications including component library selection, color palette, typography, and custom component list.",
-		AcceptanceCriteria: "Component library selection + color palette + typography + spacing + custom component list",
-		Dependencies:       "D3",
-		TokenLimitHint:     60000,
-	},
-	{
-		Type:               model.TaskTypeD9,
-		Title:              "技术可行性评估",
-		Description:        "Evaluate technical feasibility including technology stack recommendations, key risk points, and feasibility conclusions.",
-		AcceptanceCriteria: "Tech stack recommendations (with rationale) + key risk points + clear feasible/infeasible conclusion",
-		Dependencies:       "D3",
-		TokenLimitHint:     60000,
 	},
 }
 
 // CreateIdeaRequest represents the request body for creating an idea.
 type CreateIdeaRequest struct {
-	Title               string           `json:"title"`
-	Description         string           `json:"description"`
-	TargetUserHint      string           `json:"target_user_hint"`
-	ProblemDefinition   string           `json:"problem_definition"`
-	InitiatorCutPercent float64          `json:"initiator_cut_percent"`
-	PackageType         model.PackageType `json:"package_type"`
+	Title               string  `json:"title"`
+	Description         string  `json:"description"`
+	TargetUserHint      string  `json:"target_user_hint"`
+	ProblemDefinition   string  `json:"problem_definition"`
+	InitiatorCutPercent float64 `json:"initiator_cut_percent"`
+	PackageType         string  `json:"package_type"` // kept for API compat, ignored
 }
 
 // CreateIdea validates input, creates an idea, auto-generates tasks, and creates documents.
@@ -116,11 +72,8 @@ func (s *Service) CreateIdea(ctx context.Context, userID int64, req CreateIdeaRe
 	if req.Description == "" {
 		return nil, fmt.Errorf("description is required")
 	}
-	if req.PackageType != model.PackageLight && req.PackageType != model.PackageStandard {
-		return nil, fmt.Errorf("package_type must be 'light' or 'standard'")
-	}
 	if req.InitiatorCutPercent < 10 || req.InitiatorCutPercent > 30 {
-		return nil, fmt.Errorf("initiator_cut_percent must be between 10 and 30")
+		req.InitiatorCutPercent = 20
 	}
 
 	idea := &model.Idea{
@@ -130,7 +83,7 @@ func (s *Service) CreateIdea(ctx context.Context, userID int64, req CreateIdeaRe
 		ProblemDefinition:   req.ProblemDefinition,
 		InitiatorID:         userID,
 		InitiatorCutPercent: req.InitiatorCutPercent,
-		PackageType:         req.PackageType,
+		PackageType:         model.PackageStandard,
 		Status:              model.IdeaStatusActive,
 	}
 
@@ -139,15 +92,8 @@ func (s *Service) CreateIdea(ctx context.Context, userID int64, req CreateIdeaRe
 		return nil, fmt.Errorf("failed to create idea: %w", err)
 	}
 
-	// Select task templates based on package type
-	templates := make([]taskTemplate, len(lightTemplates))
-	copy(templates, lightTemplates)
-	if req.PackageType == model.PackageStandard {
-		templates = append(templates, standardExtraTemplates...)
-	}
-
 	// Create tasks and documents for each template
-	for _, tmpl := range templates {
+	for _, tmpl := range taskTemplates {
 		task := &model.Task{
 			IdeaID:             idea.ID,
 			Type:               tmpl.Type,
@@ -208,11 +154,11 @@ func (s *Service) GetIdea(ctx context.Context, id int64) (*model.Idea, error) {
 
 // IdeaContextEntry represents one task's document output in the idea context.
 type IdeaContextEntry struct {
-	TaskID   int64          `json:"task_id"`
-	TaskType model.TaskType `json:"task_type"`
-	Title    string         `json:"title"`
+	TaskID   int64            `json:"task_id"`
+	TaskType model.TaskType   `json:"task_type"`
+	Title    string           `json:"title"`
 	Status   model.TaskStatus `json:"status"`
-	Content  string         `json:"content,omitempty"`
+	Content  string           `json:"content,omitempty"`
 }
 
 // IdeaContextResponse is the aggregated context of all task documents for an idea.
