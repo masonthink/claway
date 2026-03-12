@@ -85,10 +85,10 @@ export default function TaskList({
                     color: "var(--accent-deep)",
                   }}
                 >
-                  {task.code}
+                  {task.type}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{task.name}</p>
+                  <p className="truncate text-sm font-medium">{task.title}</p>
                   {task.claimed_by && (
                     <p className="flex items-center gap-1 text-xs text-ink-soft">
                       <User className="h-3 w-3" />
@@ -99,10 +99,10 @@ export default function TaskList({
               </div>
 
               <div className="flex shrink-0 items-center gap-2.5">
-                {task.token_cost > 0 && (
+                {task.cost_usd_accumulated > 0 && (
                   <span className="flex items-center gap-1 text-xs text-ink-soft">
                     <Cpu className="h-3 w-3" />
-                    {task.token_cost.toFixed(2)}
+                    {task.cost_usd_accumulated.toFixed(2)}
                   </span>
                 )}
                 <StatusBadge status={task.status} />
@@ -193,7 +193,7 @@ export default function TaskList({
       {submitModal && (
         <TaskSubmitModal
           taskId={submitModal.id}
-          taskName={submitModal.name}
+          taskName={submitModal.title}
           onClose={() => setSubmitModal(null)}
           onSuccess={() => {
             setSubmitModal(null);
@@ -206,7 +206,7 @@ export default function TaskList({
       {reviewModal && (
         <TaskReviewModal
           taskId={reviewModal.task.id}
-          taskName={reviewModal.task.name}
+          taskName={reviewModal.task.title}
           outputContent={reviewModal.content}
           onClose={() => setReviewModal(null)}
           onSuccess={() => {

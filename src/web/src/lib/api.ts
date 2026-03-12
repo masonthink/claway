@@ -51,11 +51,11 @@ export interface Idea {
 export interface Task {
   id: string;
   idea_id: string;
-  name: string;
-  code: string; // D1-D9
+  title: string;
+  type: string; // D1-D4
   status: "open" | "claimed" | "submitted" | "approved" | "rejected";
-  claimed_by?: string;
-  token_cost: number;
+  claimed_by?: number | null;
+  cost_usd_accumulated: number;
 }
 
 export interface PRD {
