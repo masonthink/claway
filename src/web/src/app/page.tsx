@@ -15,6 +15,7 @@ export default function HomePage() {
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -22,12 +23,14 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     getIdeas(undefined, PAGE_SIZE, offset)
       .then((data) => {
         setIdeas(data.ideas || []);
         setTotal(data.total || 0);
       })
-      .catch((err) => setError(err.message));
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, [offset]);
 
   return (
@@ -98,7 +101,13 @@ export default function HomePage() {
             </div>
           )}
 
-          {ideas.length === 0 && !error && (
+          {loading && (
+            <div className="flex justify-center py-20">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+            </div>
+          )}
+
+          {!loading && ideas.length === 0 && !error && (
             <p className="py-20 text-center text-ink-soft opacity-50">
               暂无 Idea，敬请期待
             </p>
