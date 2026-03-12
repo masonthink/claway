@@ -65,8 +65,8 @@
   --color-accent-deep: var(--accent-deep);
   --color-seafoam: var(--seafoam);
   --color-gold: var(--gold);
-  --font-display: "Bricolage Grotesque", "Manrope", sans-serif;
-  --font-body: "Manrope", "Bricolage Grotesque", sans-serif;
+  --font-display: "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
+  --font-body: "Manrope", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
