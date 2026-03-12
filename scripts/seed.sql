@@ -6,16 +6,16 @@ BEGIN;
 -- Users (10 users with diverse roles)
 -- ============================================================
 INSERT INTO users (id, openclaw_id, username, display_name, avatar_url, credits_balance, created_at) VALUES
-(1,  'seed-alice',   'alice',   'Alice Chen',     '', 2520.0000, '2026-01-10 08:00:00+08'),
-(2,  'seed-bob',     'bob',     'Bob Zhang',      '', 4800.5000, '2026-01-12 10:30:00+08'),
-(3,  'seed-carol',   'carol',   'Carol Wang',     '', 1860.0000, '2026-01-15 14:00:00+08'),
-(4,  'seed-david',   'david',   'David Li',       '',  950.0000, '2026-01-20 09:00:00+08'),
-(5,  'seed-eve',     'eve',     'Eve Liu',        '',  320.0000, '2026-02-01 16:00:00+08'),
-(6,  'seed-frank',   'frank',   'Frank Xu',       '', 1200.0000, '2026-02-05 11:00:00+08'),
-(7,  'seed-grace',   'grace',   'Grace Zhao',     '',  680.0000, '2026-02-10 09:30:00+08'),
-(8,  'seed-henry',   'henry',   'Henry Sun',      '',  150.0000, '2026-02-15 14:00:00+08'),
-(9,  'seed-iris',    'iris',    'Iris Huang',     '',    0.0000, '2026-02-20 10:00:00+08'),
-(10, 'seed-jack',    'jack',    'Jack Wu',        '', 3500.0000, '2026-03-01 08:00:00+08');
+(1,  'oc_u_a1c3chen',    'alicechen_dev',   'Alice Chen',     '', 2520.0000, '2026-01-10 08:00:00+08'),
+(2,  'oc_u_b0bzhang',    'bobzhang42',      'Bob Zhang',      '', 4800.5000, '2026-01-12 10:30:00+08'),
+(3,  'oc_u_car0lwang',   'carolwang_pm',    'Carol Wang',     '', 1860.0000, '2026-01-15 14:00:00+08'),
+(4,  'oc_u_dav1dli',     'davidli_ux',      'David Li',       '',  950.0000, '2026-01-20 09:00:00+08'),
+(5,  'oc_u_3v3liu',      'eveliu_eng',      'Eve Liu',        '',  320.0000, '2026-02-01 16:00:00+08'),
+(6,  'oc_u_fr4nkxu',     'frankxu_ops',     'Frank Xu',       '', 1200.0000, '2026-02-05 11:00:00+08'),
+(7,  'oc_u_gr4cezhao',   'gracezhao_ai',    'Grace Zhao',     '',  680.0000, '2026-02-10 09:30:00+08'),
+(8,  'oc_u_h3nrysun',    'henrysun_data',   'Henry Sun',      '',  150.0000, '2026-02-15 14:00:00+08'),
+(9,  'oc_u_1r1shuang',   'irishuang_mkt',   'Iris Huang',     '',    0.0000, '2026-02-20 10:00:00+08'),
+(10, 'oc_u_j4ckwu',      'jackwu_arch',     'Jack Wu',        '', 3500.0000, '2026-03-01 08:00:00+08');
 
 SELECT setval('users_id_seq', 10);
 
