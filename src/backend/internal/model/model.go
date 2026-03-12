@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	"time"
 )
 
@@ -51,7 +50,7 @@ type User struct {
 	Username       string         `json:"username"`
 	DisplayName    string         `json:"display_name"`
 	AvatarURL      string         `json:"avatar_url"`
-	AgentAPIKey    sql.NullString `json:"-"`
+	AgentAPIKey    NullString `json:"-"`
 	CreditsBalance float64        `json:"credits_balance"`
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`
@@ -66,7 +65,7 @@ type OAuthAccount struct {
 	ProviderEmail    string       `json:"provider_email"`
 	AccessToken      string       `json:"-"`
 	RefreshToken     string       `json:"-"`
-	TokenExpiresAt   sql.NullTime `json:"-"`
+	TokenExpiresAt   NullTime `json:"-"`
 	CreatedAt        time.Time    `json:"created_at"`
 	UpdatedAt        time.Time    `json:"updated_at"`
 }
@@ -82,7 +81,7 @@ type Idea struct {
 	PackageType        PackageType `json:"package_type"`
 	Status             IdeaStatus  `json:"status"`
 	CreatedAt          time.Time   `json:"created_at"`
-	Deadline           sql.NullTime `json:"deadline"`
+	Deadline           NullTime `json:"deadline"`
 }
 
 type Task struct {
@@ -95,14 +94,14 @@ type Task struct {
 	Dependencies       string         `json:"dependencies"`
 	TokenLimitHint     int            `json:"token_limit_hint"`
 	Status             TaskStatus     `json:"status"`
-	ClaimedBy          sql.NullInt64  `json:"claimed_by"`
-	ClaimedAt          sql.NullTime   `json:"claimed_at"`
-	SubmittedAt        sql.NullTime   `json:"submitted_at"`
-	ApprovedAt         sql.NullTime   `json:"approved_at"`
-	OutputContent      sql.NullString `json:"output_content"`
-	OutputNote         sql.NullString `json:"output_note"`
-	QualityScore       sql.NullFloat64 `json:"quality_score"`
-	RejectReason       sql.NullString `json:"reject_reason"`
+	ClaimedBy          NullInt64  `json:"claimed_by"`
+	ClaimedAt          NullTime   `json:"claimed_at"`
+	SubmittedAt        NullTime   `json:"submitted_at"`
+	ApprovedAt         NullTime   `json:"approved_at"`
+	OutputContent      NullString `json:"output_content"`
+	OutputNote         NullString `json:"output_note"`
+	QualityScore       NullFloat64 `json:"quality_score"`
+	RejectReason       NullString `json:"reject_reason"`
 	CostUSDAccumulated float64        `json:"cost_usd_accumulated"`
 }
 
@@ -120,7 +119,7 @@ type DocumentVersion struct {
 	DocumentID       int64          `json:"document_id"`
 	Version          int            `json:"version"`
 	Content          string         `json:"content"`
-	DiffFromPrevious sql.NullString `json:"diff_from_previous"`
+	DiffFromPrevious NullString `json:"diff_from_previous"`
 	CreatedAt        time.Time      `json:"created_at"`
 	CreatedBy        int64          `json:"created_by"`
 }
@@ -162,7 +161,7 @@ type PRD struct {
 	ID           int64        `json:"id"`
 	IdeaID       int64        `json:"idea_id"`
 	Content      string       `json:"content"`
-	PublishedAt  sql.NullTime `json:"published_at"`
+	PublishedAt  NullTime `json:"published_at"`
 	PriceCredits float64      `json:"price_credits"`
 	ReadCount    int          `json:"read_count"`
 }

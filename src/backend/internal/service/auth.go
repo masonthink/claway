@@ -251,10 +251,10 @@ func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerU
 		RefreshToken:     tokenResp.RefreshToken,
 	}
 	if tokenResp.ExpiresIn > 0 {
-		account.TokenExpiresAt = sql.NullTime{
+		account.TokenExpiresAt = model.NullTime{NullTime: sql.NullTime{
 			Time:  time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second),
 			Valid: true,
-		}
+		}}
 	}
 	_, err = s.store.CreateOAuthAccount(ctx, account)
 	if err != nil {
