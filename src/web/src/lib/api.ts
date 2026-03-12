@@ -1,8 +1,11 @@
-// API client with JWT auth header injection
+// API client — routes through Next.js proxy to avoid slow direct connections
 
 import { getToken } from "./auth";
 
-const API_BASE =
+// Proxy base: same-origin /api/proxy/* → backend
+const PROXY_BASE = "/api/proxy";
+// Direct backend URL (for OAuth redirects only)
+export const DIRECT_API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
 
 async function request<T>(
@@ -18,7 +21,7 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${PROXY_BASE}${path}`, {
     ...options,
     headers,
   });

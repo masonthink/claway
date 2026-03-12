@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import IdeaCard from "@/components/IdeaCard";
 import Pagination from "@/components/Pagination";
-import { getIdeas, type Idea } from "@/lib/api";
+import { getIdeas, DIRECT_API_BASE, type Idea } from "@/lib/api";
 import { isLoggedIn } from "@/lib/auth";
 
 const PAGE_SIZE = 12;
@@ -48,7 +48,7 @@ export default function HomePage() {
           </p>
           <div className="flex items-center justify-center gap-4">
             <a
-              href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1"}/auth/x`}
+              href={`${DIRECT_API_BASE}/auth/x`}
               className="inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-[0.95rem] font-semibold text-white hover:-translate-y-0.5"
               style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
             >
