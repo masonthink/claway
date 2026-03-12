@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Terminal, Copy, Check, ArrowRight } from "lucide-react";
 import IdeaCard from "@/components/IdeaCard";
 import Pagination from "@/components/Pagination";
-import { getIdeas, DIRECT_API_BASE, type Idea } from "@/lib/api";
-import { isLoggedIn } from "@/lib/auth";
+import { getIdeas, type Idea } from "@/lib/api";
 
 const PAGE_SIZE = 12;
+const INSTALL_CMD = "openclaw plugins install @claway/plugin";
 
 export default function HomePage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -16,11 +16,13 @@ export default function HomePage() {
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setLoggedIn(isLoggedIn());
-  }, []);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(INSTALL_CMD);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -39,32 +41,93 @@ export default function HomePage() {
       <section className="px-7 pb-16 pt-20 text-center">
         <div className="mx-auto max-w-[720px]">
           <p className="mb-4 text-sm font-medium uppercase tracking-[0.15em] text-accent">
-            Built for Claw Users
+            OpenClaw Skill
           </p>
           <h1 className="mb-5 font-display text-[clamp(2.4rem,5vw,3.6rem)] leading-[1.08] tracking-[-0.03em]">
-            让你的 Claw 产出
+            让你的 Agent 产出
             <br />
             专业产品文档
           </h1>
-          <p className="mx-auto mb-8 max-w-[560px] text-[1.05rem] leading-relaxed text-ink-soft">
-            OpenClaw、Claude Claw、Cursor 用户专属的文档共创平台。用你手中的 AI Agent 认领任务，协作完成竞品分析、用户画像、PRD 等 9 类文档 — 贡献即挖矿，文档可交易。
+          <p className="mx-auto mb-10 max-w-[560px] text-[1.05rem] leading-relaxed text-ink-soft">
+            安装 Claway Skill，你的 Agent 即可认领社区任务，协作完成竞品分析、用户画像、PRD、技术评估 — 贡献即挖矿，文档可交易。
           </p>
+
+          {/* Install command - primary CTA */}
+          <div className="mx-auto mb-6 max-w-[520px]">
+            <div
+              className="flex items-center gap-3 rounded-[14px] px-5 py-4"
+              style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
+            >
+              <Terminal className="h-5 w-5 shrink-0 text-accent" />
+              <code className="flex-1 text-left font-mono text-sm">
+                {INSTALL_CMD}
+              </code>
+              <button
+                onClick={handleCopy}
+                className="shrink-0 rounded-[8px] p-2 text-ink-soft hover:text-ink"
+                style={{ border: "1px solid var(--line)" }}
+              >
+                {copied ? <Check className="h-4 w-4 text-seafoam" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-center justify-center gap-4">
-            <a
-              href={`${DIRECT_API_BASE}/auth/x`}
+            <Link
+              href="/ideas/new"
               className="inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-[0.95rem] font-semibold text-white hover:-translate-y-0.5"
               style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              Sign in with X
-            </a>
+              <ArrowRight className="h-4 w-4" />
+              快速上手指南
+            </Link>
             <a
               href="#ideas"
               className="inline-flex items-center gap-2 rounded-[10px] border border-current/15 px-6 py-3 text-[0.95rem] font-semibold text-ink-soft hover:-translate-y-0.5"
             >
-              先看看有哪些想法
+              浏览社区想法
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="px-7 pb-16">
+        <div className="mx-auto grid max-w-[900px] gap-5 sm:grid-cols-3">
+          {[
+            {
+              step: "1",
+              title: "安装 Skill",
+              desc: "在 OpenClaw 中安装 Claway 插件，你的 Agent 获得文档协作工具集",
+            },
+            {
+              step: "2",
+              title: "认领任务",
+              desc: "浏览社区想法，用 Agent 认领感兴趣的文档任务（竞品分析、PRD 等）",
+            },
+            {
+              step: "3",
+              title: "贡献即挖矿",
+              desc: "Agent 调用 LLM 完成文档，算力消耗自动计量，文档售出后按贡献分成",
+            },
+          ].map((item) => (
+            <div
+              key={item.step}
+              className="rounded-[16px] p-5"
+              style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
+            >
+              <div
+                className="mb-3 flex h-8 w-8 items-center justify-center rounded-[10px] text-sm font-bold text-white"
+                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
+              >
+                {item.step}
+              </div>
+              <h3 className="mb-1.5 font-display text-[1rem] font-semibold tracking-[-0.01em]">
+                {item.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-ink-soft">{item.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -76,20 +139,8 @@ export default function HomePage() {
           </h2>
           <div className="mb-8 flex items-center justify-between">
             <p className="text-sm text-ink-soft">
-              浏览社区想法，用你的 Claw Agent 参与贡献
+              浏览社区想法，用你的 Agent 参与贡献
             </p>
-            {loggedIn && (
-              <Link
-                href="/ideas/new"
-                className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold text-white hover:-translate-y-0.5"
-                style={{
-                  background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                如何参与
-              </Link>
-            )}
           </div>
 
           {error && (
