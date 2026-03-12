@@ -16,9 +16,43 @@ func NewAuthHandler(svc *service.Service) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
 
-// OpenClawCallback handles GET /api/v1/auth/openclaw/callback
-// Exchanges the authorization code for a token, fetches the user profile,
-// creates or finds the user, and returns a session JWT.
+// XLogin handles GET /api/v1/auth/x
+// Redirects user to X OAuth authorization page.
+// Optional query param: cli_port (for CLI flow, e.g. "19876")
+func (h *AuthHandler) XLogin(c echo.Context) error {
+	cliPort := c.QueryParam("cli_port")
+
+	authURL, err := h.svc.GetXAuthURL(cliPort)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, authURL)
+}
+
+// XCallback handles GET /api/v1/auth/x/callback
+// Receives the authorization code from X and completes the OAuth flow.
+func (h *AuthHandler) XCallback(c echo.Context) error {
+	code := c.QueryParam("code")
+	state := c.QueryParam("state")
+
+	if code == "" {
+		errorMsg := c.QueryParam("error")
+		if errorMsg == "" {
+			errorMsg = "missing authorization code"
+		}
+		return c.HTML(http.StatusBadRequest, authErrorHTML("Authorization failed: "+errorMsg))
+	}
+
+	redirectURL, err := h.svc.HandleXCallback(c.Request().Context(), code, state)
+	if err != nil {
+		return c.HTML(http.StatusInternalServerError, authErrorHTML("Login failed: "+err.Error()))
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+}
+
+// OpenClawCallback handles GET /api/v1/auth/openclaw/callback (legacy)
 func (h *AuthHandler) OpenClawCallback(c echo.Context) error {
 	code := c.QueryParam("code")
 	if code == "" {
@@ -43,4 +77,13 @@ func (h *AuthHandler) GetMe(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, user)
+}
+
+func authErrorHTML(msg string) string {
+	return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Claway - Auth Error</title>
+<style>body{font-family:system-ui;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0a;color:#e5e5e5}
+.card{text-align:center;padding:2rem;border-radius:12px;border:1px solid #333;max-width:400px}
+a{color:#7c8aff}</style></head>
+<body><div class="card"><h2>Authentication Error</h2><p>` + msg + `</p><a href="https://claway.cc">Back to Claway</a></div></body></html>`
 }

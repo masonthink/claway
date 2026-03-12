@@ -90,7 +90,9 @@ func main() {
 	v1 := e.Group("/api/v1")
 
 	// Public routes (no auth required)
-	v1.GET("/auth/openclaw/callback", authH.OpenClawCallback)
+	v1.GET("/auth/x", authH.XLogin)
+	v1.GET("/auth/x/callback", authH.XCallback)
+	v1.GET("/auth/openclaw/callback", authH.OpenClawCallback) // legacy
 	v1.GET("/ideas", ideaH.ListIdeas)
 	v1.GET("/ideas/:id", ideaH.GetIdea)
 	v1.GET("/ideas/:id/tasks", taskH.ListTasks)

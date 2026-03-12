@@ -15,7 +15,7 @@
         "description": "Your Claway JWT token for authentication"
       }
     },
-    "required": ["platformUrl", "apiKey"]
+    "required": ["platformUrl"]
   },
   "uiHints": {
     "platformUrl": {

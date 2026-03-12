@@ -5,33 +5,28 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { setToken } from "@/lib/auth";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
-
 function CallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const code = searchParams.get("code");
-    if (!code) {
-      setError("Missing authorization code");
+    // New flow: backend redirects here with ?token=JWT
+    const token = searchParams.get("token");
+    if (token) {
+      setToken(token);
+      router.push("/dashboard");
       return;
     }
 
-    fetch(`${API_BASE}/auth/callback?code=${encodeURIComponent(code)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Authentication failed");
-        return res.json();
-      })
-      .then((data: { token: string }) => {
-        setToken(data.token);
-        router.push("/dashboard");
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Authentication failed");
-      });
+    // Error from OAuth
+    const errorMsg = searchParams.get("error");
+    if (errorMsg) {
+      setError(errorMsg);
+      return;
+    }
+
+    setError("Missing authentication token");
   }, [searchParams, router]);
 
   if (error) {

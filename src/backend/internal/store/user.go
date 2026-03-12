@@ -9,55 +9,67 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// GetUserByOpenClawID retrieves a user by their OpenClaw ID.
-func (s *Store) GetUserByOpenClawID(ctx context.Context, openclawID string) (*model.User, error) {
+const userColumns = `id, openclaw_id, username, display_name, avatar_url, agent_api_key, credits_balance, created_at, updated_at`
+
+func scanUser(row pgx.Row) (*model.User, error) {
 	var u model.User
-	err := s.db.QueryRow(ctx,
-		`SELECT id, openclaw_id, username, agent_api_key, credits_balance, created_at, updated_at
-		 FROM users WHERE openclaw_id = $1`, openclawID,
-	).Scan(&u.ID, &u.OpenClawID, &u.Username, &u.AgentAPIKey, &u.CreditsBalance, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.OpenClawID, &u.Username, &u.DisplayName, &u.AvatarURL, &u.AgentAPIKey, &u.CreditsBalance, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
-		return nil, fmt.Errorf("get user by openclaw_id: %w", err)
+		return nil, err
 	}
 	return &u, nil
+}
+
+// GetUserByOpenClawID retrieves a user by their OpenClaw ID (legacy).
+func (s *Store) GetUserByOpenClawID(ctx context.Context, openclawID string) (*model.User, error) {
+	u, err := scanUser(s.db.QueryRow(ctx,
+		`SELECT `+userColumns+` FROM users WHERE openclaw_id = $1`, openclawID))
+	if err != nil {
+		return nil, fmt.Errorf("get user by openclaw_id: %w", err)
+	}
+	return u, nil
 }
 
 // GetUserByID retrieves a user by their internal ID.
 func (s *Store) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
-	var u model.User
-	err := s.db.QueryRow(ctx,
-		`SELECT id, openclaw_id, username, agent_api_key, credits_balance, created_at, updated_at
-		 FROM users WHERE id = $1`, id,
-	).Scan(&u.ID, &u.OpenClawID, &u.Username, &u.AgentAPIKey, &u.CreditsBalance, &u.CreatedAt, &u.UpdatedAt)
+	u, err := scanUser(s.db.QueryRow(ctx,
+		`SELECT `+userColumns+` FROM users WHERE id = $1`, id))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
-		}
 		return nil, fmt.Errorf("get user by id: %w", err)
 	}
-	return &u, nil
+	return u, nil
 }
 
 // CreateUser inserts a new user and returns the created record.
 func (s *Store) CreateUser(ctx context.Context, openclawID, username string) (*model.User, error) {
-	var u model.User
-	err := s.db.QueryRow(ctx,
+	u, err := scanUser(s.db.QueryRow(ctx,
 		`INSERT INTO users (openclaw_id, username)
 		 VALUES ($1, $2)
-		 RETURNING id, openclaw_id, username, agent_api_key, credits_balance, created_at, updated_at`,
-		openclawID, username,
-	).Scan(&u.ID, &u.OpenClawID, &u.Username, &u.AgentAPIKey, &u.CreditsBalance, &u.CreatedAt, &u.UpdatedAt)
+		 RETURNING `+userColumns,
+		openclawID, username))
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
-	return &u, nil
+	return u, nil
+}
+
+// CreateUserFromOAuth creates a user from an OAuth profile.
+func (s *Store) CreateUserFromOAuth(ctx context.Context, username, displayName, avatarURL string) (*model.User, error) {
+	u, err := scanUser(s.db.QueryRow(ctx,
+		`INSERT INTO users (openclaw_id, username, display_name, avatar_url)
+		 VALUES ('', $1, $2, $3)
+		 RETURNING `+userColumns,
+		username, displayName, avatarURL))
+	if err != nil {
+		return nil, fmt.Errorf("create user from oauth: %w", err)
+	}
+	return u, nil
 }
 
 // UpdateCreditsBalance atomically adjusts a user's credits balance by delta.
-// Delta can be positive (credit) or negative (debit).
 func (s *Store) UpdateCreditsBalance(ctx context.Context, userID int64, delta float64) error {
 	tag, err := s.db.Exec(ctx,
 		`UPDATE users SET credits_balance = credits_balance + $1, updated_at = NOW()
@@ -68,6 +80,60 @@ func (s *Store) UpdateCreditsBalance(ctx context.Context, userID int64, delta fl
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrNotFound
+	}
+	return nil
+}
+
+// --- OAuth Accounts ---
+
+// GetOAuthAccount finds a linked OAuth account by provider and provider user ID.
+func (s *Store) GetOAuthAccount(ctx context.Context, provider, providerUserID string) (*model.OAuthAccount, error) {
+	var a model.OAuthAccount
+	err := s.db.QueryRow(ctx,
+		`SELECT id, user_id, provider, provider_user_id, provider_username, provider_email,
+		        access_token, refresh_token, token_expires_at, created_at, updated_at
+		 FROM user_oauth_accounts
+		 WHERE provider = $1 AND provider_user_id = $2`,
+		provider, providerUserID,
+	).Scan(&a.ID, &a.UserID, &a.Provider, &a.ProviderUserID, &a.ProviderUsername, &a.ProviderEmail,
+		&a.AccessToken, &a.RefreshToken, &a.TokenExpiresAt, &a.CreatedAt, &a.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("get oauth account: %w", err)
+	}
+	return &a, nil
+}
+
+// CreateOAuthAccount links an OAuth account to a user.
+func (s *Store) CreateOAuthAccount(ctx context.Context, account *model.OAuthAccount) (*model.OAuthAccount, error) {
+	var a model.OAuthAccount
+	err := s.db.QueryRow(ctx,
+		`INSERT INTO user_oauth_accounts (user_id, provider, provider_user_id, provider_username, provider_email, access_token, refresh_token, token_expires_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		 RETURNING id, user_id, provider, provider_user_id, provider_username, provider_email,
+		           access_token, refresh_token, token_expires_at, created_at, updated_at`,
+		account.UserID, account.Provider, account.ProviderUserID, account.ProviderUsername, account.ProviderEmail,
+		account.AccessToken, account.RefreshToken, account.TokenExpiresAt,
+	).Scan(&a.ID, &a.UserID, &a.Provider, &a.ProviderUserID, &a.ProviderUsername, &a.ProviderEmail,
+		&a.AccessToken, &a.RefreshToken, &a.TokenExpiresAt, &a.CreatedAt, &a.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("create oauth account: %w", err)
+	}
+	return &a, nil
+}
+
+// UpdateOAuthTokens refreshes stored tokens for an OAuth account.
+func (s *Store) UpdateOAuthTokens(ctx context.Context, id int64, accessToken, refreshToken string, expiresAt interface{}) error {
+	_, err := s.db.Exec(ctx,
+		`UPDATE user_oauth_accounts
+		 SET access_token = $1, refresh_token = $2, token_expires_at = $3, updated_at = NOW()
+		 WHERE id = $4`,
+		accessToken, refreshToken, expiresAt, id,
+	)
+	if err != nil {
+		return fmt.Errorf("update oauth tokens: %w", err)
 	}
 	return nil
 }

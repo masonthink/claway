@@ -1,6 +1,7 @@
 // Tool registrations for the Claway OpenClaw plugin.
 
 import { ClawayClient } from "./client";
+import { runAuthFlow, loadToken } from "./auth";
 
 // Helper to create a standard tool response
 function textResult(text: string) {
@@ -17,6 +18,86 @@ async function safeExecute(fn: () => Promise<string>): Promise<any> {
 }
 
 export function registerTools(api: any, client: ClawayClient) {
+  // ========== Auth Tools ==========
+
+  api.registerTool({
+    name: "claway_auth",
+    description:
+      "Authenticate with Claway using your X (Twitter) account. Opens a browser window for OAuth login. Run this first before using any other Claway tools.",
+    parameters: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["login", "status", "logout"],
+          description: "Action: 'login' to authenticate, 'status' to check current auth, 'logout' to clear saved token",
+        },
+      },
+    },
+    execute: async (_execId: string, params: any) =>
+      safeExecute(async () => {
+        const action = params.action || "login";
+        const platformUrl = (client as any).baseUrl || "";
+
+        if (action === "status") {
+          const token = loadToken();
+          if (token) {
+            try {
+              const me = await client.getMe();
+              return [
+                `已登录 Claway`,
+                `  用户名: ${me.username}`,
+                `  积分余额: ${me.credits_balance}`,
+              ].join("\n");
+            } catch {
+              return "Token 已保存但可能已过期，请重新运行 claway_auth login";
+            }
+          }
+          return "未登录。请运行 claway_auth login 进行认证。";
+        }
+
+        if (action === "logout") {
+          const fs = await import("fs");
+          const path = await import("path");
+          const os = await import("os");
+          const authFile = path.join(os.homedir(), ".config", "claway", "auth.json");
+          try {
+            fs.unlinkSync(authFile);
+          } catch {}
+          return "已退出登录，Token 已清除。";
+        }
+
+        // Login flow
+        const authPromise = runAuthFlow(platformUrl);
+        const pending = (runAuthFlow as any)._pending;
+
+        if (!pending) {
+          return "无法启动认证服务器，请重试。";
+        }
+
+        const lines = [
+          `请在浏览器中打开以下链接完成 X 账号授权:`,
+          ``,
+          `  ${pending.authUrl}`,
+          ``,
+          `等待授权完成... (2 分钟超时)`,
+        ];
+
+        // Wait for the auth to complete
+        try {
+          const result = await authPromise;
+          lines.push(``);
+          lines.push(`认证成功! Token 已保存到 ~/.config/claway/auth.json`);
+          lines.push(`现在可以使用所有 Claway 工具了。`);
+        } catch (err: any) {
+          lines.push(``);
+          lines.push(`认证失败: ${err.message}`);
+        }
+
+        return lines.join("\n");
+      }),
+  });
+
   // ========== Initiator Tools ==========
 
   api.registerTool({

@@ -50,6 +50,8 @@ claway/
 
 ## 后端 API（27 端点）
 ```
+GET    /api/v1/auth/x                 # X OAuth 登录（重定向到 Twitter）
+GET    /api/v1/auth/x/callback        # X OAuth 回调
 POST   /api/v1/ideas                  # 创建想法（自动生成子任务）
 GET    /api/v1/ideas                  # 想法列表
 GET    /api/v1/ideas/:id              # 想法详情
@@ -89,15 +91,16 @@ go test -v ./internal/
 
 ## 部署架构
 - **后端**: GitHub Actions → Docker → GHCR → SSH 部署 VPS
-- **前端**: Vercel 自动部署，自定义域名 claway.concors.ai
+- **前端**: Vercel 自动部署，自定义域名 claway.cc
 - **VPS**: 45.32.57.146 (Vultr Tokyo)
-- **API 域名**: api-claway.concors.ai
-- **前端域名**: claway.concors.ai (Vercel)
+- **API 域名**: api.claway.cc
+- **前端域名**: claway.cc (Vercel)
 - **反向代理**: Cloudflare → Caddy → localhost:8081
 - **数据库**: PostgreSQL 16 (Docker 容器 claway-postgres)
 - **部署路径**: /opt/claway/
 - **SSH 密钥**: ~/.ssh/dtc_deploy_vps
 - **Cloudflare SSL**: Flexible 模式
+- **认证**: X (Twitter) OAuth 2.0 + PKCE，支持 Web 和 CLI 两种流程
 
 ## 开发规范
 - 中文编写文档

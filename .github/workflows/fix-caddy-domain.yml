@@ -18,7 +18,7 @@ jobs:
             set -e
             cat > /opt/caddy/Caddyfile << 'CADDYEOF'
             :80 {
-              @claway host api-claway.concors.ai
+              @claway host api.claway.cc
               handle @claway {
                 reverse_proxy localhost:8081
                 header {

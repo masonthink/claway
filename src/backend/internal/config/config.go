@@ -7,15 +7,23 @@ import (
 
 // Config holds all application configuration loaded from environment variables.
 type Config struct {
-	DatabaseURL          string
-	RedisURL             string
-	Port                 string
-	JWTSecret            string
+	DatabaseURL        string
+	RedisURL           string
+	Port               string
+	JWTSecret          string
+	FrontendURL        string
+	UpstreamLLMBaseURL string
+	UpstreamLLMAPIKey  string
+
+	// X (Twitter) OAuth 2.0
+	XClientID     string
+	XClientSecret string
+	XRedirectURI  string // backend callback URL
+
+	// Legacy OpenClaw OAuth (kept for backward compatibility)
 	OpenClawClientID     string
 	OpenClawClientSecret string
 	OpenClawBaseURL      string
-	UpstreamLLMBaseURL   string
-	UpstreamLLMAPIKey    string
 }
 
 // Load reads configuration from environment variables.
@@ -25,11 +33,15 @@ func Load() (*Config, error) {
 		RedisURL:             os.Getenv("REDIS_URL"),
 		Port:                 os.Getenv("PORT"),
 		JWTSecret:            os.Getenv("JWT_SECRET"),
+		FrontendURL:          os.Getenv("FRONTEND_URL"),
+		UpstreamLLMBaseURL:   os.Getenv("UPSTREAM_LLM_BASE_URL"),
+		UpstreamLLMAPIKey:    os.Getenv("UPSTREAM_LLM_API_KEY"),
+		XClientID:            os.Getenv("X_CLIENT_ID"),
+		XClientSecret:        os.Getenv("X_CLIENT_SECRET"),
+		XRedirectURI:         os.Getenv("X_REDIRECT_URI"),
 		OpenClawClientID:     os.Getenv("OPENCLAW_CLIENT_ID"),
 		OpenClawClientSecret: os.Getenv("OPENCLAW_CLIENT_SECRET"),
 		OpenClawBaseURL:      os.Getenv("OPENCLAW_BASE_URL"),
-		UpstreamLLMBaseURL:   os.Getenv("UPSTREAM_LLM_BASE_URL"),
-		UpstreamLLMAPIKey:    os.Getenv("UPSTREAM_LLM_API_KEY"),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -44,7 +56,13 @@ func Load() (*Config, error) {
 		cfg.Port = "8080"
 	}
 
-	// Redis is optional for MVP
+	if cfg.FrontendURL == "" {
+		cfg.FrontendURL = "https://claway.cc"
+	}
+
+	if cfg.XRedirectURI == "" {
+		cfg.XRedirectURI = "https://api.claway.cc/api/v1/auth/x/callback"
+	}
 
 	if cfg.OpenClawBaseURL == "" {
 		cfg.OpenClawBaseURL = "https://api.openclaw.ai"

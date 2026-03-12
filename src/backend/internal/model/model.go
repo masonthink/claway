@@ -47,12 +47,28 @@ const (
 
 type User struct {
 	ID             int64          `json:"id"`
-	OpenClawID     string         `json:"openclaw_id"`
+	OpenClawID     string         `json:"openclaw_id,omitempty"`
 	Username       string         `json:"username"`
+	DisplayName    string         `json:"display_name"`
+	AvatarURL      string         `json:"avatar_url"`
 	AgentAPIKey    sql.NullString `json:"-"`
 	CreditsBalance float64        `json:"credits_balance"`
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`
+}
+
+type OAuthAccount struct {
+	ID               int64        `json:"id"`
+	UserID           int64        `json:"user_id"`
+	Provider         string       `json:"provider"`
+	ProviderUserID   string       `json:"provider_user_id"`
+	ProviderUsername  string       `json:"provider_username"`
+	ProviderEmail    string       `json:"provider_email"`
+	AccessToken      string       `json:"-"`
+	RefreshToken     string       `json:"-"`
+	TokenExpiresAt   sql.NullTime `json:"-"`
+	CreatedAt        time.Time    `json:"created_at"`
+	UpdatedAt        time.Time    `json:"updated_at"`
 }
 
 type Idea struct {

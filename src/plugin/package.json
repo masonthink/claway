@@ -8,9 +8,12 @@
     "dev": "tsc --watch"
   },
   "openclaw": {
-    "extensions": ["./dist/index.js"]
+    "extensions": [
+      "./dist/index.js"
+    ]
   },
   "devDependencies": {
+    "@types/node": "^25.4.0",
     "typescript": "^5.4.0"
   }
 }
