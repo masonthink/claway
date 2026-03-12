@@ -5,11 +5,11 @@ BEGIN;
 -- Users (5 users with different roles)
 -- ============================================================
 INSERT INTO users (id, openclaw_id, username, display_name, avatar_url, credits_balance, created_at) VALUES
-(1, '', 'alice',  'Alice Chen',   '', 1520.0000, '2026-02-10 08:00:00+08'),
-(2, '', 'bob',    'Bob Zhang',    '', 3200.5000, '2026-02-12 10:30:00+08'),
-(3, '', 'carol',  'Carol Wang',   '',  860.0000, '2026-02-15 14:00:00+08'),
-(4, '', 'david',  'David Li',     '',  450.0000, '2026-02-20 09:00:00+08'),
-(5, '', 'eve',    'Eve Liu',      '',    0.0000, '2026-03-01 16:00:00+08');
+(1, 'seed-alice', 'alice',  'Alice Chen',   '', 1520.0000, '2026-02-10 08:00:00+08'),
+(2, 'seed-bob',   'bob',    'Bob Zhang',    '', 3200.5000, '2026-02-12 10:30:00+08'),
+(3, 'seed-carol', 'carol',  'Carol Wang',   '',  860.0000, '2026-02-15 14:00:00+08'),
+(4, 'seed-david', 'david',  'David Li',     '',  450.0000, '2026-02-20 09:00:00+08'),
+(5, 'seed-eve',   'eve',    'Eve Liu',      '',    0.0000, '2026-03-01 16:00:00+08');
 
 SELECT setval('users_id_seq', 5);
 
