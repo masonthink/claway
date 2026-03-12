@@ -34,8 +34,8 @@ export default function IdeaDetailPage() {
     if (!id) return;
     Promise.all([
       getIdea(id).then(setIdea),
-      getIdeaTasks(id).then((d) => setTasks(d.tasks)),
-      getIdeaCompute(id).then(setLeaderboard),
+      getIdeaTasks(id).then((d) => setTasks(d.tasks || [])),
+      getIdeaCompute(id).then((d) => setLeaderboard(d && d.entries ? d : { entries: [] })),
     ]).catch((err) => setError(err.message));
   };
 
