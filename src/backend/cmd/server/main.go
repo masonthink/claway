@@ -76,6 +76,27 @@ func main() {
 	// Global middleware
 	e.Use(echomw.Logger())
 	e.Use(echomw.Recover())
+	e.Use(echomw.RateLimiterWithConfig(echomw.RateLimiterConfig{
+		Skipper: func(c echo.Context) bool {
+			// Skip rate limiting for health checks
+			return c.Path() == "/health"
+		},
+		Store: echomw.NewRateLimiterMemoryStoreWithConfig(
+			echomw.RateLimiterMemoryStoreConfig{Rate: 30, Burst: 60, ExpiresIn: 1 * time.Minute},
+		),
+		IdentifierExtractor: func(c echo.Context) (string, error) {
+			// Use X-Forwarded-For for Cloudflare/Caddy proxied requests
+			if xff := c.Request().Header.Get("X-Forwarded-For"); xff != "" {
+				return xff, nil
+			}
+			return c.RealIP(), nil
+		},
+		DenyHandler: func(c echo.Context, identifier string, err error) error {
+			return c.JSON(http.StatusTooManyRequests, map[string]string{
+				"error": "rate limit exceeded, please try again later",
+			})
+		},
+	}))
 	e.Use(echomw.CORSWithConfig(echomw.CORSConfig{
 		AllowOrigins: []string{
 			"https://claway.cc",

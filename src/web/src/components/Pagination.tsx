@@ -34,7 +34,7 @@ export default function Pagination({
       <button
         disabled={currentPage === 1}
         onClick={() => onChange((currentPage - 2) * limit)}
-        aria-label="上一页"
+        aria-label="Previous page"
         className="flex h-9 w-9 items-center justify-center rounded-[8px] disabled:opacity-30"
         style={{ border: "1px solid var(--line)" }}
       >
@@ -67,7 +67,7 @@ export default function Pagination({
       <button
         disabled={currentPage === totalPages}
         onClick={() => onChange(currentPage * limit)}
-        aria-label="下一页"
+        aria-label="Next page"
         className="flex h-9 w-9 items-center justify-center rounded-[8px] disabled:opacity-30"
         style={{ border: "1px solid var(--line)" }}
       >

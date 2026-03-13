@@ -43,7 +43,7 @@ export default function IdeaDetailPage() {
 
   const handleVote = async (contributionId: number) => {
     if (!id) return;
-    if (!confirm("确认投票？每个想法只能投一票，投票后不可更改。")) return;
+    if (!confirm("Confirm your vote? You can only vote once per idea, and it cannot be changed.")) return;
 
     setVoting(contributionId);
     setVoteError(null);
@@ -53,7 +53,7 @@ export default function IdeaDetailPage() {
       setVotedContribId(contributionId);
       loadData();
     } catch (err) {
-      setVoteError(err instanceof Error ? err.message : "投票失败");
+      setVoteError(err instanceof Error ? err.message : "Vote failed");
     } finally {
       setVoting(null);
     }
@@ -78,7 +78,7 @@ export default function IdeaDetailPage() {
     <div className="mx-auto max-w-[860px] px-7 py-8">
       <Link href="/" className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        返回列表
+        Back to list
       </Link>
 
       {/* Header */}
@@ -105,20 +105,20 @@ export default function IdeaDetailPage() {
 
         {/* Idea details */}
         <div className="mb-4 space-y-3">
-          <DetailItem label="目标用户" value={idea.target_user} />
-          <DetailItem label="核心问题" value={idea.core_problem} />
-          {idea.out_of_scope && <DetailItem label="范围外" value={idea.out_of_scope} />}
+          <DetailItem label="Target User" value={idea.target_user} />
+          <DetailItem label="Core Problem" value={idea.core_problem} />
+          {idea.out_of_scope && <DetailItem label="Out of Scope" value={idea.out_of_scope} />}
         </div>
 
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-ink-soft">
           <span className="flex items-center gap-1">
             <Users className="h-4 w-4" aria-hidden="true" />
-            {idea.contribution_count} 贡献
+            {idea.contribution_count} proposals
           </span>
           <span className="flex items-center gap-1">
             <Vote className="h-4 w-4" aria-hidden="true" />
-            {idea.voter_count} 投票人
+            {idea.voter_count} voters
           </span>
           {isOpen && (
             <span className="flex items-center gap-1 text-accent">
@@ -133,7 +133,7 @@ export default function IdeaDetailPage() {
               style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
             >
               <Trophy className="h-4 w-4" aria-hidden="true" />
-              查看揭榜结果
+              View Results
             </Link>
           )}
         </div>
@@ -155,14 +155,14 @@ export default function IdeaDetailPage() {
           role="status"
           style={{ background: "rgba(43,198,164,0.1)", color: "rgb(26,107,91)", border: "1px solid rgba(43,198,164,0.2)" }}
         >
-          投票成功！感谢你的参与。
+          Vote submitted! Thanks for participating.
         </div>
       )}
 
       {/* Contributions */}
       <div>
         <h2 className="mb-4 font-display text-lg tracking-[-0.02em]">
-          贡献 ({contributions.length})
+          Proposals ({contributions.length})
         </h2>
 
         {/* Blind voting hint */}
@@ -171,13 +171,13 @@ export default function IdeaDetailPage() {
             className="mb-4 rounded-[10px] p-3 text-xs text-ink-soft"
             style={{ background: "var(--surface-muted)" }}
           >
-            盲投期间仅展示方案摘要，完整内容将在揭榜后公开。每个想法只能投一票，请仔细阅读后投票。
+            During blind voting, only proposal summaries are shown. Full content will be revealed after the deadline. You get one vote per idea — read carefully before voting.
           </p>
         )}
 
         {contributions.length === 0 && (
           <p className="py-8 text-center text-ink-soft opacity-50">
-            暂无贡献
+            No proposals yet
           </p>
         )}
 
@@ -204,12 +204,12 @@ export default function IdeaDetailPage() {
                     </Link>
                   ) : (
                     <span className="font-mono text-sm text-ink-soft">
-                      匿名贡献者 #{idx + 1}
+                      Anonymous Contributor #{idx + 1}
                     </span>
                   )}
                   <StatusBadge status={contrib.status} />
                   {votedContribId === contrib.id && (
-                    <span className="text-xs font-medium text-accent">已投票</span>
+                    <span className="text-xs font-medium text-accent">Voted</span>
                   )}
                 </div>
                 <span className="flex items-center gap-1 text-xs text-ink-soft">
@@ -233,7 +233,7 @@ export default function IdeaDetailPage() {
                 <button
                   onClick={() => {
                     if (!isLoggedIn()) {
-                      setVoteError("请先登录后再投票");
+                      setVoteError("Please log in before voting");
                       return;
                     }
                     handleVote(contrib.id);
@@ -243,7 +243,7 @@ export default function IdeaDetailPage() {
                   style={{ border: "1px solid var(--line)" }}
                 >
                   <Vote className="h-4 w-4" aria-hidden="true" />
-                  {voting === contrib.id ? "投票中..." : "投票"}
+                  {voting === contrib.id ? "Voting..." : "Vote"}
                 </button>
               )}
             </div>

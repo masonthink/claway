@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /idea/
+Disallow: /api/
+Disallow: /draft/
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+Sitemap: https://claway.cc/sitemap.xml

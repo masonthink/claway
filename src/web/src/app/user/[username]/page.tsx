@@ -43,7 +43,7 @@ export default function UserProfilePage() {
     <div className="mx-auto max-w-[860px] px-7 py-8">
       <Link href="/" className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" />
-        返回
+        Back
       </Link>
 
       {/* Profile card */}
@@ -55,7 +55,7 @@ export default function UserProfilePage() {
           {user.avatar_url ? (
             <img
               src={user.avatar_url}
-              alt={`${user.username} 的头像`}
+              alt={`${user.username}'s avatar`}
               className="h-16 w-16 rounded-full object-cover"
             />
           ) : (
@@ -72,7 +72,7 @@ export default function UserProfilePage() {
             </h1>
             <p className="text-sm text-ink-soft">@{user.username}</p>
             <p className="mt-1 text-xs text-ink-soft">
-              加入于 {new Date(user.created_at).toLocaleDateString("zh-CN")}
+              Joined {new Date(user.created_at).toLocaleDateString("en-US")}
             </p>
           </div>
         </div>
@@ -81,9 +81,9 @@ export default function UserProfilePage() {
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { icon: Lightbulb, label: "发起想法", value: profile.idea_count },
-          { icon: FileText, label: "贡献方案", value: profile.contribution_count },
-          { icon: Trophy, label: "精选入围", value: profile.featured_count },
+          { icon: Lightbulb, label: "Ideas Posted", value: profile.idea_count },
+          { icon: FileText, label: "Proposals", value: profile.contribution_count },
+          { icon: Trophy, label: "Featured", value: profile.featured_count },
         ].map((item) => (
           <div
             key={item.label}

@@ -1,7 +1,7 @@
 export default function PageSkeleton({ variant = "detail" }: { variant?: "home" | "detail" }) {
   if (variant === "home") {
     return (
-      <div className="animate-pulse" role="status" aria-label="加载中">
+      <div className="animate-pulse" role="status" aria-label="Loading">
         <div className="px-7 pb-16 pt-20">
           <div className="mx-auto max-w-[720px] space-y-4 text-center">
             <div className="mx-auto h-4 w-40 rounded" style={{ background: "var(--surface-muted)" }} />
@@ -16,20 +16,20 @@ export default function PageSkeleton({ variant = "detail" }: { variant?: "home" 
             ))}
           </div>
         </div>
-        <span className="sr-only">加载中</span>
+        <span className="sr-only">Loading</span>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[860px] animate-pulse px-7 py-8" role="status" aria-label="加载中">
+    <div className="mx-auto max-w-[860px] animate-pulse px-7 py-8" role="status" aria-label="Loading">
       <div className="mb-6 h-4 w-20 rounded" style={{ background: "var(--surface-muted)" }} />
       <div className="mb-8 h-48 rounded-[20px]" style={{ background: "var(--surface)" }} />
       <div className="space-y-4">
         <div className="h-32 rounded-[16px]" style={{ background: "var(--surface)" }} />
         <div className="h-32 rounded-[16px]" style={{ background: "var(--surface)" }} />
       </div>
-      <span className="sr-only">加载中</span>
+      <span className="sr-only">Loading</span>
     </div>
   );
 }

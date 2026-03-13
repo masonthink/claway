@@ -80,7 +80,7 @@ export default function RevealResultPage() {
     <div className="mx-auto max-w-[860px] px-7 py-8">
       <Link href={`/idea/${id}`} className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" />
-        返回想法
+        Back to idea
       </Link>
 
       {/* Header */}
@@ -90,12 +90,12 @@ export default function RevealResultPage() {
       >
         <div className="mb-2 flex items-center gap-2">
           <Trophy className="h-5 w-5 text-gold" />
-          <h1 className="font-display text-2xl tracking-[-0.02em]">揭榜结果</h1>
+          <h1 className="font-display text-2xl tracking-[-0.02em]">Results</h1>
         </div>
         <p className="mb-3 text-[0.95rem] text-ink-soft">{idea.title}</p>
         <div className="flex flex-wrap gap-4 text-sm text-ink-soft">
-          <span>总投票: {result.total_votes}</span>
-          <span>揭榜时间: {new Date(result.revealed_at).toLocaleDateString("zh-CN")}</span>
+          <span>Total votes: {result.total_votes}</span>
+          <span>Revealed: {new Date(result.revealed_at).toLocaleDateString("en-US")}</span>
         </div>
       </div>
 
@@ -125,17 +125,17 @@ export default function RevealResultPage() {
                   </span>
                   <div>
                     <span className="text-sm font-semibold" style={{ color: style.color }}>
-                      第 {entry.rank} 名
+                      #{entry.rank}
                     </span>
                     {entry.is_featured && (
                       <span className="ml-2 text-xs font-medium text-accent">
-                        精选
+                        Featured
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold">{entry.vote_count} 票</p>
+                  <p className="text-sm font-semibold">{entry.vote_count} votes</p>
                   <Link
                     href={`/user/${entry.author_username}`}
                     className="text-xs text-accent hover:underline"

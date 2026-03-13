@@ -32,11 +32,11 @@ export default function IdeaCard({ idea }: { idea: Idea }) {
         <span>@{idea.initiator_username}</span>
         <span className="flex items-center gap-1">
           <Users className="h-3 w-3" />
-          {idea.contribution_count} 贡献
+          {idea.contribution_count} proposals
         </span>
         <span className="flex items-center gap-1">
           <Vote className="h-3 w-3" />
-          {idea.voter_count} 投票
+          {idea.voter_count} votes
         </span>
         {idea.status === "open" && (
           <span className="ml-auto flex items-center gap-1 text-accent">

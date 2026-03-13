@@ -7,11 +7,11 @@ const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  open: "进行中",
-  closed: "已揭榜",
-  cancelled: "已取消",
-  draft: "草稿",
-  submitted: "已提交",
+  open: "Open",
+  closed: "Revealed",
+  cancelled: "Cancelled",
+  draft: "Draft",
+  submitted: "Submitted",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

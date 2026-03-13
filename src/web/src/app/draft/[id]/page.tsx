@@ -74,7 +74,7 @@ export default function DraftPreviewPage() {
     <div className="mx-auto max-w-[1100px] px-7 py-8">
       <Link href="/" className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink">
         <ArrowLeft className="h-4 w-4" />
-        返回
+        Back
       </Link>
 
       {/* Header */}
@@ -85,9 +85,9 @@ export default function DraftPreviewPage() {
         <div className="flex items-center gap-3">
           <FileText className="h-5 w-5 text-accent" />
           <div>
-            <h1 className="font-display text-lg tracking-[-0.02em]">草稿预览</h1>
+            <h1 className="font-display text-lg tracking-[-0.02em]">Draft Preview</h1>
             <p className="text-xs text-ink-soft">
-              Contribution #{contrib.id} - 最后更新 {new Date(contrib.updated_at).toLocaleDateString("zh-CN")}
+              Contribution #{contrib.id} - Last updated {new Date(contrib.updated_at).toLocaleDateString("en-US")}
             </p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function DraftPreviewPage() {
               style={{ border: "1px solid var(--line)" }}
             >
               <List className="h-3.5 w-3.5" />
-              目录
+              Contents
             </button>
           )}
         </div>
@@ -115,7 +115,7 @@ export default function DraftPreviewPage() {
               style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
             >
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-soft">
-                目录
+                Contents
               </p>
               <ul className="space-y-1">
                 {toc.map((item) => (
