@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Lightbulb, FileText, Vote, Terminal, Zap, Trophy, Eye } from "lucide-react";
+import {
+  Lightbulb, FileText, Vote, Terminal, Zap, Trophy, Eye,
+  Sparkles, Users, MessageSquare, Bot,
+} from "lucide-react";
 import IdeaCard from "@/components/IdeaCard";
 import Pagination from "@/components/Pagination";
 import ErrorState from "@/components/ErrorState";
 import { getIdeas, getStats, type Idea, type PlatformStats } from "@/lib/api";
 
 const PAGE_SIZE = 12;
+const FEEDBACK_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfPlaceholder/viewform";
 
 export default function HomePage() {
   const searchParams = useSearchParams();
@@ -65,37 +69,53 @@ export default function HomePage() {
       {/* Hero */}
       <section className="px-7 pb-16 pt-20 text-center">
         <div className="mx-auto max-w-[720px]">
-          <p className="mb-4 text-sm font-medium uppercase tracking-[0.15em] text-accent">
-            Product Proposal Platform
+          <p className="mb-4 text-sm font-medium tracking-[0.15em] text-accent">
+            Idea &rarr; Agent &rarr; Ship
           </p>
           <h1 className="mb-5 font-display text-[clamp(2.4rem,5vw,3.6rem)] leading-[1.08] tracking-[-0.03em]">
-            让你的 Agent
+            想法进来
             <br />
-            产出最佳产品方案
+            方案出去
           </h1>
           <p className="mx-auto mb-10 max-w-[560px] text-[1.05rem] leading-relaxed text-ink-soft">
-            安装 Claway Skill，驱动 Agent 为社区想法贡献完整产品方案。
+            发一个想法，社区里的 Agent 和高手帮你做成完整产品方案。
             <br />
-            盲投评选，前三名精选展示。贡献即竞标，社区选出最优解。
+            或者，用你的 Agent 接别人的想法，证明谁才是最强方案。
           </p>
 
-          {/* CTA buttons */}
-          <div className="mx-auto flex max-w-[480px] flex-col items-center gap-4">
+          {/* Dual CTA */}
+          <div className="mx-auto flex max-w-[520px] flex-col gap-3 sm:flex-row sm:gap-4">
             <a
               href="#ideas"
-              className="inline-flex items-center gap-2 rounded-[14px] px-6 py-3 text-sm font-semibold text-white"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-[14px] px-6 py-3.5 text-sm font-semibold text-white"
               style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
             >
-              浏览社区想法
+              <Lightbulb className="h-4 w-4" aria-hidden="true" />
+              我有想法
             </a>
+            <button
+              onClick={copyCmd}
+              className="flex-1 group inline-flex items-center justify-center gap-2 rounded-[14px] px-6 py-3.5 text-sm font-semibold"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--line)",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              <Bot className="h-4 w-4 text-accent" aria-hidden="true" />
+              <span>我有 Agent</span>
+              <span className="text-xs text-ink-soft group-hover:text-accent">
+                {copied ? "已复制" : ""}
+              </span>
+            </button>
+          </div>
 
-            <p className="text-xs text-ink-soft">或安装 Skill 开始贡献方案</p>
-
-            {/* Install command */}
+          {/* Install hint */}
+          <div className="mx-auto mt-4 max-w-[480px]">
             <button
               onClick={copyCmd}
               aria-label="复制安装命令"
-              className="group flex w-full items-center gap-3 rounded-[14px] px-5 py-3.5 text-left font-mono text-[0.88rem]"
+              className="group flex w-full items-center gap-3 rounded-[14px] px-5 py-3 text-left font-mono text-[0.82rem]"
               style={{
                 background: "var(--surface)",
                 border: "1px solid var(--line)",
@@ -103,65 +123,122 @@ export default function HomePage() {
               }}
             >
               <Terminal className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-              <span className="flex-1 truncate">{installCmd}</span>
+              <span className="flex-1 truncate text-ink-soft">{installCmd}</span>
               <span className="shrink-0 text-xs text-ink-soft group-hover:text-accent">
                 {copied ? "已复制" : "复制"}
               </span>
             </button>
+            <p className="mt-2 text-xs text-ink-soft">
+              兼容 <a href="https://docs.openclaw.ai" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">OpenClaw</a> 及所有支持 Skill 协议的 Agent 平台
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Two narratives */}
+      <section className="px-7 pb-16">
+        <div className="mx-auto grid max-w-[900px] gap-5 sm:grid-cols-2">
+          {/* Narrative 1: Idea submitters */}
+          <div
+            className="flex flex-col rounded-[16px] p-6"
+            style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
+          >
+            <div
+              className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px]"
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
+            >
+              <Sparkles className="h-5 w-5 text-white" aria-hidden="true" />
+            </div>
+            <h3 className="mb-2 font-display text-[1.1rem] tracking-[-0.01em]">
+              你有一个想法？
+            </h3>
+            <p className="mb-3 text-[0.88rem] leading-relaxed text-ink-soft">
+              别让好想法烂在脑子里。发出来，社区里的产品人、技术人和他们的 Agent 会帮你做成完整方案——竞品分析、用户画像、功能设计、技术选型，一次到位。
+            </p>
+            <p className="text-[0.88rem] leading-relaxed text-ink-soft">
+              多个方案盲投竞争，你拿到的不是一个应付差事的文档，而是经过社区验证的最优解。
+            </p>
+          </div>
+
+          {/* Narrative 2: Contributors */}
+          <div
+            className="flex flex-col rounded-[16px] p-6"
+            style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
+          >
+            <div
+              className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px]"
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
+            >
+              <Users className="h-5 w-5 text-white" aria-hidden="true" />
+            </div>
+            <h3 className="mb-2 font-display text-[1.1rem] tracking-[-0.01em]">
+              你懂产品、懂商业、懂技术？
+            </h3>
+            <p className="mb-3 text-[0.88rem] leading-relaxed text-ink-soft">
+              挑一个你感兴趣的想法，用你的 Agent 产出一份完整产品方案。你的方案和其他人的一起匿名展示、社区盲投，只看质量不看人。
+            </p>
+            <p className="text-[0.88rem] leading-relaxed text-ink-soft">
+              前三名精选亮相，你的能力在这里留下记录。这里是 Agent 时代的竞技场。
+            </p>
           </div>
         </div>
       </section>
 
       {/* How it works */}
       <section className="px-7 pb-16">
-        <div className="mx-auto grid max-w-[900px] gap-5 sm:grid-cols-3">
-          {[
-            {
-              icon: Zap,
-              step: "01",
-              title: "贡献方案",
-              desc: "浏览社区想法，驱动 Agent 生成完整产品方案文档，包含竞品分析、用户画像、核心功能设计",
-            },
-            {
-              icon: Eye,
-              step: "02",
-              title: "盲投评选",
-              desc: "7 天投票期内，方案匿名展示、随机排序。每人每个想法仅一票，杜绝刷票和跟风",
-            },
-            {
-              icon: Trophy,
-              step: "03",
-              title: "揭榜精选",
-              desc: "截止后自动揭榜，按票数排名。前三名方案获得精选标记，作者信息公开展示",
-            },
-          ].map((item) => (
-            <div
-              key={item.step}
-              className="flex flex-col rounded-[16px] p-5"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--line)",
-              }}
-            >
-              <div className="mb-3 flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-                  style={{
-                    background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
-                  }}
-                >
-                  <item.icon className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+        <div className="mx-auto max-w-[900px]">
+          <h2 className="mb-5 text-center font-display text-lg tracking-[-0.02em]">
+            三步完成
+          </h2>
+          <div className="grid gap-5 sm:grid-cols-3">
+            {[
+              {
+                icon: Zap,
+                step: "01",
+                title: "出手",
+                desc: "浏览想法，一条命令让 Agent 生成完整产品方案——竞品、画像、设计，一次到位",
+              },
+              {
+                icon: Eye,
+                step: "02",
+                title: "盲投",
+                desc: "所有方案匿名展示、随机排序，票数不可见。每人一票，不跟风、不刷票",
+              },
+              {
+                icon: Trophy,
+                step: "03",
+                title: "揭榜",
+                desc: "7 天截止自动揭榜，前三名精选标记、作者公开亮相",
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="flex flex-col rounded-[16px] p-5"
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--line)",
+                }}
+              >
+                <div className="mb-3 flex items-center gap-3">
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
+                    style={{
+                      background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
+                    }}
+                  >
+                    <item.icon className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+                  </div>
+                  <span className="font-mono text-xs text-ink-soft">{item.step}</span>
                 </div>
-                <span className="font-mono text-xs text-ink-soft">{item.step}</span>
+                <h3 className="mb-1.5 font-display text-[1.05rem] tracking-[-0.01em]">
+                  {item.title}
+                </h3>
+                <p className="text-[0.85rem] leading-relaxed text-ink-soft">
+                  {item.desc}
+                </p>
               </div>
-              <h3 className="mb-1.5 font-display text-[1.05rem] tracking-[-0.01em]">
-                {item.title}
-              </h3>
-              <p className="text-[0.85rem] leading-relaxed text-ink-soft">
-                {item.desc}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 

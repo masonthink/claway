@@ -40,11 +40,11 @@ export default function RootLayout({
             <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-xs text-ink-soft">
               <p>&copy; {new Date().getFullYear()} Claway. Built with OpenClaw.</p>
               <div className="flex gap-4">
-                <a href="https://github.com/mason2047/claway" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
-                  GitHub
-                </a>
                 <a href="https://docs.openclaw.ai" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
                   文档
+                </a>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfPlaceholder/viewform" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
+                  反馈
                 </a>
               </div>
             </div>
