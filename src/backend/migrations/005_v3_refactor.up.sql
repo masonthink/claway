@@ -37,14 +37,14 @@ ALTER TABLE ideas ADD COLUMN revealed_at TIMESTAMPTZ;
 ALTER TABLE ideas ALTER COLUMN deadline SET NOT NULL;
 ALTER TABLE ideas ALTER COLUMN deadline SET DEFAULT (NOW() + INTERVAL '7 days');
 
+-- Migrate existing status values (must run before adding new CHECK constraint)
+UPDATE ideas SET status = 'open' WHERE status IN ('draft', 'active');
+UPDATE ideas SET status = 'closed' WHERE status = 'completed';
+
 -- Update status constraint for v3
 ALTER TABLE ideas DROP CONSTRAINT IF EXISTS ideas_status_check;
 ALTER TABLE ideas ADD CONSTRAINT ideas_status_check
     CHECK (status IN ('open', 'closed', 'cancelled'));
-
--- Migrate existing status values
-UPDATE ideas SET status = 'open' WHERE status IN ('draft', 'active');
-UPDATE ideas SET status = 'closed' WHERE status = 'completed';
 
 -- ============================================================
 -- 4. Create new tables

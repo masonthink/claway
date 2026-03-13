@@ -1,0 +1,3 @@
+-- 005_v3_refactor.down.sql
+-- v3 is a destructive migration; rollback is not supported.
+-- This file exists only to satisfy golang-migrate's requirement for paired files.
