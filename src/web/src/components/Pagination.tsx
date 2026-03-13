@@ -34,10 +34,11 @@ export default function Pagination({
       <button
         disabled={currentPage === 1}
         onClick={() => onChange((currentPage - 2) * limit)}
+        aria-label="上一页"
         className="flex h-9 w-9 items-center justify-center rounded-[8px] disabled:opacity-30"
         style={{ border: "1px solid var(--line)" }}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {pages.map((p, i) =>
@@ -66,10 +67,11 @@ export default function Pagination({
       <button
         disabled={currentPage === totalPages}
         onClick={() => onChange(currentPage * limit)}
+        aria-label="下一页"
         className="flex h-9 w-9 items-center justify-center rounded-[8px] disabled:opacity-30"
         style={{ border: "1px solid var(--line)" }}
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );

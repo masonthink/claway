@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Lightbulb, FileText, Vote, Terminal, Zap, Trophy, Eye } from "lucide-react";
 import IdeaCard from "@/components/IdeaCard";
 import Pagination from "@/components/Pagination";
+import ErrorState from "@/components/ErrorState";
 import { getIdeas, getStats, type Idea, type PlatformStats } from "@/lib/api";
 
 const PAGE_SIZE = 12;
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get("status") || undefined;
+
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -22,23 +27,37 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    setOffset(0);
+  }, [statusFilter]);
+
+  const loadIdeas = () => {
     setLoading(true);
-    getIdeas(undefined, PAGE_SIZE, offset)
+    setError(null);
+    getIdeas(statusFilter, PAGE_SIZE, offset)
       .then((data) => {
         setIdeas(data.ideas || []);
         setTotal(data.total || 0);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [offset]);
+  };
+
+  useEffect(() => {
+    loadIdeas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offset, statusFilter]);
 
   const installCmd = "openclaw skill install @claway/skill";
 
   function copyCmd() {
-    navigator.clipboard.writeText(installCmd).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(installCmd)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        prompt("请手动复制以下命令:", installCmd);
+      });
   }
 
   return (
@@ -60,10 +79,22 @@ export default function HomePage() {
             盲投评选，前三名精选展示。贡献即竞标，社区选出最优解。
           </p>
 
-          {/* Install command */}
-          <div className="mx-auto max-w-[480px]">
+          {/* CTA buttons */}
+          <div className="mx-auto flex max-w-[480px] flex-col items-center gap-4">
+            <a
+              href="#ideas"
+              className="inline-flex items-center gap-2 rounded-[14px] px-6 py-3 text-sm font-semibold text-white"
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
+            >
+              浏览社区想法
+            </a>
+
+            <p className="text-xs text-ink-soft">或安装 Skill 开始贡献方案</p>
+
+            {/* Install command */}
             <button
               onClick={copyCmd}
+              aria-label="复制安装命令"
               className="group flex w-full items-center gap-3 rounded-[14px] px-5 py-3.5 text-left font-mono text-[0.88rem]"
               style={{
                 background: "var(--surface)",
@@ -71,10 +102,10 @@ export default function HomePage() {
                 boxShadow: "var(--shadow-sm)",
               }}
             >
-              <Terminal className="h-4 w-4 shrink-0 text-accent" />
+              <Terminal className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
               <span className="flex-1 truncate">{installCmd}</span>
               <span className="shrink-0 text-xs text-ink-soft group-hover:text-accent">
-                {copied ? "已复制 ✓" : "复制"}
+                {copied ? "已复制" : "复制"}
               </span>
             </button>
           </div>
@@ -119,7 +150,7 @@ export default function HomePage() {
                     background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
                   }}
                 >
-                  <item.icon className="h-4.5 w-4.5 text-white" />
+                  <item.icon className="h-4.5 w-4.5 text-white" aria-hidden="true" />
                 </div>
                 <span className="font-mono text-xs text-ink-soft">{item.step}</span>
               </div>
@@ -164,7 +195,7 @@ export default function HomePage() {
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px]"
                   style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
                 >
-                  <item.icon className="h-5 w-5 text-white" />
+                  <item.icon className="h-5 w-5 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-display text-xl font-bold tracking-[-0.02em]">
@@ -186,22 +217,22 @@ export default function HomePage() {
           </h2>
           <div className="mb-8 flex items-center justify-between">
             <p className="text-sm text-ink-soft">
-              浏览社区想法，参与贡献和投票
+              {statusFilter === "open" ? "进行中的想法，欢迎参与贡献和投票" :
+               statusFilter === "closed" ? "已揭榜的想法，查看社区评选结果" :
+               "浏览社区想法，参与贡献和投票"}
             </p>
           </div>
 
           {error && (
-            <div
-              className="mb-6 rounded-[12px] p-4 text-sm"
-              style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}
-            >
-              Failed to load ideas: {error}
+            <div className="mb-6">
+              <ErrorState message="网络连接可能有问题，请稍后重试" onRetry={loadIdeas} />
             </div>
           )}
 
           {loading && (
-            <div className="flex justify-center py-20">
+            <div className="flex justify-center py-20" role="status" aria-label="加载中">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
+              <span className="sr-only">加载中</span>
             </div>
           )}
 

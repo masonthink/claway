@@ -20,7 +20,7 @@ func NewStatsHandler(svc *service.Service) *StatsHandler {
 func (h *StatsHandler) GetPlatformStats(c echo.Context) error {
 	stats, err := h.svc.GetPlatformStats(c.Request().Context())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, stats)

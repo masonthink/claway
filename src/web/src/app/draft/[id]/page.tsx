@@ -7,6 +7,7 @@ import { ArrowLeft, FileText, List } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import StatusBadge from "@/components/StatusBadge";
 import { getDraftPreview, type Contribution } from "@/lib/api";
+import ErrorState from "@/components/ErrorState";
 
 interface TocItem {
   level: number;
@@ -51,25 +52,22 @@ export default function DraftPreviewPage() {
     return extractToc(contrib.content);
   }, [contrib?.content]);
 
+  const reload = () => {
+    if (!id) return;
+    setError(null);
+    getDraftPreview(id).then(setContrib).catch((err) => setError(err.message));
+  };
+
   if (error) {
     return (
       <div className="mx-auto max-w-[860px] px-7 py-12">
-        <div
-          className="rounded-[12px] p-4 text-sm"
-          style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}
-        >
-          {error}
-        </div>
+        <ErrorState message={error} onRetry={reload} />
       </div>
     );
   }
 
   if (!contrib) {
-    return (
-      <div className="mx-auto max-w-[860px] px-7 py-12 text-center text-ink-soft">
-        Loading...
-      </div>
-    );
+    return null; // loading.tsx handles this
   }
 
   return (

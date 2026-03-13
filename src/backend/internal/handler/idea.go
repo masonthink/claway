@@ -28,7 +28,7 @@ func (h *IdeaHandler) CreateIdea(c echo.Context) error {
 
 	idea, err := h.svc.CreateIdea(c.Request().Context(), userID, req)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusCreated, idea)
@@ -42,7 +42,7 @@ func (h *IdeaHandler) ListIdeas(c echo.Context) error {
 
 	resp, err := h.svc.ListIdeas(c.Request().Context(), status, limit, offset)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, resp)
@@ -57,7 +57,7 @@ func (h *IdeaHandler) GetIdea(c echo.Context) error {
 
 	idea, err := h.svc.GetIdea(c.Request().Context(), id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusNotFound, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, idea)
@@ -71,7 +71,7 @@ func (h *IdeaHandler) ListMyIdeas(c echo.Context) error {
 
 	resp, err := h.svc.ListMyIdeas(c.Request().Context(), userID, limit, offset)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, resp)
@@ -86,7 +86,7 @@ func (h *IdeaHandler) GetRevealResult(c echo.Context) error {
 
 	result, err := h.svc.GetRevealResult(c.Request().Context(), id)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, result)

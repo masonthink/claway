@@ -32,7 +32,7 @@ func (h *ContributionHandler) CreateContribution(c echo.Context) error {
 
 	contrib, err := h.svc.CreateContribution(c.Request().Context(), userID, ideaID, req)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusCreated, contrib)
@@ -53,7 +53,7 @@ func (h *ContributionHandler) UpdateContribution(c echo.Context) error {
 
 	contrib, err := h.svc.UpdateContribution(c.Request().Context(), userID, contribID, req)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, contrib)
@@ -69,7 +69,7 @@ func (h *ContributionHandler) SubmitContribution(c echo.Context) error {
 
 	contrib, err := h.svc.SubmitContribution(c.Request().Context(), userID, contribID)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, contrib)
@@ -84,7 +84,7 @@ func (h *ContributionHandler) ListContributions(c echo.Context) error {
 
 	contributions, err := h.svc.ListContributions(c.Request().Context(), ideaID)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusNotFound, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, contributions)
@@ -105,7 +105,7 @@ func (h *ContributionHandler) GetContribution(c echo.Context) error {
 
 	contrib, err := h.svc.GetContribution(c.Request().Context(), userID, contribID)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusNotFound, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, contrib)
@@ -119,7 +119,7 @@ func (h *ContributionHandler) ListMyContributions(c echo.Context) error {
 
 	contributions, total, err := h.svc.ListMyContributions(c.Request().Context(), userID, limit, offset)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -138,7 +138,7 @@ func (h *ContributionHandler) GetDraftPreview(c echo.Context) error {
 
 	contrib, err := h.svc.GetDraftPreview(c.Request().Context(), userID, contribID)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusNotFound, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, contrib)

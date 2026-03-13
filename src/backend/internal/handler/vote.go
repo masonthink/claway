@@ -32,7 +32,7 @@ func (h *VoteHandler) CastVote(c echo.Context) error {
 
 	vote, err := h.svc.CastVote(c.Request().Context(), userID, ideaID, req)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusCreated, map[string]string{
@@ -48,7 +48,7 @@ func (h *VoteHandler) ListMyVotes(c echo.Context) error {
 
 	votes, total, err := h.svc.ListMyVotes(c.Request().Context(), userID, limit, offset)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{

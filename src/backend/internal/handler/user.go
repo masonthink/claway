@@ -25,7 +25,7 @@ func (h *UserHandler) GetUserProfile(c echo.Context) error {
 
 	profile, err := h.svc.GetUserProfile(c.Request().Context(), username)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusNotFound, map[string]string{"error": userMessage(err)})
 	}
 
 	return c.JSON(http.StatusOK, profile)

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Trophy, Medal } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import ErrorState from "@/components/ErrorState";
 import {
   getIdea,
   getRevealResult,
@@ -43,15 +44,26 @@ export default function RevealResultPage() {
     ]).catch((err) => setError(err.message));
   }, [id]);
 
+  const reload = () => {
+    if (!id) return;
+    setError(null);
+    Promise.all([
+      getIdea(id).then(setIdea),
+      getRevealResult(id).then(setResult),
+      getContributions(id).then((contribs) => {
+        const contents: Record<number, string> = {};
+        for (const c of contribs) {
+          if (c.content) contents[c.id] = c.content;
+        }
+        setContribContents(contents);
+      }),
+    ]).catch((err) => setError(err.message));
+  };
+
   if (error) {
     return (
       <div className="mx-auto max-w-[860px] px-7 py-12">
-        <div
-          className="rounded-[12px] p-4 text-sm"
-          style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}
-        >
-          {error}
-        </div>
+        <ErrorState message={error} onRetry={reload} />
       </div>
     );
   }

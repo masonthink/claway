@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lightbulb, FileText, Trophy, User as UserIcon } from "lucide-react";
 import { getUserProfile, type UserProfile } from "@/lib/api";
+import ErrorState from "@/components/ErrorState";
 
 export default function UserProfilePage() {
   const { username } = useParams<{ username: string }>();
@@ -18,25 +19,22 @@ export default function UserProfilePage() {
       .catch((err) => setError(err.message));
   }, [username]);
 
+  const reload = () => {
+    if (!username) return;
+    setError(null);
+    getUserProfile(username).then(setProfile).catch((err) => setError(err.message));
+  };
+
   if (error) {
     return (
       <div className="mx-auto max-w-[860px] px-7 py-12">
-        <div
-          className="rounded-[12px] p-4 text-sm"
-          style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}
-        >
-          {error}
-        </div>
+        <ErrorState message={error} onRetry={reload} />
       </div>
     );
   }
 
   if (!profile) {
-    return (
-      <div className="mx-auto max-w-[860px] px-7 py-12 text-center text-ink-soft">
-        Loading...
-      </div>
-    );
+    return null; // loading.tsx handles this
   }
 
   const { user } = profile;
@@ -57,7 +55,7 @@ export default function UserProfilePage() {
           {user.avatar_url ? (
             <img
               src={user.avatar_url}
-              alt={user.username}
+              alt={`${user.username} 的头像`}
               className="h-16 w-16 rounded-full object-cover"
             />
           ) : (

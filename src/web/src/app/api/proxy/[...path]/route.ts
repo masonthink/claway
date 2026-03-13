@@ -3,6 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND_URL =
   process.env.BACKEND_URL || "https://api.claway.cc/api/v1";
 
+// Allowed path prefixes to prevent SSRF
+const ALLOWED_PREFIXES = [
+  "public/",
+  "auth/",
+  "ideas",
+  "contributions",
+  "me/",
+  "draft/",
+];
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -33,7 +43,19 @@ export async function DELETE(
 
 async function proxy(req: NextRequest, params: { path: string[] }) {
   const path = params.path.join("/");
+
+  // Validate path: reject traversal and non-whitelisted prefixes
+  if (path.includes("..") || path.includes("//") || !ALLOWED_PREFIXES.some((p) => path.startsWith(p))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   const url = new URL(`${BACKEND_URL}/${path}`);
+
+  // Ensure resolved URL still points to backend (prevent host override)
+  const backendOrigin = new URL(BACKEND_URL).origin;
+  if (url.origin !== backendOrigin) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   // Forward query params
   req.nextUrl.searchParams.forEach((value, key) => {
@@ -74,9 +96,9 @@ async function proxy(req: NextRequest, params: { path: string[] }) {
         "Content-Type": res.headers.get("Content-Type") || "application/json",
       },
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
-      { error: `proxy error: ${err instanceof Error ? err.message : "unknown"}` },
+      { error: "proxy error" },
       { status: 502 }
     );
   }
