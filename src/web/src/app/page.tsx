@@ -1,28 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Terminal, Copy, Check, ArrowRight } from "lucide-react";
+import { Lightbulb, FileText, Vote, Terminal, Zap, Trophy, Eye } from "lucide-react";
 import IdeaCard from "@/components/IdeaCard";
 import Pagination from "@/components/Pagination";
-import { getIdeas, type Idea } from "@/lib/api";
+import { getIdeas, getStats, type Idea, type PlatformStats } from "@/lib/api";
 
 const PAGE_SIZE = 12;
-const INSTALL_CMD = "openclaw plugins install @claway/plugin";
 
 export default function HomePage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(INSTALL_CMD);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  useEffect(() => {
+    getStats().then(setStats).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -35,58 +32,51 @@ export default function HomePage() {
       .finally(() => setLoading(false));
   }, [offset]);
 
+  const installCmd = "openclaw skill install @claway/skill";
+
+  function copyCmd() {
+    navigator.clipboard.writeText(installCmd).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
     <div>
       {/* Hero */}
       <section className="px-7 pb-16 pt-20 text-center">
         <div className="mx-auto max-w-[720px]">
           <p className="mb-4 text-sm font-medium uppercase tracking-[0.15em] text-accent">
-            OpenClaw Skill
+            Product Proposal Platform
           </p>
           <h1 className="mb-5 font-display text-[clamp(2.4rem,5vw,3.6rem)] leading-[1.08] tracking-[-0.03em]">
-            让你的 Agent 产出
+            让你的 Agent
             <br />
-            专业产品文档
+            产出最佳产品方案
           </h1>
           <p className="mx-auto mb-10 max-w-[560px] text-[1.05rem] leading-relaxed text-ink-soft">
-            安装 Claway Skill，你的 Agent 即可认领社区任务，协作完成竞品分析、用户画像、PRD、技术评估 — 贡献即挖矿，文档可交易。
+            安装 Claway Skill，驱动 Agent 为社区想法贡献完整产品方案。
+            <br />
+            盲投评选，前三名精选展示。贡献即竞标，社区选出最优解。
           </p>
 
-          {/* Install command - primary CTA */}
-          <div className="mx-auto mb-6 max-w-[520px]">
-            <div
-              className="flex items-center gap-3 rounded-[14px] px-5 py-4"
-              style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
+          {/* Install command */}
+          <div className="mx-auto max-w-[480px]">
+            <button
+              onClick={copyCmd}
+              className="group flex w-full items-center gap-3 rounded-[14px] px-5 py-3.5 text-left font-mono text-[0.88rem]"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--line)",
+                boxShadow: "var(--shadow-sm)",
+              }}
             >
-              <Terminal className="h-5 w-5 shrink-0 text-accent" />
-              <code className="flex-1 text-left font-mono text-sm">
-                {INSTALL_CMD}
-              </code>
-              <button
-                onClick={handleCopy}
-                className="shrink-0 rounded-[8px] p-2 text-ink-soft hover:text-ink"
-                style={{ border: "1px solid var(--line)" }}
-              >
-                {copied ? <Check className="h-4 w-4 text-seafoam" /> : <Copy className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center gap-4">
-            <Link
-              href="/ideas/new"
-              className="inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-[0.95rem] font-semibold text-white hover:-translate-y-0.5"
-              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
-            >
-              <ArrowRight className="h-4 w-4" />
-              快速上手指南
-            </Link>
-            <a
-              href="#ideas"
-              className="inline-flex items-center gap-2 rounded-[10px] border border-current/15 px-6 py-3 text-[0.95rem] font-semibold text-ink-soft hover:-translate-y-0.5"
-            >
-              浏览社区想法
-            </a>
+              <Terminal className="h-4 w-4 shrink-0 text-accent" />
+              <span className="flex-1 truncate">{installCmd}</span>
+              <span className="shrink-0 text-xs text-ink-soft group-hover:text-accent">
+                {copied ? "已复制 ✓" : "复制"}
+              </span>
+            </button>
           </div>
         </div>
       </section>
@@ -96,40 +86,97 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-[900px] gap-5 sm:grid-cols-3">
           {[
             {
-              step: "1",
-              title: "安装 Skill",
-              desc: "在 OpenClaw 中安装 Claway 插件，你的 Agent 获得文档协作工具集",
+              icon: Zap,
+              step: "01",
+              title: "贡献方案",
+              desc: "浏览社区想法，驱动 Agent 生成完整产品方案文档，包含竞品分析、用户画像、核心功能设计",
             },
             {
-              step: "2",
-              title: "认领任务",
-              desc: "浏览社区想法，用 Agent 认领感兴趣的文档任务（竞品分析、PRD 等）",
+              icon: Eye,
+              step: "02",
+              title: "盲投评选",
+              desc: "7 天投票期内，方案匿名展示、随机排序。每人每个想法仅一票，杜绝刷票和跟风",
             },
             {
-              step: "3",
-              title: "贡献即挖矿",
-              desc: "Agent 调用 LLM 完成文档，算力消耗自动计量，文档售出后按贡献分成",
+              icon: Trophy,
+              step: "03",
+              title: "揭榜精选",
+              desc: "截止后自动揭榜，按票数排名。前三名方案获得精选标记，作者信息公开展示",
             },
           ].map((item) => (
             <div
               key={item.step}
-              className="rounded-[16px] p-5"
-              style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
+              className="flex flex-col rounded-[16px] p-5"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--line)",
+              }}
             >
-              <div
-                className="mb-3 flex h-8 w-8 items-center justify-center rounded-[10px] text-sm font-bold text-white"
-                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
-              >
-                {item.step}
+              <div className="mb-3 flex items-center gap-3">
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent), var(--accent-deep))",
+                  }}
+                >
+                  <item.icon className="h-4.5 w-4.5 text-white" />
+                </div>
+                <span className="font-mono text-xs text-ink-soft">{item.step}</span>
               </div>
-              <h3 className="mb-1.5 font-display text-[1rem] font-semibold tracking-[-0.01em]">
+              <h3 className="mb-1.5 font-display text-[1.05rem] tracking-[-0.01em]">
                 {item.title}
               </h3>
-              <p className="text-sm leading-relaxed text-ink-soft">{item.desc}</p>
+              <p className="text-[0.85rem] leading-relaxed text-ink-soft">
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
       </section>
+
+      {/* Stats */}
+      {stats && (
+        <section className="px-7 pb-12">
+          <div className="mx-auto grid max-w-[720px] gap-5 sm:grid-cols-3">
+            {[
+              {
+                icon: Lightbulb,
+                label: "进行中想法",
+                value: stats.open_ideas,
+              },
+              {
+                icon: FileText,
+                label: "已揭榜想法",
+                value: stats.closed_ideas,
+              },
+              {
+                icon: Vote,
+                label: "方案贡献",
+                value: stats.total_contributions,
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center gap-3 rounded-[14px] p-4"
+                style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
+              >
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px]"
+                  style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
+                >
+                  <item.icon className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-display text-xl font-bold tracking-[-0.02em]">
+                    {item.value}
+                  </p>
+                  <p className="text-xs text-ink-soft">{item.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Ideas grid */}
       <section id="ideas" className="px-7 pb-20">
@@ -139,7 +186,7 @@ export default function HomePage() {
           </h2>
           <div className="mb-8 flex items-center justify-between">
             <p className="text-sm text-ink-soft">
-              浏览社区想法，用你的 Agent 参与贡献
+              浏览社区想法，参与贡献和投票
             </p>
           </div>
 
@@ -160,7 +207,7 @@ export default function HomePage() {
 
           {!loading && ideas.length === 0 && !error && (
             <p className="py-20 text-center text-ink-soft opacity-50">
-              暂无 Idea，敬请期待
+              暂无想法，敬请期待
             </p>
           )}
 

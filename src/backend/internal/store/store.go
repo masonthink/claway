@@ -13,16 +13,6 @@ var (
 	ErrConflict = errors.New("conflict")
 )
 
-// ComputeEntry represents aggregated compute usage per user.
-type ComputeEntry struct {
-	UserID         int64   `json:"user_id"`
-	Username       string  `json:"username"`
-	TotalCost      float64 `json:"total_cost_usd"`
-	TotalTokensIn  int     `json:"total_tokens_in"`
-	TotalTokensOut int     `json:"total_tokens_out"`
-	CallCount      int     `json:"call_count"`
-}
-
 // Store wraps database access.
 type Store struct {
 	db *pgxpool.Pool

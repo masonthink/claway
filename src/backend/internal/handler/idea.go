@@ -34,7 +34,7 @@ func (h *IdeaHandler) CreateIdea(c echo.Context) error {
 	return c.JSON(http.StatusCreated, idea)
 }
 
-// ListIdeas handles GET /api/v1/ideas
+// ListIdeas handles GET /api/v1/ideas and GET /api/v1/public/ideas
 func (h *IdeaHandler) ListIdeas(c echo.Context) error {
 	status := c.QueryParam("status")
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
@@ -48,7 +48,7 @@ func (h *IdeaHandler) ListIdeas(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-// GetIdea handles GET /api/v1/ideas/:id
+// GetIdea handles GET /api/v1/ideas/:id and GET /api/v1/public/ideas/:id
 func (h *IdeaHandler) GetIdea(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -63,17 +63,31 @@ func (h *IdeaHandler) GetIdea(c echo.Context) error {
 	return c.JSON(http.StatusOK, idea)
 }
 
-// GetIdeaContext handles GET /api/v1/ideas/:id/context
-func (h *IdeaHandler) GetIdeaContext(c echo.Context) error {
+// ListMyIdeas handles GET /api/v1/me/ideas
+func (h *IdeaHandler) ListMyIdeas(c echo.Context) error {
+	userID := c.Get("user_id").(int64)
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	offset, _ := strconv.Atoi(c.QueryParam("offset"))
+
+	resp, err := h.svc.ListMyIdeas(c.Request().Context(), userID, limit, offset)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// GetRevealResult handles GET /api/v1/ideas/:id/result and GET /api/v1/public/ideas/:id/result
+func (h *IdeaHandler) GetRevealResult(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid idea id"})
 	}
 
-	ctx, err := h.svc.GetIdeaContext(c.Request().Context(), id)
+	result, err := h.svc.GetRevealResult(c.Request().Context(), id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, ctx)
+	return c.JSON(http.StatusOK, result)
 }

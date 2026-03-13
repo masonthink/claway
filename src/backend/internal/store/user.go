@@ -9,11 +9,11 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const userColumns = `id, openclaw_id, username, display_name, avatar_url, agent_api_key, credits_balance, created_at, updated_at`
+const userColumns = `id, openclaw_id, username, display_name, avatar_url, created_at, updated_at`
 
 func scanUser(row pgx.Row) (*model.User, error) {
 	var u model.User
-	err := row.Scan(&u.ID, &u.OpenClawID, &u.Username, &u.DisplayName, &u.AvatarURL, &u.AgentAPIKey, &u.CreditsBalance, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.OpenClawID, &u.Username, &u.DisplayName, &u.AvatarURL, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -43,6 +43,16 @@ func (s *Store) GetUserByID(ctx context.Context, id int64) (*model.User, error) 
 	return u, nil
 }
 
+// GetUserByUsername retrieves a user by their username.
+func (s *Store) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+	u, err := scanUser(s.db.QueryRow(ctx,
+		`SELECT `+userColumns+` FROM users WHERE username = $1`, username))
+	if err != nil {
+		return nil, fmt.Errorf("get user by username: %w", err)
+	}
+	return u, nil
+}
+
 // CreateUser inserts a new user and returns the created record.
 func (s *Store) CreateUser(ctx context.Context, openclawID, username string) (*model.User, error) {
 	u, err := scanUser(s.db.QueryRow(ctx,
@@ -67,21 +77,6 @@ func (s *Store) CreateUserFromOAuth(ctx context.Context, username, displayName, 
 		return nil, fmt.Errorf("create user from oauth: %w", err)
 	}
 	return u, nil
-}
-
-// UpdateCreditsBalance atomically adjusts a user's credits balance by delta.
-func (s *Store) UpdateCreditsBalance(ctx context.Context, userID int64, delta float64) error {
-	tag, err := s.db.Exec(ctx,
-		`UPDATE users SET credits_balance = credits_balance + $1, updated_at = NOW()
-		 WHERE id = $2`, delta, userID,
-	)
-	if err != nil {
-		return fmt.Errorf("update credits balance: %w", err)
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	return nil
 }
 
 // --- OAuth Accounts ---

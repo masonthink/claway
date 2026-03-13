@@ -1,166 +1,117 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 )
 
-type PackageType string
-
-const (
-	PackageLight    PackageType = "light"
-	PackageStandard PackageType = "standard"
-)
+// --- Status constants ---
 
 type IdeaStatus string
 
 const (
-	IdeaStatusDraft      IdeaStatus = "draft"
-	IdeaStatusActive     IdeaStatus = "active"
-	IdeaStatusCompleted  IdeaStatus = "completed"
-	IdeaStatusCancelled  IdeaStatus = "cancelled"
+	IdeaStatusOpen      IdeaStatus = "open"
+	IdeaStatusClosed    IdeaStatus = "closed"
+	IdeaStatusCancelled IdeaStatus = "cancelled"
 )
 
-type TaskStatus string
+type ContributionStatus string
 
 const (
-	TaskStatusOpen      TaskStatus = "open"
-	TaskStatusClaimed   TaskStatus = "claimed"
-	TaskStatusSubmitted TaskStatus = "submitted"
-	TaskStatusApproved  TaskStatus = "approved"
-	TaskStatusRejected  TaskStatus = "rejected"
-	TaskStatusRevision  TaskStatus = "revision"
+	ContributionStatusDraft     ContributionStatus = "draft"
+	ContributionStatusSubmitted ContributionStatus = "submitted"
 )
 
-type TaskType string
+// --- Core models ---
 
-const (
-	TaskTypeD1 TaskType = "doc1" // 竞品分析
-	TaskTypeD2 TaskType = "doc2" // 用户画像
-	TaskTypeD3 TaskType = "doc3" // 产品需求文档 (PRD)
-	TaskTypeD4 TaskType = "doc4" // 技术可行性评估
-)
-
+// User represents a platform user.
 type User struct {
-	ID             int64          `json:"id"`
-	OpenClawID     string         `json:"openclaw_id,omitempty"`
-	Username       string         `json:"username"`
-	DisplayName    string         `json:"display_name"`
-	AvatarURL      string         `json:"avatar_url"`
-	AgentAPIKey    NullString `json:"-"`
-	CreditsBalance float64        `json:"credits_balance"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
+	ID          int64     `json:"id"`
+	OpenClawID  string    `json:"openclaw_id,omitempty"`
+	Username    string    `json:"username"`
+	DisplayName string    `json:"display_name"`
+	AvatarURL   string    `json:"avatar_url"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// OAuthAccount represents a linked OAuth provider account.
 type OAuthAccount struct {
-	ID               int64        `json:"id"`
-	UserID           int64        `json:"user_id"`
-	Provider         string       `json:"provider"`
-	ProviderUserID   string       `json:"provider_user_id"`
-	ProviderUsername  string       `json:"provider_username"`
-	ProviderEmail    string       `json:"provider_email"`
-	AccessToken      string       `json:"-"`
-	RefreshToken     string       `json:"-"`
+	ID               int64    `json:"id"`
+	UserID           int64    `json:"user_id"`
+	Provider         string   `json:"provider"`
+	ProviderUserID   string   `json:"provider_user_id"`
+	ProviderUsername  string   `json:"provider_username"`
+	ProviderEmail    string   `json:"provider_email"`
+	AccessToken      string   `json:"-"`
+	RefreshToken     string   `json:"-"`
 	TokenExpiresAt   NullTime `json:"-"`
-	CreatedAt        time.Time    `json:"created_at"`
-	UpdatedAt        time.Time    `json:"updated_at"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
+// Idea represents a product idea open for competitive contributions.
 type Idea struct {
-	ID                 int64       `json:"id"`
-	Title              string      `json:"title"`
-	Description        string      `json:"description"`
-	TargetUserHint     string      `json:"target_user_hint"`
-	ProblemDefinition  string      `json:"problem_definition"`
-	InitiatorID        int64       `json:"initiator_id"`
-	InitiatorCutPercent float64    `json:"initiator_cut_percent"`
-	PackageType        PackageType `json:"package_type"`
-	Status             IdeaStatus  `json:"status"`
-	CreatedAt          time.Time   `json:"created_at"`
-	Deadline           NullTime `json:"deadline"`
+	ID          int64      `json:"id"`
+	InitiatorID int64      `json:"initiator_id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	TargetUser  string     `json:"target_user"`
+	CoreProblem string     `json:"core_problem"`
+	OutOfScope  NullString `json:"out_of_scope"`
+	Status      IdeaStatus `json:"status"`
+	Deadline    time.Time  `json:"deadline"`
+	RevealedAt  NullTime   `json:"revealed_at"`
+	CreatedAt   time.Time  `json:"created_at"`
 }
 
-type Task struct {
-	ID                 int64          `json:"id"`
-	IdeaID             int64          `json:"idea_id"`
-	Type               TaskType       `json:"type"`
-	Title              string         `json:"title"`
-	Description        string         `json:"description"`
-	AcceptanceCriteria string         `json:"acceptance_criteria"`
-	Dependencies       string         `json:"dependencies"`
-	TokenLimitHint     int            `json:"token_limit_hint"`
-	Status             TaskStatus     `json:"status"`
-	ClaimedBy          NullInt64  `json:"claimed_by"`
-	ClaimedAt          NullTime   `json:"claimed_at"`
-	SubmittedAt        NullTime   `json:"submitted_at"`
-	ApprovedAt         NullTime   `json:"approved_at"`
-	OutputContent      NullString `json:"output_content"`
-	OutputNote         NullString `json:"output_note"`
-	QualityScore       NullFloat64 `json:"quality_score"`
-	RejectReason       NullString  `json:"reject_reason"`
-	ReviewFeedback     NullString  `json:"review_feedback"`
-	CostUSDAccumulated float64     `json:"cost_usd_accumulated"`
-}
-
-type Document struct {
-	ID             int64     `json:"id"`
-	TaskID         int64     `json:"task_id"`
-	Content        string    `json:"content"`
-	CurrentVersion int       `json:"current_version"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
-}
-
-type DocumentVersion struct {
-	ID               int64          `json:"id"`
-	DocumentID       int64          `json:"document_id"`
-	Version          int            `json:"version"`
-	Content          string         `json:"content"`
-	DiffFromPrevious NullString `json:"diff_from_previous"`
-	CreatedAt        time.Time      `json:"created_at"`
-	CreatedBy        int64          `json:"created_by"`
-}
-
-type TokenUsageLog struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"user_id"`
-	TaskID    int64     `json:"task_id"`
-	Model     string    `json:"model"`
-	TokensIn  int       `json:"tokens_in"`
-	TokensOut int       `json:"tokens_out"`
-	CostUSD   float64   `json:"cost_usd"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
+// Contribution represents a user's solution document for an idea.
 type Contribution struct {
-	ID            int64   `json:"id"`
-	IdeaID        int64   `json:"idea_id"`
-	TaskID        int64   `json:"task_id"`
-	UserID        int64   `json:"user_id"`
-	CostUSD       float64 `json:"cost_usd"`
-	QualityScore  float64 `json:"quality_score"`
-	WeightedScore float64 `json:"weighted_score"`
-	WeightPercent float64 `json:"weight_percent"`
+	ID          int64              `json:"id"`
+	IdeaID      int64              `json:"idea_id"`
+	AuthorID    int64              `json:"author_id"`
+	Content     string             `json:"content"`
+	DecisionLog json.RawMessage    `json:"decision_log"`
+	Status      ContributionStatus `json:"status"`
+	ViewCount   int                `json:"view_count"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
+	SubmittedAt NullTime           `json:"submitted_at"`
 }
 
-type CreditTransaction struct {
-	ID            int64     `json:"id"`
-	UserID        int64     `json:"user_id"`
-	Type          string    `json:"type"`
-	Amount        float64   `json:"amount"`
-	ReferenceType string    `json:"reference_type"`
-	ReferenceID   int64     `json:"reference_id"`
-	Description   string    `json:"description"`
-	CreatedAt     time.Time `json:"created_at"`
+// Vote represents a user's vote for a contribution.
+type Vote struct {
+	ID             int64     `json:"id"`
+	IdeaID         int64     `json:"idea_id"`
+	VoterID        int64     `json:"voter_id"`
+	ContributionID int64     `json:"contribution_id"`
+	VotedAt        time.Time `json:"voted_at"`
 }
 
-type PRD struct {
-	ID           int64        `json:"id"`
-	IdeaID       int64        `json:"idea_id"`
-	Content      string       `json:"content"`
-	PublishedAt  NullTime `json:"published_at"`
-	PriceCredits float64      `json:"price_credits"`
-	ReadCount    int          `json:"read_count"`
+// RateLimit tracks daily action counts per user.
+type RateLimit struct {
+	ID         int64     `json:"id"`
+	UserID     int64     `json:"user_id"`
+	Action     string    `json:"action"`
+	ActionDate time.Time `json:"action_date"`
+	Count      int       `json:"count"`
+}
+
+// RankedResult represents one entry in the reveal snapshot.
+type RankedResult struct {
+	ContributionID int64 `json:"contribution_id"`
+	VoteCount      int   `json:"vote_count"`
+	Rank           int   `json:"rank"`
+	IsFeatured     bool  `json:"is_featured"`
+}
+
+// RevealSnapshot holds the frozen ranking data at reveal time.
+type RevealSnapshot struct {
+	ID            int64           `json:"id"`
+	IdeaID        int64           `json:"idea_id"`
+	RankedResults json.RawMessage `json:"ranked_results"`
+	TotalVotes    int             `json:"total_votes"`
+	RevealedAt    time.Time       `json:"revealed_at"`
 }
 
 // AuthSession represents a pending authentication session for agent-based flows.

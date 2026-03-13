@@ -1,4 +1,5 @@
 // Claway plugin entry point for OpenClaw Gateway.
+// v3: contribution-based bidding model with blind voting.
 
 import { ClawayClient } from "./client";
 import { registerTools } from "./tools";

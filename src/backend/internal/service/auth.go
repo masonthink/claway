@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -241,7 +242,7 @@ func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerU
 		return user, nil
 	}
 
-	if err != store.ErrNotFound {
+	if !errors.Is(err, store.ErrNotFound) {
 		return nil, fmt.Errorf("lookup oauth account: %w", err)
 	}
 
@@ -343,7 +344,7 @@ func (s *Service) HandleOpenClawCallback(ctx context.Context, code string) (*Aut
 	}
 
 	user, err := s.store.GetUserByOpenClawID(ctx, profile.ID)
-	if err == store.ErrNotFound {
+	if errors.Is(err, store.ErrNotFound) {
 		user, err = s.store.CreateUser(ctx, profile.ID, profile.Username)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create user: %w", err)

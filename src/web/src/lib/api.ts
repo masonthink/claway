@@ -1,8 +1,8 @@
-// API client — routes through Next.js proxy to avoid slow direct connections
+// API client for Claway v3
 
 import { getToken } from "./auth";
 
-// Proxy base: same-origin /api/proxy/* → backend
+// Proxy base: same-origin /api/proxy/* -> backend
 const PROXY_BASE = "/api/proxy";
 // Direct backend URL (for OAuth redirects only)
 export const DIRECT_API_BASE =
@@ -35,85 +35,84 @@ async function request<T>(
   return res.json();
 }
 
-// Types
+// --- Types ---
 
 export interface Idea {
   id: number;
+  initiator_id: number;
   title: string;
   description: string;
-  target_user_hint: string;
-  problem_definition: string;
-  initiator_id: number;
-  initiator_cut_percent: number;
-  package_type: string;
-  status: "active" | "completed";
+  target_user: string;
+  core_problem: string;
+  out_of_scope: string | null;
+  status: "open" | "closed" | "cancelled";
+  deadline: string;
+  revealed_at: string | null;
   created_at: string;
-}
-
-export interface Task {
-  id: string;
-  idea_id: string;
-  title: string;
-  type: string; // doc1-doc4
-  status: "open" | "claimed" | "submitted" | "approved" | "rejected" | "revision";
-  claimed_by?: number | null;
-  review_feedback?: string | null;
-  cost_usd_accumulated: number;
-}
-
-export interface PRD {
-  id: string;
-  idea_id: string;
-  title: string;
-  content: string;
-  preview: string;
-  price: number;
-  purchased: boolean;
-}
-
-export interface User {
-  id: string;
-  username: string;
-  avatar_url?: string;
-}
-
-export interface CreditInfo {
-  balance: number;
-  transactions: {
-    id: string;
-    amount: number;
-    type: string;
-    description: string;
-    created_at: string;
-  }[];
+  // enriched fields
+  contribution_count: number;
+  voter_count: number;
+  initiator_username: string;
 }
 
 export interface Contribution {
-  idea_id: string;
-  idea_title: string;
-  task_code: string;
-  task_name: string;
-  status: string;
-  token_cost: number;
+  id: number;
+  idea_id: number;
+  author_id?: number;
+  author_name?: string;
+  content: string;
+  preview?: string;
+  decision_log?: unknown[];
+  status: "draft" | "submitted";
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+  submitted_at?: string;
+  preview_url?: string;
 }
 
-export interface ComputeUsage {
-  total_cost: number;
-  breakdown: {
-    idea_id: string;
-    idea_title: string;
-    cost: number;
-  }[];
+export interface RevealResultEntry {
+  contribution_id: number;
+  author_id: number;
+  author_username: string;
+  vote_count: number;
+  rank: number;
+  is_featured: boolean;
 }
 
-export interface ComputeLeaderboard {
-  entries: {
-    username: string;
-    total_cost: number;
-  }[];
+export interface RevealResult {
+  idea_id: number;
+  total_votes: number;
+  revealed_at: string;
+  results: RevealResultEntry[];
 }
 
-// API functions
+export interface PlatformStats {
+  open_ideas: number;
+  closed_ideas: number;
+  total_contributions: number;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+  created_at: string;
+}
+
+export interface UserProfile {
+  user: User;
+  idea_count: number;
+  contribution_count: number;
+  featured_count: number;
+}
+
+// --- Public API ---
+
+export function getStats(): Promise<PlatformStats> {
+  return request("/public/stats");
+}
 
 export function getIdeas(
   status?: string,
@@ -125,117 +124,45 @@ export function getIdeas(
   if (limit) params.set("limit", String(limit));
   if (offset) params.set("offset", String(offset));
   const qs = params.toString();
-  return request(`/ideas${qs ? `?${qs}` : ""}`);
+  return request(`/public/ideas${qs ? `?${qs}` : ""}`);
 }
 
 export function getIdea(id: string): Promise<Idea> {
-  return request(`/ideas/${id}`);
+  return request(`/public/ideas/${id}`);
 }
 
-export function getIdeaTasks(ideaId: string): Promise<{ tasks: Task[] }> {
-  return request(`/ideas/${ideaId}/tasks`);
+export function getContributions(ideaId: string): Promise<Contribution[]> {
+  return request(`/public/ideas/${ideaId}/contributions`);
 }
 
-export function getIdeaContext(ideaId: string): Promise<{ context: string }> {
-  return request(`/ideas/${ideaId}/context`);
+export function getRevealResult(ideaId: string): Promise<RevealResult> {
+  return request(`/public/ideas/${ideaId}/result`);
 }
 
-export function getIdeaCompute(
-  ideaId: string
-): Promise<ComputeLeaderboard> {
-  return request(`/ideas/${ideaId}/compute`);
+export function getUserProfile(username: string): Promise<UserProfile> {
+  return request(`/public/users/${username}`);
 }
 
-export function getPRD(id: string): Promise<PRD> {
-  return request(`/prd/${id}`);
-}
+// --- Auth API ---
 
 export function getMe(): Promise<User> {
   return request("/me");
 }
 
-export function getMyCredits(): Promise<CreditInfo> {
-  return request("/me/credits");
-}
-
-export function getMyContributions(): Promise<{
-  contributions: Contribution[];
-}> {
-  return request("/me/contributions");
-}
-
-export function getMyCompute(): Promise<ComputeUsage> {
-  return request("/me/compute");
-}
-
-export function createIdea(data: {
-  title: string;
-  description: string;
-  target_user_hint: string;
-  package_type: string;
-  initiator_cut_percent: number;
-}): Promise<Idea> {
-  return request("/ideas", { method: "POST", body: JSON.stringify(data) });
-}
-
-export function claimTask(taskId: string): Promise<{ success: boolean }> {
-  return request(`/tasks/${taskId}/claim`, { method: "POST" });
-}
-
-export function unclaimTask(taskId: string): Promise<{ success: boolean }> {
-  return request(`/tasks/${taskId}/claim`, { method: "DELETE" });
-}
-
-export function submitTask(
-  taskId: string,
-  data: {
-    content: string;
-    note: string;
-    token_usage?: {
-      model: string;
-      tokens_in: number;
-      tokens_out: number;
-      cost_usd: number;
-    };
-  }
-): Promise<{ success: boolean }> {
-  return request(`/tasks/${taskId}/submit`, {
+export function castVote(
+  ideaId: string,
+  contributionId: number
+): Promise<{ voted_at: string }> {
+  return request(`/ideas/${ideaId}/votes`, {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify({ contribution_id: contributionId }),
   });
 }
 
-export function reviewTask(
-  taskId: string,
-  data: {
-    action: "approve" | "reject" | "revision";
-    quality_score?: number;
-    reject_reason?: string;
-    feedback?: string;
-  }
-): Promise<{ success: boolean }> {
-  return request(`/tasks/${taskId}/review`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+export function getDraftPreview(contributionId: string): Promise<Contribution> {
+  return request(`/draft/${contributionId}`);
 }
 
-export function getTaskDocument(
-  taskId: string
-): Promise<{ content: string }> {
-  return request(`/tasks/${taskId}/document`);
-}
-
-export function updateTaskDocument(
-  taskId: string,
-  content: string
-): Promise<{ success: boolean }> {
-  return request(`/tasks/${taskId}/document`, {
-    method: "PUT",
-    body: JSON.stringify({ content }),
-  });
-}
-
-export function publishIdea(ideaId: string): Promise<{ success: boolean }> {
-  return request(`/ideas/${ideaId}/publish`, { method: "POST" });
+export function getContribution(id: string): Promise<Contribution> {
+  return request(`/contributions/${id}`);
 }

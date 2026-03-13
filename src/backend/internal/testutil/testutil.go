@@ -2,11 +2,14 @@ package testutil
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/claway/server/internal/config"
+	"github.com/claway/server/internal/model"
 	"github.com/claway/server/internal/service"
 	"github.com/claway/server/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,116 +25,71 @@ const defaultTestDatabaseURL = "postgres://mason@localhost:5432/claway_test?sslm
 const adminDatabaseURL = "postgres://mason@localhost:5432/postgres?sslmode=disable"
 
 // migrationSQL is the schema used to initialize the test database.
-// Kept in sync with migrations/001_init.up.sql + 002 + 003.
+// Kept in sync with migrations/005_v3_refactor.up.sql.
 const migrationSQL = `
 CREATE TABLE IF NOT EXISTS users (
-    id              BIGSERIAL PRIMARY KEY,
-    openclaw_id     TEXT DEFAULT '',
-    username        TEXT NOT NULL,
-    display_name    TEXT NOT NULL DEFAULT '',
-    avatar_url      TEXT NOT NULL DEFAULT '',
-    agent_api_key   TEXT,
-    credits_balance NUMERIC(12, 4) NOT NULL DEFAULT 0,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           BIGSERIAL PRIMARY KEY,
+    openclaw_id  TEXT DEFAULT '',
+    username     TEXT NOT NULL,
+    display_name TEXT NOT NULL DEFAULT '',
+    avatar_url   TEXT NOT NULL DEFAULT '',
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS ideas (
-    id                    BIGSERIAL PRIMARY KEY,
-    title                 TEXT NOT NULL,
-    description           TEXT NOT NULL DEFAULT '',
-    target_user_hint      TEXT NOT NULL DEFAULT '',
-    problem_definition    TEXT NOT NULL DEFAULT '',
-    initiator_id          BIGINT NOT NULL REFERENCES users(id),
-    initiator_cut_percent NUMERIC(5, 2) NOT NULL DEFAULT 0,
-    package_type          TEXT NOT NULL DEFAULT 'standard' CHECK (package_type IN ('light', 'standard')),
-    status                TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'completed', 'cancelled')),
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deadline              TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS tasks (
-    id                   BIGSERIAL PRIMARY KEY,
-    idea_id              BIGINT NOT NULL REFERENCES ideas(id),
-    type                 TEXT NOT NULL CHECK (type IN ('doc1','doc2','doc3','doc4')),
-    title                TEXT NOT NULL,
-    description          TEXT NOT NULL DEFAULT '',
-    acceptance_criteria  TEXT NOT NULL DEFAULT '',
-    dependencies         TEXT NOT NULL DEFAULT '',
-    token_limit_hint     INT NOT NULL DEFAULT 0,
-    status               TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','claimed','submitted','approved','rejected','revision')),
-    claimed_by           BIGINT REFERENCES users(id),
-    claimed_at           TIMESTAMPTZ,
-    submitted_at         TIMESTAMPTZ,
-    approved_at          TIMESTAMPTZ,
-    output_content       TEXT,
-    output_note          TEXT,
-    quality_score        NUMERIC(5, 2),
-    reject_reason        TEXT,
-    review_feedback      TEXT,
-    cost_usd_accumulated NUMERIC(12, 6) NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS documents (
-    id              BIGSERIAL PRIMARY KEY,
-    task_id         BIGINT NOT NULL UNIQUE REFERENCES tasks(id),
-    content         TEXT NOT NULL DEFAULT '',
-    current_version INT NOT NULL DEFAULT 1,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS document_versions (
-    id                 BIGSERIAL PRIMARY KEY,
-    document_id        BIGINT NOT NULL REFERENCES documents(id),
-    version            INT NOT NULL,
-    content            TEXT NOT NULL DEFAULT '',
-    diff_from_previous TEXT,
-    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_by         BIGINT NOT NULL REFERENCES users(id),
-    UNIQUE (document_id, version)
-);
-
-CREATE TABLE IF NOT EXISTS token_usage_logs (
-    id         BIGSERIAL PRIMARY KEY,
-    user_id    BIGINT NOT NULL REFERENCES users(id),
-    task_id    BIGINT NOT NULL REFERENCES tasks(id),
-    model      TEXT NOT NULL,
-    tokens_in  INT NOT NULL DEFAULT 0,
-    tokens_out INT NOT NULL DEFAULT 0,
-    cost_usd   NUMERIC(12, 6) NOT NULL DEFAULT 0,
-    timestamp  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           BIGSERIAL PRIMARY KEY,
+    initiator_id BIGINT NOT NULL REFERENCES users(id),
+    title        TEXT NOT NULL,
+    description  TEXT NOT NULL DEFAULT '',
+    target_user  TEXT NOT NULL DEFAULT '',
+    core_problem TEXT NOT NULL DEFAULT '',
+    out_of_scope TEXT,
+    status       TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed', 'cancelled')),
+    deadline     TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '7 days'),
+    revealed_at  TIMESTAMPTZ,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS contributions (
-    id             BIGSERIAL PRIMARY KEY,
-    idea_id        BIGINT NOT NULL REFERENCES ideas(id),
-    task_id        BIGINT NOT NULL REFERENCES tasks(id),
-    user_id        BIGINT NOT NULL REFERENCES users(id),
-    cost_usd       NUMERIC(12, 6) NOT NULL DEFAULT 0,
-    quality_score  NUMERIC(5, 2) NOT NULL DEFAULT 0,
-    weighted_score NUMERIC(12, 6) NOT NULL DEFAULT 0,
-    weight_percent NUMERIC(7, 4) NOT NULL DEFAULT 0
+    id           BIGSERIAL PRIMARY KEY,
+    idea_id      BIGINT NOT NULL REFERENCES ideas(id),
+    author_id    BIGINT NOT NULL REFERENCES users(id),
+    content      TEXT NOT NULL DEFAULT '',
+    decision_log JSONB NOT NULL DEFAULT '[]',
+    status       TEXT NOT NULL DEFAULT 'draft'
+                 CHECK (status IN ('draft', 'submitted')),
+    view_count   INT NOT NULL DEFAULT 0,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    submitted_at TIMESTAMPTZ,
+    UNIQUE (idea_id, author_id)
 );
 
-CREATE TABLE IF NOT EXISTS credit_transactions (
-    id             BIGSERIAL PRIMARY KEY,
-    user_id        BIGINT NOT NULL REFERENCES users(id),
-    type           TEXT NOT NULL,
-    amount         NUMERIC(12, 4) NOT NULL,
-    reference_type TEXT NOT NULL DEFAULT '',
-    reference_id   BIGINT NOT NULL DEFAULT 0,
-    description    TEXT NOT NULL DEFAULT '',
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS votes (
+    id              BIGSERIAL PRIMARY KEY,
+    idea_id         BIGINT NOT NULL REFERENCES ideas(id),
+    voter_id        BIGINT NOT NULL REFERENCES users(id),
+    contribution_id BIGINT NOT NULL REFERENCES contributions(id),
+    voted_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (idea_id, voter_id)
 );
 
-CREATE TABLE IF NOT EXISTS prds (
-    id            BIGSERIAL PRIMARY KEY,
-    idea_id       BIGINT NOT NULL UNIQUE REFERENCES ideas(id),
-    content       TEXT NOT NULL DEFAULT '',
-    published_at  TIMESTAMPTZ,
-    price_credits NUMERIC(12, 4) NOT NULL DEFAULT 0,
-    read_count    INT NOT NULL DEFAULT 0
+CREATE TABLE IF NOT EXISTS rate_limits (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT NOT NULL REFERENCES users(id),
+    action      TEXT NOT NULL CHECK (action IN ('post_idea', 'vote')),
+    action_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    count       INT NOT NULL DEFAULT 1,
+    UNIQUE (user_id, action, action_date)
+);
+
+CREATE TABLE IF NOT EXISTS reveal_snapshots (
+    id             BIGSERIAL PRIMARY KEY,
+    idea_id        BIGINT NOT NULL UNIQUE REFERENCES ideas(id),
+    ranked_results JSONB NOT NULL,
+    total_votes    INT NOT NULL,
+    revealed_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS user_oauth_accounts (
@@ -148,6 +106,14 @@ CREATE TABLE IF NOT EXISTS user_oauth_accounts (
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(provider, provider_user_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_ideas_deadline ON ideas(deadline);
+CREATE INDEX IF NOT EXISTS idx_contributions_idea_id ON contributions(idea_id);
+CREATE INDEX IF NOT EXISTS idx_contributions_author_id ON contributions(author_id);
+CREATE INDEX IF NOT EXISTS idx_votes_idea_id ON votes(idea_id);
+CREATE INDEX IF NOT EXISTS idx_votes_contribution_id ON votes(contribution_id);
+CREATE INDEX IF NOT EXISTS idx_votes_voter_id ON votes(voter_id);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_user_action_date ON rate_limits(user_id, action, action_date);
 `
 
 // testDatabaseURL returns the test database connection string.
@@ -194,13 +160,10 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 	// Drop all tables first to ensure clean schema (test DB only).
 	_, _ = pool.Exec(ctx, `
 		DROP TABLE IF EXISTS user_oauth_accounts CASCADE;
-		DROP TABLE IF EXISTS credit_transactions CASCADE;
+		DROP TABLE IF EXISTS reveal_snapshots CASCADE;
+		DROP TABLE IF EXISTS rate_limits CASCADE;
+		DROP TABLE IF EXISTS votes CASCADE;
 		DROP TABLE IF EXISTS contributions CASCADE;
-		DROP TABLE IF EXISTS token_usage_logs CASCADE;
-		DROP TABLE IF EXISTS document_versions CASCADE;
-		DROP TABLE IF EXISTS documents CASCADE;
-		DROP TABLE IF EXISTS prds CASCADE;
-		DROP TABLE IF EXISTS tasks CASCADE;
 		DROP TABLE IF EXISTS ideas CASCADE;
 		DROP TABLE IF EXISTS users CASCADE;
 	`)
@@ -220,17 +183,13 @@ func CleanupDB(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 	ctx := context.Background()
 
-	// Truncate in reverse dependency order using CASCADE.
 	_, err := pool.Exec(ctx, `
 		TRUNCATE TABLE
 			user_oauth_accounts,
-			credit_transactions,
+			reveal_snapshots,
+			rate_limits,
+			votes,
 			contributions,
-			token_usage_logs,
-			document_versions,
-			documents,
-			prds,
-			tasks,
 			ideas,
 			users
 		CASCADE
@@ -240,6 +199,12 @@ func CleanupDB(t *testing.T, pool *pgxpool.Pool) {
 	}
 }
 
+// CreateTestStore creates a Store instance for testing.
+func CreateTestStore(t *testing.T, pool *pgxpool.Pool) *store.Store {
+	t.Helper()
+	return store.New(pool)
+}
+
 // CreateTestService creates a Service instance configured for testing.
 func CreateTestService(t *testing.T, pool *pgxpool.Pool) *service.Service {
 	t.Helper()
@@ -247,6 +212,7 @@ func CreateTestService(t *testing.T, pool *pgxpool.Pool) *service.Service {
 		DatabaseURL: testDatabaseURL(),
 		JWTSecret:   TestJWTSecret,
 		Port:        "8080",
+		FrontendURL: "http://localhost:3000",
 	}
 	s := store.New(pool)
 	return service.New(s, cfg)
@@ -267,70 +233,84 @@ func CreateTestUser(t *testing.T, pool *pgxpool.Pool, openclawID, username strin
 	return id
 }
 
-// SimulateTokenUsage inserts a token_usage_log and updates task cost_usd_accumulated.
-// This simulates LLM proxy usage during task work.
-func SimulateTokenUsage(t *testing.T, pool *pgxpool.Pool, userID, taskID int64, costUSD float64) {
+// CreateTestIdea inserts an open idea with a 7-day deadline and returns it.
+func CreateTestIdea(t *testing.T, pool *pgxpool.Pool, initiatorID int64, title string) *model.Idea {
 	t.Helper()
 	ctx := context.Background()
-
-	_, err := pool.Exec(ctx,
-		`INSERT INTO token_usage_logs (user_id, task_id, model, tokens_in, tokens_out, cost_usd)
-		 VALUES ($1, $2, 'gpt-4o', 1000, 500, $3)`,
-		userID, taskID, costUSD,
-	)
+	s := store.New(pool)
+	idea, err := s.CreateIdea(ctx, &model.Idea{
+		InitiatorID: initiatorID,
+		Title:       title,
+		Description: "Test description",
+		TargetUser:  "developers",
+		CoreProblem: "test problem",
+		Status:      model.IdeaStatusOpen,
+		Deadline:    time.Now().Add(7 * 24 * time.Hour),
+	})
 	if err != nil {
-		t.Fatalf("failed to insert token_usage_log: %v", err)
+		t.Fatalf("failed to create test idea %q: %v", title, err)
 	}
-
-	_, err = pool.Exec(ctx,
-		`UPDATE tasks SET cost_usd_accumulated = cost_usd_accumulated + $1 WHERE id = $2`,
-		costUSD, taskID,
-	)
-	if err != nil {
-		t.Fatalf("failed to update task cost: %v", err)
-	}
+	return idea
 }
 
-// GiveCredits directly updates a user's credits balance via SQL.
-func GiveCredits(t *testing.T, pool *pgxpool.Pool, userID int64, amount float64) {
+// CreateTestIdeaWithDeadline creates an idea with a specific deadline.
+func CreateTestIdeaWithDeadline(t *testing.T, pool *pgxpool.Pool, initiatorID int64, title string, deadline time.Time) *model.Idea {
 	t.Helper()
 	ctx := context.Background()
-
-	_, err := pool.Exec(ctx,
-		`UPDATE users SET credits_balance = credits_balance + $1, updated_at = NOW() WHERE id = $2`,
-		amount, userID,
-	)
+	s := store.New(pool)
+	idea, err := s.CreateIdea(ctx, &model.Idea{
+		InitiatorID: initiatorID,
+		Title:       title,
+		Description: "Test description",
+		TargetUser:  "developers",
+		CoreProblem: "test problem",
+		Status:      model.IdeaStatusOpen,
+		Deadline:    deadline,
+	})
 	if err != nil {
-		t.Fatalf("failed to give credits to user %d: %v", userID, err)
+		t.Fatalf("failed to create test idea %q: %v", title, err)
 	}
+	return idea
 }
 
-// GetUserBalance reads the current credits_balance for a user.
-func GetUserBalance(t *testing.T, pool *pgxpool.Pool, userID int64) float64 {
+// CreateTestContribution inserts a draft contribution and returns it.
+func CreateTestContribution(t *testing.T, pool *pgxpool.Pool, ideaID, authorID int64, content string) *model.Contribution {
 	t.Helper()
 	ctx := context.Background()
-
-	var balance float64
-	err := pool.QueryRow(ctx, `SELECT credits_balance FROM users WHERE id = $1`, userID).Scan(&balance)
+	s := store.New(pool)
+	c, err := s.CreateContribution(ctx, &model.Contribution{
+		IdeaID:      ideaID,
+		AuthorID:    authorID,
+		Content:     content,
+		DecisionLog: json.RawMessage("[]"),
+	})
 	if err != nil {
-		t.Fatalf("failed to get user balance for user %d: %v", userID, err)
+		t.Fatalf("failed to create test contribution: %v", err)
 	}
-	return balance
+	return c
 }
 
-// TaskIDByType finds a task ID by its type within an idea.
-func TaskIDByType(t *testing.T, pool *pgxpool.Pool, ideaID int64, taskType string) int64 {
+// SubmitTestContribution creates and submits a contribution in one step.
+func SubmitTestContribution(t *testing.T, pool *pgxpool.Pool, ideaID, authorID int64, content string) *model.Contribution {
 	t.Helper()
 	ctx := context.Background()
+	s := store.New(pool)
 
-	var id int64
-	err := pool.QueryRow(ctx,
-		`SELECT id FROM tasks WHERE idea_id = $1 AND type = $2`, ideaID, taskType,
-	).Scan(&id)
+	c, err := s.CreateContribution(ctx, &model.Contribution{
+		IdeaID:      ideaID,
+		AuthorID:    authorID,
+		Content:     content,
+		DecisionLog: json.RawMessage("[]"),
+	})
 	if err != nil {
-		t.Fatalf("failed to find task %s for idea %d: %v", taskType, ideaID, err)
+		t.Fatalf("failed to create test contribution: %v", err)
 	}
-	return id
+
+	submitted, err := s.SubmitContribution(ctx, c.ID)
+	if err != nil {
+		t.Fatalf("failed to submit test contribution: %v", err)
+	}
+	return submitted
 }
 
 // MustFormat is a helper that wraps fmt.Sprintf for cleaner test messages.

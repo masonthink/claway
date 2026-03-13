@@ -61,9 +61,13 @@ func main() {
 	svc := service.New(st, cfg)
 
 	// Start background cleanup for expired auth sessions
-	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
-	defer cleanupCancel()
-	svc.StartAuthSessionCleanup(cleanupCtx)
+	bgCtx, bgCancel := context.WithCancel(context.Background())
+	defer bgCancel()
+	svc.StartAuthSessionCleanup(bgCtx)
+
+	// Start reveal ticker (check for expired ideas every minute)
+	svc.RunRevealTicker(bgCtx, 1*time.Minute)
+	log.Println("reveal ticker started (1 min interval)")
 
 	// Echo instance
 	e := echo.New()
@@ -84,64 +88,63 @@ func main() {
 
 	// Handlers
 	ideaH := handler.NewIdeaHandler(svc)
-	taskH := handler.NewTaskHandler(svc)
-	docH := handler.NewDocumentHandler(svc)
-	creditH := handler.NewCreditHandler(svc)
-	proxyH := handler.NewProxyHandler(svc)
+	contribH := handler.NewContributionHandler(svc)
+	voteH := handler.NewVoteHandler(svc)
 	authH := handler.NewAuthHandler(svc)
-	computeH := handler.NewComputeHandler(svc)
+	userH := handler.NewUserHandler(svc)
+	statsH := handler.NewStatsHandler(svc)
 
 	// API v1 routes
 	v1 := e.Group("/api/v1")
 
-	// Public routes (no auth required)
+	// --- Public routes (no auth required) ---
+
+	// Auth
 	v1.GET("/auth/x", authH.XLogin)
 	v1.GET("/auth/x/callback", authH.XCallback)
 	v1.GET("/auth/openclaw/callback", authH.OpenClawCallback) // legacy
 	v1.POST("/auth/session", authH.CreateAuthSession)         // agent session flow
 	v1.GET("/auth/session/:sid", authH.GetAuthSession)        // agent session polling
-	v1.GET("/ideas", ideaH.ListIdeas)
-	v1.GET("/ideas/:id", ideaH.GetIdea)
-	v1.GET("/ideas/:id/tasks", taskH.ListTasks)
-	v1.GET("/tasks/:id", taskH.GetTask)
-	v1.GET("/ideas/:id/compute", computeH.GetIdeaCompute)
-	v1.GET("/platform/compute", computeH.GetPlatformCompute)
 
-	// Auth-protected routes
+	// Public API
+	pub := v1.Group("/public")
+	pub.GET("/stats", statsH.GetPlatformStats)
+	pub.GET("/ideas", ideaH.ListIdeas)
+	pub.GET("/ideas/:id", ideaH.GetIdea)
+	pub.GET("/ideas/:id/contributions", contribH.ListContributions)
+	pub.GET("/ideas/:id/result", ideaH.GetRevealResult)
+	pub.GET("/users/:username", userH.GetUserProfile)
+
+	// --- Auth-protected routes ---
 	auth := v1.Group("", middleware.RequireAuth(cfg.JWTSecret))
 
+	// User
 	auth.GET("/auth/me", authH.GetMe)
 	auth.GET("/me", authH.GetMe)
 
-	// Ideas (write operations)
+	// Ideas
 	auth.POST("/ideas", ideaH.CreateIdea)
-	auth.GET("/ideas/:id/context", ideaH.GetIdeaContext)
-	auth.POST("/tasks/:id/claim", taskH.ClaimTask)
-	auth.DELETE("/tasks/:id/claim", taskH.UnclaimTask)
-	auth.POST("/tasks/:id/submit", taskH.SubmitTask)
-	auth.POST("/tasks/:id/review", taskH.ReviewTask)
+	auth.GET("/ideas", ideaH.ListIdeas)
+	auth.GET("/ideas/:id", ideaH.GetIdea)
+	auth.GET("/ideas/:id/result", ideaH.GetRevealResult)
 
-	// Documents
-	auth.GET("/tasks/:id/document", docH.GetDocument)
-	auth.GET("/tasks/:id/document/versions", docH.ListVersions)
-	auth.GET("/tasks/:id/document/versions/:ver", docH.GetVersion)
-	auth.PUT("/tasks/:id/document", docH.UpdateDocument)
+	// Contributions
+	auth.POST("/ideas/:id/contributions", contribH.CreateContribution)
+	auth.GET("/ideas/:id/contributions", contribH.ListContributions)
+	auth.PUT("/contributions/:id", contribH.UpdateContribution)
+	auth.POST("/contributions/:id/submit", contribH.SubmitContribution)
+	auth.GET("/contributions/:id", contribH.GetContribution)
 
-	// PRD
-	auth.POST("/ideas/:id/publish", docH.PublishPRD)
+	// Votes
+	auth.POST("/ideas/:id/votes", voteH.CastVote)
 
-	// LLM Proxy
-	auth.POST("/proxy/chat", proxyH.Chat)
+	// My data
+	auth.GET("/me/ideas", ideaH.ListMyIdeas)
+	auth.GET("/me/contributions", contribH.ListMyContributions)
+	auth.GET("/me/votes", voteH.ListMyVotes)
 
-	// Compute
-	auth.GET("/me/compute", computeH.GetMyCompute)
-	auth.GET("/me/compute/ideas/:id", computeH.GetMyIdeaCompute)
-	auth.GET("/tasks/:id/compute", computeH.GetTaskCompute)
-
-	// Credits
-	auth.GET("/me/credits", creditH.GetMyCredits)
-	auth.GET("/me/contributions", creditH.GetMyContributions)
-	auth.POST("/prd/:id/purchase", creditH.PurchasePRD)
+	// Draft preview (author only)
+	auth.GET("/draft/:contribution_id", contribH.GetDraftPreview)
 
 	// Graceful shutdown
 	go func() {
