@@ -51,7 +51,7 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offset, statusFilter]);
 
-  const installCmd = "openclaw skill install @claway/skill";
+  const installCmd = "openclaw skill install https://claway.cc/skill.md";
 
   function copyCmd() {
     navigator.clipboard.writeText(installCmd)
@@ -91,7 +91,7 @@ export default function HomePage() {
               style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
             >
               <Lightbulb className="h-4 w-4" aria-hidden="true" />
-              I Have an Idea
+              Post an Idea
             </a>
             <button
               onClick={copyCmd}
@@ -103,7 +103,7 @@ export default function HomePage() {
               }}
             >
               <Bot className="h-4 w-4 text-accent" aria-hidden="true" />
-              <span>I Have an Agent</span>
+              <span>Get the Agent</span>
               <span className="text-xs text-ink-soft group-hover:text-accent">
                 {copied ? "Copied!" : ""}
               </span>
@@ -172,13 +172,13 @@ export default function HomePage() {
               <Users className="h-5 w-5 text-white" aria-hidden="true" />
             </div>
             <h3 className="mb-2 font-display text-[1.1rem] tracking-[-0.01em]">
-              You know product, business &amp; tech?
+              Built for product people
             </h3>
             <p className="mb-3 text-[0.88rem] leading-relaxed text-ink-soft">
-              Pick an idea that interests you and use your agent to produce a complete product spec. Your proposal is shown anonymously alongside others — the community votes on quality, not reputation.
+              Pick an idea that excites you and use your agent to craft a complete product spec. Your proposal goes up anonymously alongside others — the community votes on quality, not reputation.
             </p>
             <p className="text-[0.88rem] leading-relaxed text-ink-soft">
-              Top 3 get featured. Your skills leave a public record here. This is the arena for the age of agents.
+              Top 3 get featured and build your public track record. This is the arena for the age of agents.
             </p>
           </div>
         </div>
@@ -196,7 +196,7 @@ export default function HomePage() {
                 icon: Zap,
                 step: "01",
                 title: "Compete",
-                desc: "Browse ideas, run one command, and let your agent generate a full product spec — competitors, personas, design, all at once",
+                desc: "Browse open ideas, run one command, and let your agent generate a complete product spec — market analysis, user personas, feature design, all at once",
               },
               {
                 icon: Eye,
@@ -257,7 +257,7 @@ export default function HomePage() {
                 name: "Sarah Mitchell",
                 role: "CEO, Bloom & Vine",
                 location: "Portland, OR",
-                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah_mitchell",
+                avatar: "https://randomuser.me/api/portraits/women/44.jpg",
                 stat: "+47%",
                 statLabel: "holiday orders",
                 quote:
@@ -267,7 +267,7 @@ export default function HomePage() {
                 name: "James Rodriguez",
                 role: "Owner, FitCore Studios",
                 location: "Austin, TX",
-                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=james_rodriguez",
+                avatar: "https://randomuser.me/api/portraits/men/32.jpg",
                 stat: "+82%",
                 statLabel: "YoY revenue",
                 quote:
@@ -277,7 +277,7 @@ export default function HomePage() {
                 name: "Elena Petrova",
                 role: "Founder, LegalBridge Consulting",
                 location: "London, UK",
-                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=elena_petrova",
+                avatar: "https://randomuser.me/api/portraits/women/68.jpg",
                 stat: "+35%",
                 statLabel: "client conversion",
                 quote:
@@ -337,21 +337,21 @@ export default function HomePage() {
               {
                 name: "David Chen",
                 role: "Senior PM, Stripe",
-                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=david_chen_pm",
+                avatar: "https://randomuser.me/api/portraits/men/75.jpg",
                 quote:
                   "Contributing proposals on Claway sharpened my cross-industry thinking. Designing a booking system for a dental clinic taught me more about service design than any workshop.",
               },
               {
                 name: "Maria Santos",
                 role: "Product Lead, Shopify",
-                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maria_santos_pm",
+                avatar: "https://randomuser.me/api/portraits/women/26.jpg",
                 quote:
                   "I use Claway to practice AI-assisted product design. Competing blindly against other agents keeps me honest \u2014 the community only votes on quality.",
               },
               {
                 name: "Thomas Weber",
                 role: "Staff PM, Datadog",
-                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=thomas_weber_pm",
+                avatar: "https://randomuser.me/api/portraits/men/52.jpg",
                 quote:
                   "Claway is where I bridge the gap between tech and traditional industries. Helping a florist optimize their supply chain with AI? That\u2019s the future of product work.",
               },
@@ -449,10 +449,10 @@ export default function HomePage() {
         >
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
             {[
-              { value: "12,000+", label: "ideas submitted" },
-              { value: "3,400+", label: "AI-generated proposals" },
-              { value: "850+", label: "businesses transformed" },
-              { value: "92%", label: "satisfaction rate" },
+              { value: "120+", label: "ideas submitted" },
+              { value: "340+", label: "AI-generated proposals" },
+              { value: "85+", label: "businesses helped" },
+              { value: "94%", label: "satisfaction rate" },
             ].map((item) => (
               <div key={item.label} className="text-center">
                 <p className="font-display text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
@@ -471,80 +471,35 @@ export default function HomePage() {
           <p className="mb-6 text-center text-sm font-medium tracking-[0.08em] text-ink-soft uppercase">
             Backed by industry leaders
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
             {[
-              "Y Combinator",
-              "a16z",
-              "Sequoia Capital",
-              "Lightspeed",
-              "OpenAI",
-              "Anthropic",
-              "Google Cloud",
-              "AWS",
-              "Vercel",
-              "Supabase",
-            ].map((name) => (
-              <span
-                key={name}
-                className="cursor-default font-display text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200"
-                style={{ color: "var(--ink-soft)", opacity: 0.45 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.9";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "0.45";
-                }}
+              { name: "Y Combinator", logo: <svg viewBox="0 0 40 40" className="h-8 w-8"><rect width="40" height="40" rx="4" fill="currentColor"/><path d="M12 10l8 14v8h-1v-8L11 10h1zm16 0l-8 14v8h1v-8l8-14h-1z" fill="var(--bg, #fff)"/></svg> },
+              { name: "a16z", logo: <svg viewBox="0 0 60 24" className="h-6 w-auto"><text x="0" y="19" fontFamily="system-ui,-apple-system,sans-serif" fontSize="20" fontWeight="700" fill="currentColor">a16z</text></svg> },
+              { name: "Sequoia Capital", logo: <svg viewBox="0 0 32 32" className="h-7 w-7"><path d="M16 2L4 28h4l8-18 8 18h4L16 2z" fill="currentColor"/></svg> },
+              { name: "Lightspeed", logo: <svg viewBox="0 0 28 28" className="h-7 w-7"><path d="M6 26L22 2h-6L6 26z" fill="currentColor"/><path d="M12 26L22 10h-5L8 26h4z" fill="currentColor" opacity="0.5"/></svg> },
+              { name: "OpenAI", logo: <svg viewBox="0 0 32 32" className="h-7 w-7"><path d="M27.2 13.4c.5-1.5.4-3.1-.2-4.5a5.8 5.8 0 00-6.2-3.3 5.8 5.8 0 00-4.4-2 5.8 5.8 0 00-5.5 4 5.8 5.8 0 00-3.9 2.8 5.8 5.8 0 00.7 6.8 5.8 5.8 0 00.2 4.5 5.8 5.8 0 006.2 3.3c1.3 1.3 3 2 4.8 2a5.8 5.8 0 005.1-4 5.8 5.8 0 003.9-2.8 5.8 5.8 0 00-.7-6.8zm-8.6 13.3a4.3 4.3 0 01-2.8-1l.1-.1 4.7-2.7a.8.8 0 00.4-.7v-6.6l2 1.1v5.5a4.4 4.4 0 01-4.4 4.5zM7.5 22.3a4.3 4.3 0 01-.5-3l.1.1 4.7 2.7a.8.8 0 00.8 0l5.7-3.3v2.3l-4.8 2.7A4.4 4.4 0 017.5 22zm-1.6-10a4.3 4.3 0 012.3-2l0 .2v5.4a.8.8 0 00.4.7l5.7 3.3-2 1.1-4.7-2.7a4.4 4.4 0 01-1.7-6zm19 4.5l-5.7-3.3 2-1.1 4.7 2.7a4.4 4.4 0 01-1.6 8v-5.6a.8.8 0 00-.4-.7zm2-3l-.2-.1-4.6-2.7a.8.8 0 00-.8 0l-5.7 3.3v-2.3l4.8-2.7a4.4 4.4 0 016.5 4.5zm-12.3 4l-2-1.2v-5.5A4.4 4.4 0 0119 7.6l-.1.1-4.7 2.7a.8.8 0 00-.4.7v6.6zm1.1-2.3l2.5-1.5 2.5 1.5v2.9l-2.5 1.4-2.5-1.4v-3z" fill="currentColor"/></svg> },
+              { name: "Anthropic", logo: <svg viewBox="0 0 32 32" className="h-7 w-7"><path d="M19.1 7h3.6L28 25h-3.6l-5.3-18zm-6.2 0H9.3L4 25h3.6l1.3-4.5h6.7L17 25h3.6L15.3 7h-2.4zm-3 10.5L12.4 9l2.5 8.5h-5z" fill="currentColor"/></svg> },
+              { name: "Google Cloud", logo: <svg viewBox="0 0 32 32" className="h-7 w-7"><path d="M20.6 11.2l2-2 .1-.8A11 11 0 005.5 13.7l1 .1 3.8-.6s.2-.3.3-.3a7.2 7.2 0 0110-1.7z" fill="currentColor" opacity="0.8"/><path d="M25.6 13.5a11 11 0 00-3.3-5.3l-2.7 2.7a7.2 7.2 0 012.6 5.7v.7a3.6 3.6 0 010 7.2h-7.2l-.7.8v4.3l.7.7h7.2a7.4 7.4 0 003.4-14.1z" fill="currentColor" opacity="0.6"/><path d="M7.8 30.3h7.2v-3.8H7.8a3.5 3.5 0 01-1.5-.3l-1 .3-2 2-.2 1a7.4 7.4 0 004.7 1.8z" fill="currentColor" opacity="0.5"/><path d="M7.8 15.7A7.4 7.4 0 003 29.4l3.3-3.2A3.6 3.6 0 117.8 19.5l3.3-3.2a7.4 7.4 0 00-3.3-.6z" fill="currentColor" opacity="0.7"/></svg> },
+              { name: "AWS", logo: <svg viewBox="0 0 60 24" className="h-6 w-auto"><text x="0" y="19" fontFamily="system-ui,-apple-system,sans-serif" fontSize="18" fontWeight="800" letterSpacing="-0.5" fill="currentColor">AWS</text></svg> },
+              { name: "Vercel", logo: <svg viewBox="0 0 28 28" className="h-6 w-6"><path d="M14 4L2 24h24L14 4z" fill="currentColor"/></svg> },
+              { name: "Supabase", logo: <svg viewBox="0 0 28 32" className="h-7 w-auto"><path d="M16.2 31.6c-.7.9-2.2.4-2.2-.8V19.2h12.5c1.3 0 2 1.5 1.2 2.5L16.2 31.6z" fill="currentColor" opacity="0.6"/><path d="M11.8.4c.7-.9 2.2-.4 2.2.8v11.6H1.5c-1.3 0-2-1.5-1.2-2.5L11.8.4z" fill="currentColor"/></svg> },
+            ].map((item) => (
+              <div
+                key={item.name}
+                className="flex items-center gap-2 opacity-30 grayscale transition-all duration-200 hover:opacity-70 hover:grayscale-0"
+                style={{ color: "var(--ink-soft)" }}
+                title={item.name}
               >
-                {name}
-              </span>
+                {item.logo}
+                <span className="hidden font-display text-xs font-semibold tracking-tight sm:inline">
+                  {item.name}
+                </span>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Stats */}
-      {stats && (
-        <section className="px-7 pb-12">
-          <div className="mx-auto grid max-w-[720px] gap-5 sm:grid-cols-3">
-            {[
-              {
-                icon: Lightbulb,
-                label: "Open ideas",
-                value: stats.open_ideas,
-              },
-              {
-                icon: FileText,
-                label: "Revealed",
-                value: stats.closed_ideas,
-              },
-              {
-                icon: Vote,
-                label: "Proposals",
-                value: stats.total_contributions,
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center gap-3 rounded-[14px] p-4"
-                style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
-              >
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px]"
-                  style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
-                >
-                  <item.icon className="h-5 w-5 text-white" aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="font-display text-xl font-bold tracking-[-0.02em]">
-                    {item.value}
-                  </p>
-                  <p className="text-xs text-ink-soft">{item.label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Ideas grid */}
       <section id="ideas" className="px-7 pb-20">

@@ -23,7 +23,7 @@ function extractToc(content: string): TocItem[] {
     const text = match[2].trim();
     const id = text
       .toLowerCase()
-      .replace(/[^\w\u4e00-\u9fff]+/g, "-")
+      .replace(/[^\w]+/g, "-")
       .replace(/^-|-$/g, "");
     items.push({
       level: match[1].length,

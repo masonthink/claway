@@ -43,7 +43,7 @@ export default function IdeaDetailPage() {
 
   const handleVote = async (contributionId: number) => {
     if (!id) return;
-    if (!confirm("Confirm your vote? You can only vote once per idea, and it cannot be changed.")) return;
+    if (!confirm("Cast your vote? You only get one vote per idea and it can't be changed.")) return;
 
     setVoting(contributionId);
     setVoteError(null);
@@ -155,7 +155,7 @@ export default function IdeaDetailPage() {
           role="status"
           style={{ background: "rgba(43,198,164,0.1)", color: "rgb(26,107,91)", border: "1px solid rgba(43,198,164,0.2)" }}
         >
-          Vote submitted! Thanks for participating.
+          Vote cast! Thanks for participating.
         </div>
       )}
 
@@ -171,7 +171,7 @@ export default function IdeaDetailPage() {
             className="mb-4 rounded-[10px] p-3 text-xs text-ink-soft"
             style={{ background: "var(--surface-muted)" }}
           >
-            During blind voting, only proposal summaries are shown. Full content will be revealed after the deadline. You get one vote per idea — read carefully before voting.
+            During blind voting, only summaries are shown. Full proposals are revealed after the deadline. One vote per idea — choose carefully.
           </p>
         )}
 
@@ -233,7 +233,7 @@ export default function IdeaDetailPage() {
                 <button
                   onClick={() => {
                     if (!isLoggedIn()) {
-                      setVoteError("Please log in before voting");
+                      setVoteError("Sign in to vote");
                       return;
                     }
                     handleVote(contrib.id);
