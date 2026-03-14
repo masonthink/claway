@@ -105,14 +105,10 @@ func (s *Service) ListIdeas(ctx context.Context, status string, limit, offset in
 		return nil, fmt.Errorf("failed to list ideas: %w", err)
 	}
 
-	resp := &ListIdeasResponse{
-		Ideas: make([]*IdeaResponse, 0, len(ideas)),
+	return &ListIdeasResponse{
+		Ideas: s.enrichIdeas(ctx, ideas),
 		Total: total,
-	}
-	for _, idea := range ideas {
-		resp.Ideas = append(resp.Ideas, s.enrichIdea(ctx, idea))
-	}
-	return resp, nil
+	}, nil
 }
 
 // GetIdea returns an idea by ID enriched with counts.
@@ -138,17 +134,13 @@ func (s *Service) ListMyIdeas(ctx context.Context, userID int64, limit, offset i
 		return nil, fmt.Errorf("failed to list my ideas: %w", err)
 	}
 
-	resp := &ListIdeasResponse{
-		Ideas: make([]*IdeaResponse, 0, len(ideas)),
+	return &ListIdeasResponse{
+		Ideas: s.enrichIdeas(ctx, ideas),
 		Total: total,
-	}
-	for _, idea := range ideas {
-		resp.Ideas = append(resp.Ideas, s.enrichIdea(ctx, idea))
-	}
-	return resp, nil
+	}, nil
 }
 
-// enrichIdea adds contribution count, voter count, and initiator username to an idea.
+// enrichIdea adds contribution count, voter count, and initiator username to a single idea.
 func (s *Service) enrichIdea(ctx context.Context, idea *model.Idea) *IdeaResponse {
 	contribCount, _ := s.store.CountContributionsByIdea(ctx, idea.ID)
 	voterCount, _ := s.store.CountVotersByIdea(ctx, idea.ID)
@@ -166,6 +158,45 @@ func (s *Service) enrichIdea(ctx context.Context, idea *model.Idea) *IdeaRespons
 	}
 }
 
+// enrichIdeas batch-enriches a list of ideas with 3 queries instead of 3*N.
+func (s *Service) enrichIdeas(ctx context.Context, ideas []*model.Idea) []*IdeaResponse {
+	if len(ideas) == 0 {
+		return []*IdeaResponse{}
+	}
+
+	// Collect IDs
+	ideaIDs := make([]int64, len(ideas))
+	userIDSet := make(map[int64]struct{})
+	for i, idea := range ideas {
+		ideaIDs[i] = idea.ID
+		userIDSet[idea.InitiatorID] = struct{}{}
+	}
+	userIDs := make([]int64, 0, len(userIDSet))
+	for uid := range userIDSet {
+		userIDs = append(userIDs, uid)
+	}
+
+	// Batch queries (3 queries total instead of 3*N)
+	contribCounts, _ := s.store.CountContributionsByIdeaIDs(ctx, ideaIDs)
+	voterCounts, _ := s.store.CountVotersByIdeaIDs(ctx, ideaIDs)
+	usersMap, _ := s.store.GetUsersByIDs(ctx, userIDs)
+
+	result := make([]*IdeaResponse, len(ideas))
+	for i, idea := range ideas {
+		username := ""
+		if u, ok := usersMap[idea.InitiatorID]; ok {
+			username = u.Username
+		}
+		result[i] = &IdeaResponse{
+			Idea:              idea,
+			ContributionCount: contribCounts[idea.ID],
+			VoterCount:        voterCounts[idea.ID],
+			InitiatorUsername:  username,
+		}
+	}
+	return result
+}
+
 // GetIdeaStats returns platform-level stats.
 type PlatformStats struct {
 	OpenIdeas         int `json:"open_ideas"`
@@ -173,22 +204,16 @@ type PlatformStats struct {
 	TotalContributions int `json:"total_contributions"`
 }
 
-// GetPlatformStats returns aggregate platform statistics.
+// GetPlatformStats returns aggregate platform statistics with minimal queries.
 func (s *Service) GetPlatformStats(ctx context.Context) (*PlatformStats, error) {
-	openIdeas, _, err := s.store.ListIdeas(ctx, "open", 1, 0)
+	_, openTotal, err := s.store.ListIdeas(ctx, "open", 1, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count open ideas: %w", err)
 	}
-	closedIdeas, _, err := s.store.ListIdeas(ctx, "closed", 1, 0)
+	_, closedTotal, err := s.store.ListIdeas(ctx, "closed", 1, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count closed ideas: %w", err)
 	}
-
-	_, openTotal, _ := s.store.ListIdeas(ctx, "open", 1, 0)
-	_, closedTotal, _ := s.store.ListIdeas(ctx, "closed", 1, 0)
-	_ = openIdeas
-	_ = closedIdeas
-
 	totalContribs, _ := s.store.CountAllSubmittedContributions(ctx)
 
 	return &PlatformStats{

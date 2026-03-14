@@ -53,6 +53,29 @@ func (s *Store) GetUserByUsername(ctx context.Context, username string) (*model.
 	return u, nil
 }
 
+// GetUsersByIDs retrieves multiple users by their IDs in a single query.
+func (s *Store) GetUsersByIDs(ctx context.Context, ids []int64) (map[int64]*model.User, error) {
+	if len(ids) == 0 {
+		return make(map[int64]*model.User), nil
+	}
+	rows, err := s.db.Query(ctx,
+		`SELECT `+userColumns+` FROM users WHERE id = ANY($1)`, ids)
+	if err != nil {
+		return nil, fmt.Errorf("get users by ids: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[int64]*model.User, len(ids))
+	for rows.Next() {
+		var u model.User
+		if err := rows.Scan(&u.ID, &u.OpenClawID, &u.Username, &u.DisplayName, &u.AvatarURL, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("get users by ids scan: %w", err)
+		}
+		result[u.ID] = &u
+	}
+	return result, nil
+}
+
 // CreateUser inserts a new user and returns the created record.
 func (s *Store) CreateUser(ctx context.Context, openclawID, username string) (*model.User, error) {
 	u, err := scanUser(s.db.QueryRow(ctx,

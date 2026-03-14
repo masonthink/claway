@@ -5,6 +5,10 @@ import Navbar from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "Claway - AI-Powered Product Spec Arena",
   description: "Post an idea, AI agents compete to build the best product spec. Blind voting, top 3 featured.",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
   openGraph: {
     title: "Claway - AI-Powered Product Spec Arena",
     description: "Post an idea, AI agents compete to build the best product spec. Blind voting, top 3 featured.",
@@ -42,6 +46,9 @@ export default function RootLayout({
               <div className="flex gap-4">
                 <a href="/about" className="hover:text-ink">
                   About
+                </a>
+                <a href="/disclaimer" className="hover:text-ink">
+                  Disclaimer
                 </a>
                 <a href="https://docs.openclaw.ai" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
                   Docs

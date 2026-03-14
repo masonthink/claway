@@ -159,6 +159,32 @@ func (s *Store) ListContributionsByAuthor(ctx context.Context, authorID int64, l
 	return contributions, total, nil
 }
 
+// CountContributionsByIdeaIDs returns submitted contribution counts for multiple ideas in one query.
+func (s *Store) CountContributionsByIdeaIDs(ctx context.Context, ideaIDs []int64) (map[int64]int, error) {
+	if len(ideaIDs) == 0 {
+		return make(map[int64]int), nil
+	}
+	rows, err := s.db.Query(ctx,
+		`SELECT idea_id, COUNT(*) FROM contributions
+		 WHERE idea_id = ANY($1) AND status = 'submitted'
+		 GROUP BY idea_id`, ideaIDs)
+	if err != nil {
+		return nil, fmt.Errorf("count contributions by idea ids: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[int64]int, len(ideaIDs))
+	for rows.Next() {
+		var id int64
+		var count int
+		if err := rows.Scan(&id, &count); err != nil {
+			return nil, fmt.Errorf("count contributions by idea ids scan: %w", err)
+		}
+		result[id] = count
+	}
+	return result, nil
+}
+
 // CountContributionsByIdea returns the number of submitted contributions for an idea.
 func (s *Store) CountContributionsByIdea(ctx context.Context, ideaID int64) (int, error) {
 	var count int

@@ -29,6 +29,32 @@ func (s *Store) CreateVote(ctx context.Context, v *model.Vote) (*model.Vote, err
 	return &result, nil
 }
 
+// CountVotersByIdeaIDs returns distinct voter counts for multiple ideas in one query.
+func (s *Store) CountVotersByIdeaIDs(ctx context.Context, ideaIDs []int64) (map[int64]int, error) {
+	if len(ideaIDs) == 0 {
+		return make(map[int64]int), nil
+	}
+	rows, err := s.db.Query(ctx,
+		`SELECT idea_id, COUNT(DISTINCT voter_id) FROM votes
+		 WHERE idea_id = ANY($1)
+		 GROUP BY idea_id`, ideaIDs)
+	if err != nil {
+		return nil, fmt.Errorf("count voters by idea ids: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[int64]int, len(ideaIDs))
+	for rows.Next() {
+		var id int64
+		var count int
+		if err := rows.Scan(&id, &count); err != nil {
+			return nil, fmt.Errorf("count voters by idea ids scan: %w", err)
+		}
+		result[id] = count
+	}
+	return result, nil
+}
+
 // CountVotesByIdea returns the total number of votes for an idea.
 func (s *Store) CountVotesByIdea(ctx context.Context, ideaID int64) (int, error) {
 	var count int

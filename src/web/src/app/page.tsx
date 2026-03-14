@@ -297,6 +297,8 @@ export default function HomePage() {
                     src={item.avatar}
                     alt={item.name}
                     className="h-12 w-12 shrink-0 rounded-full"
+                    loading="lazy"
+                    decoding="async"
                     style={{ background: "var(--line)" }}
                   />
                   <div>
@@ -376,6 +378,8 @@ export default function HomePage() {
                     src={item.avatar}
                     alt={item.name}
                     className="h-10 w-10 shrink-0 rounded-full"
+                    loading="lazy"
+                    decoding="async"
                     style={{ background: "var(--line)" }}
                   />
                   <div>

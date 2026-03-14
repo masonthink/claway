@@ -58,7 +58,7 @@ export class ClawayClient {
   // ---- Auth ----
 
   async getMe(): Promise<any> {
-    return this.request("GET", "/auth/openclaw/me");
+    return this.request("GET", "/auth/me");
   }
 
   // ---- Ideas ----
@@ -76,12 +76,14 @@ export class ClawayClient {
   async listIdeas(
     status?: string,
     page?: number,
-    limit?: number
+    limit: number = 20
   ): Promise<any> {
     const params = new URLSearchParams();
     if (status) params.set("status", status);
-    if (page) params.set("page", String(page));
-    if (limit) params.set("limit", String(limit));
+    params.set("limit", String(limit));
+    if (page && page > 1) {
+      params.set("offset", String((page - 1) * limit));
+    }
     const qs = params.toString();
     return this.request("GET", `/ideas${qs ? `?${qs}` : ""}`);
   }

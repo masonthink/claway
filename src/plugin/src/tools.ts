@@ -9,12 +9,32 @@ function textResult(text: string) {
   return { content: [{ type: "text", text }] };
 }
 
+// Web URL helpers — always generate links so users can view content in browser
+const WEB_BASE = "https://claway.cc";
+function ideaUrl(id: string | number) { return `${WEB_BASE}/idea/${id}`; }
+function draftUrl(id: string | number) { return `${WEB_BASE}/draft/${id}`; }
+function resultUrl(id: string | number) { return `${WEB_BASE}/idea/${id}/result`; }
+function userUrl(username: string) { return `${WEB_BASE}/user/${username}`; }
+
 // Helper to safely execute a tool action with error handling
 async function safeExecute(fn: () => Promise<string>): Promise<any> {
   try {
     return textResult(await fn());
   } catch (err: any) {
-    return textResult(`操作失败: ${err.message || String(err)}`);
+    const msg = err.message || String(err);
+    let hint = "";
+    if (msg.includes("401") || msg.includes("Unauthorized")) {
+      hint = "\n提示: 认证已过期或未登录，请先运行 claway_auth login。";
+    } else if (msg.includes("403")) {
+      hint = "\n提示: 权限不足，可能在操作他人的资源。";
+    } else if (msg.includes("404")) {
+      hint = "\n提示: 资源不存在，请确认 ID 是否正确。";
+    } else if (msg.includes("409") || msg.includes("conflict") || msg.includes("already")) {
+      hint = "\n提示: 操作冲突，可能是重复投票或重复提交。";
+    } else if (msg.includes("429")) {
+      hint = "\n提示: 操作频率过高，请稍后再试。";
+    }
+    return textResult(`操作失败: ${msg}${hint}`);
   }
 }
 
@@ -77,7 +97,7 @@ export function registerTools(api: any, client: ClawayClient) {
           try {
             fs.unlinkSync(authFile);
           } catch {}
-          return "已退出登录，Token 已清除。";
+          return "已退出登录。如需重新登录，请运行 claway_auth login。";
         }
 
         // Login flow
@@ -99,8 +119,7 @@ export function registerTools(api: any, client: ClawayClient) {
         try {
           await authPromise;
           lines.push(``);
-          lines.push(`认证成功! Token 已保存到 ~/.config/claway/auth.json`);
-          lines.push(`现在可以使用所有 Claway 工具了。`);
+          lines.push(`认证成功! 你已登录 Claway，可以开始浏览和参与想法了。`);
         } catch (err: any) {
           lines.push(``);
           lines.push(`认证失败: ${err.message}`);
@@ -146,16 +165,14 @@ export function registerTools(api: any, client: ClawayClient) {
       safeExecute(async () => {
         const idea = await client.createIdea(params);
         return [
-          `创建成功!`,
-          `  Idea ID: ${idea.id}`,
+          `Idea 创建成功!`,
+          `  ID: ${idea.id}`,
           `  标题: ${idea.title || params.title}`,
-          `  截止时间: ${idea.deadline}`,
-          idea.url ? `  链接: ${idea.url}` : "",
+          `  截止时间: ${idea.deadline}（7 天后揭榜）`,
+          `  查看页面: ${ideaUrl(idea.id)}`,
           ``,
-          `7 天后揭榜。贡献者可以用他们的 agent 提交完整方案，社区投票选出精选。`,
-        ]
-          .filter(Boolean)
-          .join("\n");
+          `你可以把链接分享给其他人，邀请他们提交方案和投票。`,
+        ].join("\n");
       }),
   });
 
@@ -184,7 +201,10 @@ export function registerTools(api: any, client: ClawayClient) {
         );
         const ideas = resp.ideas || resp.data || [];
         if (ideas.length === 0) {
-          return "当前没有 Idea。";
+          if (params.status) {
+            return `没有${params.status === "open" ? "进行中" : "已揭榜"}的 Idea。`;
+          }
+          return `平台暂无 Idea。使用 claway_create_idea 发起第一个!`;
         }
         const total = resp.total || ideas.length;
         const lines = [`共 ${total} 个 Idea:\n`];
@@ -194,8 +214,9 @@ export function registerTools(api: any, client: ClawayClient) {
             `      ${truncate(idea.description, 100)}`
           );
           lines.push(
-            `      状态: ${idea.status} | 贡献数: ${idea.contribution_count ?? "?"} | 截止: ${idea.deadline || "?"}`
+            `      状态: ${idea.status === "open" ? "进行中" : "已揭榜"} | 贡献数: ${idea.contribution_count ?? "?"} | 截止: ${idea.deadline || "?"}`
           );
+          lines.push(`      链接: ${ideaUrl(idea.id)}`);
           lines.push("");
         }
         return lines.join("\n");
@@ -209,7 +230,7 @@ export function registerTools(api: any, client: ClawayClient) {
     parameters: {
       type: "object",
       properties: {
-        idea_id: { type: "string", description: "Idea ID (UUID)" },
+        idea_id: { type: "string", description: "Idea ID" },
       },
       required: ["idea_id"],
     },
@@ -220,7 +241,7 @@ export function registerTools(api: any, client: ClawayClient) {
         const lines = [
           `Idea: ${idea.title}`,
           `  ID: ${idea.id}`,
-          `  状态: ${idea.status}`,
+          `  状态: ${idea.status === "open" ? "进行中" : "已揭榜"}`,
           `  描述: ${idea.description}`,
           `  目标用户: ${idea.target_user}`,
           `  核心问题: ${idea.core_problem}`,
@@ -231,6 +252,15 @@ export function registerTools(api: any, client: ClawayClient) {
           `  截止时间: ${idea.deadline || "?"}`,
           `  创建时间: ${idea.created_at}`,
         ];
+
+        lines.push("");
+        lines.push(`  查看页面: ${ideaUrl(idea.id)}`);
+        if (idea.status === "open") {
+          lines.push(`\n下一步: 提交方案 (claway_create_contribution) 或查看已有方案 (claway_list_contributions)`);
+        } else if (idea.status === "closed") {
+          lines.push(`  揭榜结果: ${resultUrl(idea.id)}`);
+          lines.push(`\n使用 claway_get_result 查看排名详情。`);
+        }
 
         return lines.filter(Boolean).join("\n");
       }),
@@ -245,7 +275,7 @@ export function registerTools(api: any, client: ClawayClient) {
     parameters: {
       type: "object",
       properties: {
-        idea_id: { type: "string", description: "Idea ID to contribute to (UUID)" },
+        idea_id: { type: "string", description: "Idea ID to contribute to" },
         content: {
           type: "string",
           description: "Full Markdown document content",
@@ -266,19 +296,16 @@ export function registerTools(api: any, client: ClawayClient) {
           params.content,
           params.decision_log || []
         );
+        const cid = result.contribution_id || result.id;
         return [
           `草稿已创建!`,
-          `  贡献 ID: ${result.contribution_id || result.id}`,
-          `  状态: draft (草稿)`,
-          result.preview_url
-            ? `  网页预览: ${result.preview_url} (仅你可见)`
-            : "",
+          `  贡献 ID: ${cid}`,
+          `  状态: draft (草稿，未提交)`,
+          `  网页预览: ${draftUrl(cid)} (仅你可见)`,
           ``,
-          `你可以在网页上阅读完整内容，回来告诉我要改什么。`,
-          `或者使用 claway_submit_contribution 提交（提交后不可修改）。`,
-        ]
-          .filter(Boolean)
-          .join("\n");
+          `在浏览器中查看渲染效果，回来告诉我要改什么。`,
+          `确认无误后使用 claway_submit_contribution 提交（提交后不可修改）。`,
+        ].join("\n");
       }),
   });
 
@@ -291,7 +318,7 @@ export function registerTools(api: any, client: ClawayClient) {
       properties: {
         contribution_id: {
           type: "string",
-          description: "Contribution ID (UUID)",
+          description: "Contribution ID",
         },
         content: {
           type: "string",
@@ -316,8 +343,9 @@ export function registerTools(api: any, client: ClawayClient) {
           `草稿已更新!`,
           `  贡献 ID: ${result.contribution_id || params.contribution_id}`,
           `  更新时间: ${result.updated_at || "now"}`,
+          `  网页预览: ${draftUrl(result.contribution_id || params.contribution_id)}`,
           ``,
-          `网页预览已同步。还要改别的吗？`,
+          `刷新浏览器查看最新内容。还要改别的吗？`,
           `确认无误后使用 claway_submit_contribution 提交。`,
         ].join("\n");
       }),
@@ -326,13 +354,13 @@ export function registerTools(api: any, client: ClawayClient) {
   api.registerTool({
     name: "claway_submit_contribution",
     description:
-      "Submit a draft contribution, locking it permanently. After submission, the content cannot be modified. This action is irreversible.",
+      "Submit a draft contribution, locking it permanently. IMPORTANT: This action is irreversible — confirm with the user before calling this tool.",
     parameters: {
       type: "object",
       properties: {
         contribution_id: {
           type: "string",
-          description: "Contribution ID to submit (UUID)",
+          description: "Contribution ID to submit",
         },
       },
       required: ["contribution_id"],
@@ -343,10 +371,9 @@ export function registerTools(api: any, client: ClawayClient) {
         return [
           `方案已提交!`,
           `  贡献 ID: ${result.contribution_id || params.contribution_id}`,
-          `  状态: submitted (已锁定)`,
-          `  提交时间: ${result.submitted_at || "now"}`,
+          `  状态: submitted (已锁定，不可修改)`,
           ``,
-          `方案将匿名显示在 Idea 页面，揭榜前不公开署名。祝好运!`,
+          `方案将匿名参与评选，揭榜前不公开署名。祝好运!`,
         ].join("\n");
       }),
   });
@@ -360,7 +387,7 @@ export function registerTools(api: any, client: ClawayClient) {
       properties: {
         contribution_id: {
           type: "string",
-          description: "Contribution ID (UUID)",
+          description: "Contribution ID",
         },
       },
       required: ["contribution_id"],
@@ -371,8 +398,11 @@ export function registerTools(api: any, client: ClawayClient) {
         const lines = [
           `贡献 #${c.id}`,
           `  Idea ID: ${c.idea_id}`,
-          `  状态: ${c.status}`,
+          `  状态: ${c.status === "draft" ? "草稿" : "已提交"}`,
           `  作者: ${c.author?.username || c.author_id || "(匿名)"}`,
+          c.status === "draft"
+            ? `  网页预览: ${draftUrl(c.id)}`
+            : `  Idea 页面: ${ideaUrl(c.idea_id)}`,
           `  提交时间: ${c.submitted_at || "(草稿未提交)"}`,
           `  创建时间: ${c.created_at}`,
           ``,
@@ -380,6 +410,10 @@ export function registerTools(api: any, client: ClawayClient) {
           ``,
           c.content || "(空)",
         ];
+        if (c.status === "draft") {
+          lines.push("");
+          lines.push(`可使用 claway_update_contribution 修改，或 claway_submit_contribution 提交。`);
+        }
         return lines.join("\n");
       }),
   });
@@ -391,7 +425,7 @@ export function registerTools(api: any, client: ClawayClient) {
     parameters: {
       type: "object",
       properties: {
-        idea_id: { type: "string", description: "Idea ID (UUID)" },
+        idea_id: { type: "string", description: "Idea ID" },
       },
       required: ["idea_id"],
     },
@@ -400,7 +434,7 @@ export function registerTools(api: any, client: ClawayClient) {
         const resp = await client.listContributions(params.idea_id);
         const contributions = resp.contributions || resp.data || [];
         if (contributions.length === 0) {
-          return "该 Idea 暂无已提交的方案。";
+          return `该 Idea 暂无已提交的方案。使用 claway_create_contribution 提交你的方案!`;
         }
         const lines = [`共 ${contributions.length} 份方案:\n`];
         for (let i = 0; i < contributions.length; i++) {
@@ -415,6 +449,7 @@ export function registerTools(api: any, client: ClawayClient) {
           if (c.author) {
             lines.push(`    作者: ${c.author.username || c.author}`);
           }
+          lines.push(`    查看: claway_get_contribution ${c.id}`);
           lines.push("");
         }
         return lines.join("\n");
@@ -431,13 +466,13 @@ export function registerTools(api: any, client: ClawayClient) {
         const resp = await client.getMyContributions();
         const contributions = resp.contributions || resp.data || [];
         if (contributions.length === 0) {
-          return "暂无贡献记录。";
+          return `暂无贡献记录。使用 claway_list_ideas 浏览想法，找到感兴趣的参与!`;
         }
         const lines = [`我的贡献 (${contributions.length} 份):\n`];
         for (const c of contributions) {
           lines.push(`  [${c.id}] Idea: ${c.idea_title || c.idea_id}`);
           lines.push(
-            `    状态: ${c.status} | ${c.status === "draft" ? "草稿" : `提交于 ${c.submitted_at}`}`
+            `    状态: ${c.status === "draft" ? `草稿 | 预览: ${draftUrl(c.id)}` : `已提交于 ${c.submitted_at}`}`
           );
           lines.push("");
         }
@@ -450,14 +485,14 @@ export function registerTools(api: any, client: ClawayClient) {
   api.registerTool({
     name: "claway_vote",
     description:
-      "Cast a vote for a contribution on an idea. Each user can vote once per idea. Votes are irreversible. You cannot vote for your own contribution.",
+      "Cast a vote for a contribution. IMPORTANT: Votes are irreversible — confirm the user's choice before calling this tool.",
     parameters: {
       type: "object",
       properties: {
-        idea_id: { type: "string", description: "Idea ID (UUID)" },
+        idea_id: { type: "string", description: "Idea ID" },
         contribution_id: {
           type: "string",
-          description: "Contribution ID to vote for (UUID)",
+          description: "Contribution ID to vote for",
         },
       },
       required: ["idea_id", "contribution_id"],
@@ -469,10 +504,13 @@ export function registerTools(api: any, client: ClawayClient) {
           params.contribution_id
         );
         return [
-          `已投票!`,
+          `投票成功!`,
+          `  Idea: ${params.idea_id}`,
+          `  投给方案: ${params.contribution_id}`,
           `  投票时间: ${result.voted_at || "now"}`,
           ``,
-          `投票结果将在截止后揭晓。投票不可撤回。`,
+          `投票不可撤回。结果将在截止后揭晓。`,
+          `  Idea 页面: ${ideaUrl(params.idea_id)}`,
         ].join("\n");
       }),
   });
@@ -487,7 +525,7 @@ export function registerTools(api: any, client: ClawayClient) {
         const resp = await client.getMyVotes();
         const votes = resp.votes || resp.data || [];
         if (votes.length === 0) {
-          return "暂无投票记录。";
+          return `暂无投票记录。使用 claway_list_ideas 查看可投票的 Idea。`;
         }
         const lines = [`我的投票 (${votes.length} 条):\n`];
         for (const v of votes) {
@@ -495,6 +533,7 @@ export function registerTools(api: any, client: ClawayClient) {
           lines.push(
             `    投给: ${v.contribution_id} | 时间: ${v.voted_at}`
           );
+          lines.push(`    链接: ${ideaUrl(v.idea_id)}`);
           lines.push("");
         }
         return lines.join("\n");
@@ -510,7 +549,7 @@ export function registerTools(api: any, client: ClawayClient) {
     parameters: {
       type: "object",
       properties: {
-        idea_id: { type: "string", description: "Idea ID (UUID)" },
+        idea_id: { type: "string", description: "Idea ID" },
       },
       required: ["idea_id"],
     },
@@ -527,6 +566,7 @@ export function registerTools(api: any, client: ClawayClient) {
         const lines = [
           `揭榜结果 (总票数: ${totalVotes})`,
           `  揭榜时间: ${resp.revealed_at || "?"}`,
+          `  完整结果: ${resultUrl(params.idea_id)}`,
           ``,
         ];
 
@@ -556,14 +596,15 @@ export function registerTools(api: any, client: ClawayClient) {
         const resp = await client.getMyIdeas();
         const ideas = resp.ideas || resp.data || [];
         if (ideas.length === 0) {
-          return "你还没有发起过 Idea。";
+          return `你还没有发起过 Idea。使用 claway_create_idea 创建你的第一个想法!`;
         }
         const lines = [`我发起的 Idea (${ideas.length} 个):\n`];
         for (const idea of ideas) {
           lines.push(`  [${idea.id}] ${idea.title}`);
           lines.push(
-            `      状态: ${idea.status} | 贡献数: ${idea.contribution_count ?? "?"} | 截止: ${idea.deadline || "?"}`
+            `      状态: ${idea.status === "open" ? "进行中" : "已揭榜"} | 贡献数: ${idea.contribution_count ?? "?"} | 截止: ${idea.deadline || "?"}`
           );
+          lines.push(`      链接: ${ideaUrl(idea.id)}`);
           lines.push("");
         }
         return lines.join("\n");
@@ -583,6 +624,7 @@ export function registerTools(api: any, client: ClawayClient) {
           `  用户名: ${me.username}`,
           `  显示名: ${me.display_name || me.username}`,
           me.avatar_url ? `  头像: ${me.avatar_url}` : "",
+          `  主页: ${userUrl(me.username)}`,
           `  注册时间: ${me.created_at || "?"}`,
         ]
           .filter(Boolean)

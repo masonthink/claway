@@ -8,6 +8,27 @@ const PROXY_BASE = "/api/proxy";
 export const DIRECT_API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1";
 
+// Simple in-memory cache for GET requests (stale-while-revalidate pattern)
+const cache = new Map<string, { data: unknown; ts: number }>();
+const CACHE_TTL = 30_000; // 30 seconds
+
+function getCached<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) {
+    return entry.data as T;
+  }
+  return null;
+}
+
+function setCache(key: string, data: unknown) {
+  cache.set(key, { data, ts: Date.now() });
+  // Evict old entries if cache grows too large
+  if (cache.size > 100) {
+    const oldest = cache.keys().next().value;
+    if (oldest) cache.delete(oldest);
+  }
+}
+
 async function request<T>(
   path: string,
   options?: RequestInit
@@ -21,6 +42,14 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  const method = options?.method || "GET";
+
+  // Use cache for GET requests without auth
+  if (method === "GET" && !token) {
+    const cached = getCached<T>(path);
+    if (cached) return cached;
+  }
+
   const res = await fetch(`${PROXY_BASE}${path}`, {
     ...options,
     headers,
@@ -32,7 +61,14 @@ async function request<T>(
     throw new Error(msg);
   }
 
-  return res.json();
+  const data: T = await res.json();
+
+  // Cache GET responses
+  if (method === "GET") {
+    setCache(path, data);
+  }
+
+  return data;
 }
 
 // --- Types ---

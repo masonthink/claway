@@ -3,6 +3,8 @@
 
 import { ClawayClient } from "./client";
 
+const WEB_BASE = "https://claway.cc";
+
 export function registerContextInjection(api: any, client: ClawayClient) {
   api.on(
     "before_prompt_build",
@@ -34,6 +36,7 @@ export function registerContextInjection(api: any, client: ClawayClient) {
         for (const draft of drafts) {
           lines.push(`### 草稿: ${draft.idea_title || draft.idea_id}`);
           lines.push(`- 贡献 ID: ${draft.id}`);
+          lines.push(`- 预览: ${WEB_BASE}/draft/${draft.id}`);
           lines.push(`- Idea ID: ${draft.idea_id}`);
           lines.push(`- 状态: 草稿 (未提交)`);
           if (draft.updated_at) {

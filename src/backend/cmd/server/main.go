@@ -26,8 +26,18 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	// Database connection pool
-	dbpool, err := pgxpool.New(context.Background(), cfg.DatabaseURL)
+	// Database connection pool with tuned settings
+	poolCfg, err := pgxpool.ParseConfig(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("failed to parse database URL: %v", err)
+	}
+	poolCfg.MaxConns = 10
+	poolCfg.MinConns = 2
+	poolCfg.MaxConnLifetime = 30 * time.Minute
+	poolCfg.MaxConnIdleTime = 5 * time.Minute
+	poolCfg.HealthCheckPeriod = 1 * time.Minute
+
+	dbpool, err := pgxpool.NewWithConfig(context.Background(), poolCfg)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
@@ -76,6 +86,9 @@ func main() {
 	// Global middleware
 	e.Use(echomw.Logger())
 	e.Use(echomw.Recover())
+	e.Use(echomw.GzipWithConfig(echomw.GzipConfig{
+		Level: 5,
+	}))
 	e.Use(echomw.RateLimiterWithConfig(echomw.RateLimiterConfig{
 		Skipper: func(c echo.Context) bool {
 			// Skip rate limiting for health checks
@@ -132,8 +145,13 @@ func main() {
 	v1.POST("/auth/session", authH.CreateAuthSession)         // agent session flow
 	v1.GET("/auth/session/:sid", authH.GetAuthSession)        // agent session polling
 
-	// Public API
-	pub := v1.Group("/public")
+	// Public API (with cache headers)
+	pub := v1.Group("/public", func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Response().Header().Set("Cache-Control", "public, max-age=60, stale-while-revalidate=300")
+			return next(c)
+		}
+	})
 	pub.GET("/stats", statsH.GetPlatformStats)
 	pub.GET("/ideas", ideaH.ListIdeas)
 	pub.GET("/ideas/:id", ideaH.GetIdea)
