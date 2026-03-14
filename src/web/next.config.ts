@@ -4,14 +4,6 @@ const nextConfig: NextConfig = {
   // Compress responses
   compress: true,
 
-  // Optimize images from external domains
-  images: {
-    remotePatterns: [
-      { hostname: "randomuser.me" },
-      { hostname: "api.dicebear.com" },
-    ],
-  },
-
   // Cache static assets aggressively
   async headers() {
     return [

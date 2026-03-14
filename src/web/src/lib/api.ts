@@ -179,20 +179,21 @@ export function getUserProfile(username: string): Promise<UserProfile> {
   return request(`/public/users/${username}`);
 }
 
-// --- Auth API ---
+// --- Auth API (read-only — all write operations go through OpenClaw Skill) ---
 
 export function getMe(): Promise<User> {
   return request("/me");
 }
 
-export function castVote(
-  ideaId: string,
-  contributionId: number
-): Promise<{ voted_at: string }> {
-  return request(`/ideas/${ideaId}/votes`, {
-    method: "POST",
-    body: JSON.stringify({ contribution_id: contributionId }),
-  });
+export interface MyVote {
+  id: number;
+  idea_id: number;
+  contribution_id: number;
+  voted_at: string;
+}
+
+export function getMyVoteForIdea(ideaId: string): Promise<MyVote> {
+  return request(`/me/votes/${ideaId}`);
 }
 
 export function getDraftPreview(contributionId: string): Promise<Contribution> {

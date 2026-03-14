@@ -3,17 +3,18 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Trophy, Medal } from "lucide-react";
+import { ArrowLeft, Trophy, Medal, Check } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import ErrorState from "@/components/ErrorState";
 import {
   getIdea,
   getRevealResult,
   getContributions,
+  getMyVoteForIdea,
   type Idea,
   type RevealResult,
-  type Contribution,
 } from "@/lib/api";
+import { isLoggedIn } from "@/lib/auth";
 
 const RANK_STYLES: Record<number, { bg: string; color: string; icon: string }> = {
   1: { bg: "rgba(231,187,103,0.2)", color: "#92700a", icon: "gold" },
@@ -26,12 +27,13 @@ export default function RevealResultPage() {
   const [idea, setIdea] = useState<Idea | null>(null);
   const [result, setResult] = useState<RevealResult | null>(null);
   const [contribContents, setContribContents] = useState<Record<number, string>>({});
+  const [myVotedContribId, setMyVotedContribId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
 
-    Promise.all([
+    const fetches: Promise<void>[] = [
       getIdea(id).then(setIdea),
       getRevealResult(id).then(setResult),
       getContributions(id).then((contribs) => {
@@ -41,7 +43,18 @@ export default function RevealResultPage() {
         }
         setContribContents(contents);
       }),
-    ]).catch((err) => setError(err.message));
+    ];
+
+    // If logged in, fetch user's vote for this idea
+    if (isLoggedIn()) {
+      fetches.push(
+        getMyVoteForIdea(id)
+          .then((vote) => setMyVotedContribId(vote.contribution_id))
+          .catch(() => {}) // non-critical (user may not have voted)
+      );
+    }
+
+    Promise.all(fetches).catch((err) => setError(err.message));
   }, [id]);
 
   const reload = () => {
@@ -104,12 +117,18 @@ export default function RevealResultPage() {
         {result.results.map((entry) => {
           const style = RANK_STYLES[entry.rank] || { bg: "var(--surface)", color: "var(--ink-soft)", icon: "" };
           const content = contribContents[entry.contribution_id];
+          const isMyVote = myVotedContribId === entry.contribution_id;
 
           return (
             <div
               key={entry.contribution_id}
               className="overflow-hidden rounded-[20px]"
-              style={{ border: "1px solid var(--line)", background: "var(--surface)" }}
+              style={{
+                border: isMyVote
+                  ? "2px solid var(--accent)"
+                  : "1px solid var(--line)",
+                background: "var(--surface)",
+              }}
             >
               {/* Rank header */}
               <div
@@ -123,13 +142,21 @@ export default function RevealResultPage() {
                   >
                     {entry.rank <= 3 ? <Medal className="h-5 w-5" /> : `#${entry.rank}`}
                   </span>
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold" style={{ color: style.color }}>
                       #{entry.rank}
                     </span>
                     {entry.is_featured && (
-                      <span className="ml-2 text-xs font-medium text-accent">
+                      <span className="text-xs font-medium text-accent">
                         Featured
+                      </span>
+                    )}
+                    {isMyVote && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-accent"
+                        style={{ background: "rgba(var(--accent-rgb, 99,102,241), 0.1)" }}
+                      >
+                        <Check className="h-3 w-3" />
+                        Your pick
                       </span>
                     )}
                   </div>
