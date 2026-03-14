@@ -157,6 +157,8 @@ func (s *Service) RunRevealTicker(ctx context.Context, interval time.Duration) {
 	}()
 }
 
+const maxRevealRetries = 3
+
 func (s *Service) processExpiredIdeas(ctx context.Context) {
 	ideas, err := s.store.ListExpiredOpenIdeas(ctx)
 	if err != nil {
@@ -166,8 +168,31 @@ func (s *Service) processExpiredIdeas(ctx context.Context) {
 
 	for _, idea := range ideas {
 		log.Printf("processing reveal for idea %d: %s", idea.ID, idea.Title)
-		if err := s.ProcessReveal(ctx, idea.ID); err != nil {
-			log.Printf("error revealing idea %d: %v", idea.ID, err)
+		if err := s.revealWithRetry(ctx, idea.ID); err != nil {
+			log.Printf("CRITICAL: reveal failed after %d retries for idea %d: %v", maxRevealRetries, idea.ID, err)
 		}
 	}
+}
+
+// revealWithRetry attempts ProcessReveal with exponential backoff.
+// Retries up to maxRevealRetries times (3 attempts total, with 1s, 2s backoff delays).
+func (s *Service) revealWithRetry(ctx context.Context, ideaID int64) error {
+	var lastErr error
+	for attempt := 0; attempt < maxRevealRetries; attempt++ {
+		if attempt > 0 {
+			delay := time.Duration(1<<uint(attempt-1)) * time.Second
+			log.Printf("retrying reveal for idea %d (attempt %d/%d, delay %v)", ideaID, attempt+1, maxRevealRetries, delay)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(delay):
+			}
+		}
+		if err := s.ProcessReveal(ctx, ideaID); err != nil {
+			lastErr = err
+			continue
+		}
+		return nil
+	}
+	return fmt.Errorf("all %d attempts failed: %w", maxRevealRetries, lastErr)
 }

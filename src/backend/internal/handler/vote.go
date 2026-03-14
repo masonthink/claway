@@ -40,6 +40,22 @@ func (h *VoteHandler) CastVote(c echo.Context) error {
 	})
 }
 
+// GetMyVoteForIdea handles GET /api/v1/me/votes/:idea_id
+func (h *VoteHandler) GetMyVoteForIdea(c echo.Context) error {
+	userID := c.Get("user_id").(int64)
+	ideaID, err := strconv.ParseInt(c.Param("idea_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid idea id"})
+	}
+
+	vote, err := h.svc.GetMyVoteForIdea(c.Request().Context(), userID, ideaID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "no vote found"})
+	}
+
+	return c.JSON(http.StatusOK, vote)
+}
+
 // ListMyVotes handles GET /api/v1/me/votes
 func (h *VoteHandler) ListMyVotes(c echo.Context) error {
 	userID := c.Get("user_id").(int64)

@@ -186,6 +186,7 @@ func main() {
 	auth.GET("/me/ideas", ideaH.ListMyIdeas)
 	auth.GET("/me/contributions", contribH.ListMyContributions)
 	auth.GET("/me/votes", voteH.ListMyVotes)
+	auth.GET("/me/votes/:idea_id", voteH.GetMyVoteForIdea)
 
 	// Draft preview (author only)
 	auth.GET("/draft/:contribution_id", contribH.GetDraftPreview)
