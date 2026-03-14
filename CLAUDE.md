@@ -120,6 +120,20 @@ go test -v ./internal/store/... ./internal/service/...
 - **认证**: X (Twitter) OAuth 2.0 + PKCE + OpenClaw OAuth
 - **限流**: Echo RateLimiter 中间件, 30 req/s, burst 60, 基于 X-Forwarded-For
 
+## gstack
+
+For all web browsing tasks, always use the `/browse` skill from gstack. Never use `mcp__claude-in-chrome__*` tools directly.
+
+Available skills:
+- `/browse` — web browsing and browser automation
+- `/plan-ceo-review` — CEO-level plan review
+- `/plan-eng-review` — engineering plan review
+- `/review` — code review
+- `/ship` — deploy and release
+- `/qa` — quality assurance testing
+- `/retro` — retrospective
+- `/setup-browser-cookies` — configure browser cookies
+
 ## 开发规范
 - 中文编写文档
 - 代码注释用英文
