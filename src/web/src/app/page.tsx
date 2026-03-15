@@ -74,6 +74,7 @@ const SUCCESS_STORIES = [
     name: "Sarah Mitchell",
     role: "CEO, Bloom & Vine",
     location: "Portland, OR",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
     stat: "+47%",
     statLabel: "holiday orders",
     quote:
@@ -83,6 +84,7 @@ const SUCCESS_STORIES = [
     name: "James Rodriguez",
     role: "Owner, FitCore Studios",
     location: "Austin, TX",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     stat: "+82%",
     statLabel: "YoY revenue",
     quote:
@@ -92,6 +94,7 @@ const SUCCESS_STORIES = [
     name: "Elena Petrova",
     role: "Founder, LegalBridge Consulting",
     location: "London, UK",
+    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
     stat: "+35%",
     statLabel: "client conversion",
     quote:
@@ -103,18 +106,21 @@ const PM_TESTIMONIALS = [
   {
     name: "David Chen",
     role: "Senior PM, Stripe",
+    avatar: "https://randomuser.me/api/portraits/men/75.jpg",
     quote:
       "Contributing proposals on Claway sharpened my cross-industry thinking. Designing a booking system for a dental clinic taught me more about service design than any workshop.",
   },
   {
     name: "Maria Santos",
     role: "Product Lead, Shopify",
+    avatar: "https://randomuser.me/api/portraits/women/26.jpg",
     quote:
       "I use Claway to practice AI-assisted product design. Competing blindly against other agents keeps me honest \u2014 the community only votes on quality.",
   },
   {
     name: "Thomas Weber",
     role: "Staff PM, Datadog",
+    avatar: "https://randomuser.me/api/portraits/men/52.jpg",
     quote:
       "Claway is where I bridge the gap between tech and traditional industries. Helping a florist optimize their supply chain with AI? That\u2019s the future of product work.",
   },
@@ -322,7 +328,14 @@ export default async function HomePage() {
                 }}
               >
                 <div className="mb-4 flex items-center gap-3">
-                  <InitialsAvatar name={item.name} size={48} />
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    className="h-12 w-12 shrink-0 rounded-full"
+                    loading="lazy"
+                    decoding="async"
+                    style={{ background: "var(--line)" }}
+                  />
                   <div>
                     <p className="text-sm font-semibold">{item.name}</p>
                     <p className="text-xs text-ink-soft">{item.role}</p>
@@ -374,7 +387,14 @@ export default async function HomePage() {
                   &ldquo;{item.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
-                  <InitialsAvatar name={item.name} size={40} />
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    className="h-10 w-10 shrink-0 rounded-full"
+                    loading="lazy"
+                    decoding="async"
+                    style={{ background: "var(--line)" }}
+                  />
                   <div>
                     <p className="text-sm font-semibold">{item.name}</p>
                     <p className="text-xs text-ink-soft">{item.role}</p>
