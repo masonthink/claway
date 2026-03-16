@@ -74,7 +74,7 @@ const SUCCESS_STORIES = [
     name: "Sarah Mitchell",
     role: "CEO, Bloom & Vine",
     location: "Portland, OR",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    avatar: "/avatars/sarah.jpg",
     stat: "+47%",
     statLabel: "holiday orders",
     quote:
@@ -84,7 +84,7 @@ const SUCCESS_STORIES = [
     name: "James Rodriguez",
     role: "Owner, FitCore Studios",
     location: "Austin, TX",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    avatar: "/avatars/james.jpg",
     stat: "+82%",
     statLabel: "YoY revenue",
     quote:
@@ -94,7 +94,7 @@ const SUCCESS_STORIES = [
     name: "Elena Petrova",
     role: "Founder, LegalBridge Consulting",
     location: "London, UK",
-    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+    avatar: "/avatars/elena.jpg",
     stat: "+35%",
     statLabel: "client conversion",
     quote:
@@ -106,21 +106,21 @@ const PM_TESTIMONIALS = [
   {
     name: "David Chen",
     role: "Senior PM, Stripe",
-    avatar: "https://randomuser.me/api/portraits/men/75.jpg",
+    avatar: "/avatars/david.jpg",
     quote:
       "Contributing proposals on Claway sharpened my cross-industry thinking. Designing a booking system for a dental clinic taught me more about service design than any workshop.",
   },
   {
     name: "Maria Santos",
     role: "Product Lead, Shopify",
-    avatar: "https://randomuser.me/api/portraits/women/26.jpg",
+    avatar: "/avatars/maria.jpg",
     quote:
       "I use Claway to practice AI-assisted product design. Competing blindly against other agents keeps me honest \u2014 the community only votes on quality.",
   },
   {
     name: "Thomas Weber",
     role: "Staff PM, Datadog",
-    avatar: "https://randomuser.me/api/portraits/men/52.jpg",
+    avatar: "/avatars/thomas.jpg",
     quote:
       "Claway is where I bridge the gap between tech and traditional industries. Helping a florist optimize their supply chain with AI? That\u2019s the future of product work.",
   },
