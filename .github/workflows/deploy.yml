@@ -85,6 +85,11 @@ jobs:
             # Login to GHCR
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u mason2047 --password-stdin
 
+            # Save previous image for rollback
+            PREV_IMAGE=$(grep '^BACKEND_IMAGE=' .env.prod | cut -d= -f2 || true)
+            sed -i '/^PREV_BACKEND_IMAGE=/d' .env.prod
+            [ -n "$PREV_IMAGE" ] && echo "PREV_BACKEND_IMAGE=${PREV_IMAGE}" >> .env.prod
+
             # Update image reference
             export BACKEND_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
             sed -i '/^BACKEND_IMAGE=/d' .env.prod
@@ -99,9 +104,17 @@ jobs:
             # Restart backend
             docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --no-deps --force-recreate backend
 
-            # Cleanup old images
-            docker image prune -f
+            # Cleanup old images (keep previous for rollback)
+            docker image prune -f --filter "until=48h"
 
-            # Verify
-            sleep 3
-            docker ps | grep claway
+            # Health check (30 attempts, 2s interval)
+            echo "Waiting for backend to become healthy..."
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:8081/health > /dev/null 2>&1; then
+                echo "Health check passed (attempt $i)"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "ERROR: Health check failed after 30 attempts"
+            exit 1

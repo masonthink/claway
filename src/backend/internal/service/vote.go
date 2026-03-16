@@ -88,6 +88,20 @@ type VoteResponse struct {
 	VotedAt        string `json:"voted_at"`
 }
 
+// GetMyVoteForIdea returns the user's vote for a specific idea, or error if not found.
+func (s *Service) GetMyVoteForIdea(ctx context.Context, userID, ideaID int64) (*VoteResponse, error) {
+	vote, err := s.store.GetUserVoteForIdea(ctx, ideaID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("vote not found: %w", err)
+	}
+	return &VoteResponse{
+		ID:             vote.ID,
+		IdeaID:         vote.IdeaID,
+		ContributionID: vote.ContributionID,
+		VotedAt:        vote.VotedAt.Format("2006-01-02T15:04:05Z"),
+	}, nil
+}
+
 // ListMyVotes returns all votes cast by the authenticated user.
 func (s *Service) ListMyVotes(ctx context.Context, userID int64, limit, offset int) ([]*VoteResponse, int, error) {
 	if limit <= 0 {

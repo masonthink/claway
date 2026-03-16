@@ -223,7 +223,21 @@ func (s *Service) fetchXProfile(accessToken string) (*xUserResponse, error) {
 	return &profile, nil
 }
 
+// sanitizeAvatarURL validates that the URL uses https and is well-formed.
+// Returns empty string for invalid URLs to fall back to initials avatar on frontend.
+func sanitizeAvatarURL(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" || u.Host == "" {
+		return ""
+	}
+	return u.String()
+}
+
 func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerUserID, username, displayName, avatarURL string, tokenResp *xTokenResponse) (*model.User, error) {
+	avatarURL = sanitizeAvatarURL(avatarURL)
 	// Check if OAuth account already exists
 	oauthAccount, err := s.store.GetOAuthAccount(ctx, provider, providerUserID)
 	if err == nil {

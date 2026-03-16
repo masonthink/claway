@@ -3,18 +3,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Clock, Users, Vote, Eye, Trophy } from "lucide-react";
+import { ArrowLeft, Clock, Users, Vote, Eye, Trophy, Bot } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import ErrorState from "@/components/ErrorState";
 import {
   getIdea,
   getContributions,
-  castVote,
   type Idea,
   type Contribution,
 } from "@/lib/api";
-import { isLoggedIn } from "@/lib/auth";
 import { timeLeft } from "@/lib/utils";
 
 export default function IdeaDetailPage() {
@@ -22,10 +20,6 @@ export default function IdeaDetailPage() {
   const [idea, setIdea] = useState<Idea | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [voting, setVoting] = useState<number | null>(null);
-  const [voteError, setVoteError] = useState<string | null>(null);
-  const [voteSuccess, setVoteSuccess] = useState(false);
-  const [votedContribId, setVotedContribId] = useState<number | null>(null);
 
   const loadData = () => {
     if (!id) return;
@@ -40,24 +34,6 @@ export default function IdeaDetailPage() {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  const handleVote = async (contributionId: number) => {
-    if (!id) return;
-    if (!confirm("Cast your vote? You only get one vote per idea and it can't be changed.")) return;
-
-    setVoting(contributionId);
-    setVoteError(null);
-    try {
-      await castVote(id, contributionId);
-      setVoteSuccess(true);
-      setVotedContribId(contributionId);
-      loadData();
-    } catch (err) {
-      setVoteError(err instanceof Error ? err.message : "Vote failed");
-    } finally {
-      setVoting(null);
-    }
-  };
 
   if (error) {
     return (
@@ -139,26 +115,6 @@ export default function IdeaDetailPage() {
         </div>
       </div>
 
-      {/* Vote feedback */}
-      {voteError && (
-        <div
-          className="mb-6 rounded-[12px] p-4 text-sm"
-          role="alert"
-          style={{ background: "rgba(239,68,68,0.08)", color: "#dc2626", border: "1px solid rgba(239,68,68,0.15)" }}
-        >
-          {voteError}
-        </div>
-      )}
-      {voteSuccess && (
-        <div
-          className="mb-6 rounded-[12px] p-4 text-sm"
-          role="status"
-          style={{ background: "rgba(43,198,164,0.1)", color: "rgb(26,107,91)", border: "1px solid rgba(43,198,164,0.2)" }}
-        >
-          Vote cast! Thanks for participating.
-        </div>
-      )}
-
       {/* Contributions */}
       <div>
         <h2 className="mb-4 font-display text-lg tracking-[-0.02em]">
@@ -171,7 +127,7 @@ export default function IdeaDetailPage() {
             className="mb-4 rounded-[10px] p-3 text-xs text-ink-soft"
             style={{ background: "var(--surface-muted)" }}
           >
-            During blind voting, only summaries are shown. Full proposals are revealed after the deadline. One vote per idea — choose carefully.
+            During blind voting, only summaries are shown. Full proposals are revealed after the deadline.
           </p>
         )}
 
@@ -188,9 +144,7 @@ export default function IdeaDetailPage() {
               className="rounded-[16px] p-5"
               style={{
                 background: "var(--surface)",
-                border: votedContribId === contrib.id
-                  ? "2px solid var(--accent)"
-                  : "1px solid var(--line)",
+                border: "1px solid var(--line)",
               }}
             >
               <div className="mb-3 flex items-start justify-between gap-3">
@@ -208,9 +162,6 @@ export default function IdeaDetailPage() {
                     </span>
                   )}
                   <StatusBadge status={contrib.status} />
-                  {votedContribId === contrib.id && (
-                    <span className="text-xs font-medium text-accent">Voted</span>
-                  )}
                 </div>
                 <span className="flex items-center gap-1 text-xs text-ink-soft">
                   <Eye className="h-3 w-3" aria-hidden="true" />
@@ -227,28 +178,31 @@ export default function IdeaDetailPage() {
               {isClosed && contrib.content && (
                 <MarkdownRenderer content={contrib.content} />
               )}
-
-              {/* Vote button for open ideas */}
-              {isOpen && !voteSuccess && (
-                <button
-                  onClick={() => {
-                    if (!isLoggedIn()) {
-                      setVoteError("Sign in to vote");
-                      return;
-                    }
-                    handleVote(contrib.id);
-                  }}
-                  disabled={voting !== null}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-sm font-medium text-ink-soft hover:text-ink disabled:opacity-50"
-                  style={{ border: "1px solid var(--line)" }}
-                >
-                  <Vote className="h-4 w-4" aria-hidden="true" />
-                  {voting === contrib.id ? "Voting..." : "Vote"}
-                </button>
-              )}
             </div>
           ))}
         </div>
+
+        {/* CTA: vote/contribute via OpenClaw */}
+        {isOpen && (
+          <div
+            className="mt-6 flex items-center gap-3 rounded-[14px] p-4"
+            style={{ background: "var(--surface-muted)", border: "1px solid var(--line)" }}
+          >
+            <Bot className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
+            <p className="text-sm text-ink-soft">
+              Want to contribute a proposal or cast your vote? Use the{" "}
+              <a
+                href="https://docs.openclaw.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-accent hover:underline"
+              >
+                Claway Skill
+              </a>{" "}
+              in OpenClaw.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

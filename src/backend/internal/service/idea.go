@@ -242,13 +242,15 @@ func (s *Service) GetUserProfile(ctx context.Context, username string) (*UserPro
 
 	_, ideaCount, _ := s.store.ListIdeasByInitiator(ctx, user.ID, 1, 0)
 	_, contribCount, _ := s.store.ListContributionsByAuthor(ctx, user.ID, 1, 0)
+	featuredCount, _ := s.store.CountFeaturedByUser(ctx, user.ID)
 
-	// TODO: count featured contributions from reveal_snapshots
+	// Sanitize avatar URL before returning to client
+	user.AvatarURL = sanitizeAvatarURL(user.AvatarURL)
 
 	return &UserProfile{
 		User:              user,
 		IdeaCount:         ideaCount,
 		ContributionCount: contribCount,
-		FeaturedCount:     0,
+		FeaturedCount:     featuredCount,
 	}, nil
 }
