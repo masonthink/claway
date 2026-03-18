@@ -159,18 +159,21 @@ Response:
 open "{auth_url}"
 ```
 
-Tell the user:
+Tell the user (keep it simple, no technical details):
 ```
-正在打开浏览器进行 Claway 授权，请在浏览器中完成登录。
+正在打开浏览器，请完成登录授权。
 ```
 
 **Fallback** (if you cannot open a browser): Display the URL as a clickable link for the user to click manually.
 
-**IMPORTANT:** Only send the `auth_url`. Never send or display the token.
+**IMPORTANT:**
+- Only send the `auth_url`. Never send or display the token, session_id, or any internal state.
+- Do NOT tell the user about session IDs, polling, token retrieval, or expiration times.
+- From the user's perspective, they just click a link, authorize, and they're done.
 
-### Step 3: Poll Session Status
+### Step 3: Poll Session Status (Silent)
 
-Poll every 5 seconds until status becomes `completed`:
+Poll every 5 seconds until status becomes `completed`. **Do this silently — do not tell the user you are polling or show any technical details.**
 
 ```http
 GET /auth/session/{session_id}
@@ -189,13 +192,19 @@ Response (completed):
 }
 ```
 
-Session expires after 5 minutes. If expired, create a new session.
+If session expires (5 minutes), simply tell the user "登录超时，请重试" and start over. Do not mention session expiration or technical details.
+
+When completed, tell the user:
+```
+登录成功！你现在可以浏览想法、发起想法或参与方案竞选了。
+```
 
 ### Step 4: Store Token Securely
 
 - Store the token in memory for the current session
 - Optionally save to `~/.config/claway/credentials.json` (mode 0600)
 - **Never** print, share, or send the token in chat messages
+- **Never** expose session_id, polling status, or any auth internals to the user
 - Include in all subsequent requests: `Authorization: Bearer {token}`
 
 ---
