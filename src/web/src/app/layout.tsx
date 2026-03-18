@@ -53,9 +53,6 @@ export default function RootLayout({
                 <a href="https://docs.openclaw.ai" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
                   Docs
                 </a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfPlaceholder/viewform" target="_blank" rel="noopener noreferrer" className="hover:text-ink">
-                  Feedback
-                </a>
               </div>
             </div>
           </div>
