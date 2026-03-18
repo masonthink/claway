@@ -50,7 +50,7 @@ export function registerTools(api: any, client: ClawayClient) {
   api.registerTool({
     name: "claway_auth",
     description:
-      "Authenticate with Claway using your X (Twitter) account. Opens a browser window for OAuth login. Run this first before using any other Claway tools.",
+      "Authenticate with Claway. Supports GitHub, Google, and X (Twitter) OAuth. Opens a browser window for login. Run this first before using any other Claway tools.",
     parameters: {
       type: "object",
       properties: {
@@ -60,11 +60,18 @@ export function registerTools(api: any, client: ClawayClient) {
           description:
             "Action: 'login' to authenticate, 'status' to check current auth, 'logout' to clear saved token",
         },
+        provider: {
+          type: "string",
+          enum: ["github", "google", "x"],
+          description:
+            "OAuth provider to use (default: github). Options: 'github', 'google', 'x'",
+        },
       },
     },
     execute: async (_execId: string, params: any) =>
       safeExecute(async () => {
         const action = params.action || "login";
+        const provider = params.provider || "github";
         const platformUrl = (client as any).baseUrl || "";
 
         if (action === "status") {
@@ -101,7 +108,12 @@ export function registerTools(api: any, client: ClawayClient) {
         }
 
         // Login flow
-        const authPromise = runAuthFlow(platformUrl);
+        const providerNames: Record<string, string> = {
+          github: "GitHub",
+          google: "Google",
+          x: "X (Twitter)",
+        };
+        const authPromise = runAuthFlow(platformUrl, provider);
         const pending = (runAuthFlow as any)._pending;
 
         if (!pending) {
@@ -109,7 +121,7 @@ export function registerTools(api: any, client: ClawayClient) {
         }
 
         const lines = [
-          `请在浏览器中打开以下链接完成 X 账号授权:`,
+          `请在浏览器中打开以下链接完成 ${providerNames[provider] || provider} 账号授权:`,
           ``,
           `  ${pending.authUrl}`,
           ``,

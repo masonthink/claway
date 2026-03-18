@@ -57,9 +57,9 @@ export function loadToken(): string | null {
  * 3. Wait for callback with JWT token
  * 4. Save token and return
  */
-export function runAuthFlow(platformUrl: string): Promise<AuthResult> {
+export function runAuthFlow(platformUrl: string, provider: string = "github"): Promise<AuthResult> {
   return new Promise((resolve, reject) => {
-    const authUrl = `${platformUrl}/api/v1/auth/x?cli_port=${CLI_PORT}`;
+    const authUrl = `${platformUrl}/api/v1/auth/${provider}?cli_port=${CLI_PORT}`;
 
     const server = http.createServer((req, res) => {
       const url = new URL(req.url || "/", `http://127.0.0.1:${CLI_PORT}`);

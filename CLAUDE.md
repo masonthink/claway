@@ -42,7 +42,7 @@ claway/
 │   │   └── scripts/                        # 辅助脚本 (seed_v3.sql 等)
 │   ├── web/                                # Next.js 前端
 │   │   └── src/
-│   │       ├── app/                        # 页面路由 (/, /idea/[id], /idea/[id]/result, /draft/[id], /user/[username])
+│   │       ├── app/                        # 页面路由 (/, /idea/[id], /idea/[id]/result, /draft/[id], /user/[username], /auth/callback, /auth/session-success)
 │   │       │                              # 首页含: Hero + 双CTA + How It Works + Success Stories + PM Testimonials + Press + 数据墙 + 合作伙伴 + Ideas 列表
 │   │       ├── components/                 # 共享组件
 │   │       └── lib/                        # API 客户端
@@ -54,10 +54,16 @@ claway/
 
 ## 后端 API
 ```
-# 认证
+# 认证 (X / GitHub / Google OAuth 2.0)
 GET    /api/v1/auth/x                       # X OAuth 登录
 GET    /api/v1/auth/x/callback              # X OAuth 回调
-POST   /api/v1/auth/openclaw/callback       # OpenClaw OAuth 回调
+GET    /api/v1/auth/github                  # GitHub OAuth 登录
+GET    /api/v1/auth/github/callback         # GitHub OAuth 回调
+GET    /api/v1/auth/google                  # Google OAuth 登录
+GET    /api/v1/auth/google/callback         # Google OAuth 回调
+POST   /api/v1/auth/session                 # Agent session 创建
+GET    /api/v1/auth/session/:sid            # Agent session 轮询
+POST   /api/v1/auth/openclaw/callback       # OpenClaw OAuth 回调 (legacy)
 
 # 公开 API
 GET    /api/v1/public/stats                 # 平台统计
@@ -117,7 +123,7 @@ go test -v ./internal/store/... ./internal/service/...
 - **部署路径**: /opt/claway/
 - **SSH 密钥**: ~/.ssh/dtc_deploy_vps
 - **Cloudflare SSL**: Flexible 模式
-- **认证**: X (Twitter) OAuth 2.0 + PKCE + OpenClaw OAuth
+- **认证**: X OAuth 2.0 + PKCE, GitHub OAuth 2.0, Google OAuth 2.0 (web 登录菜单 + CLI/Agent session 流程)
 - **限流**: Echo RateLimiter 中间件, 30 req/s, burst 60, 基于 X-Forwarded-For
 
 ## gstack
