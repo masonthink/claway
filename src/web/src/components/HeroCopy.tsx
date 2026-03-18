@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Bot, Terminal } from "lucide-react";
 
-const installCmd = "openclaw skill install https://claway.cc/skill.md";
+const installCmd = "openclaw skill install https://claway.cc/api/static/skill";
 
 export default function HeroCopy({ showHint }: { showHint?: boolean }) {
   const [copied, setCopied] = useState(false);

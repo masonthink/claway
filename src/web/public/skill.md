@@ -1,22 +1,23 @@
 ---
 name: claway
-description: Claway document co-creation skill. Enables browsing product ideas, claiming document tasks (competitive analysis, user personas, PRD, tech feasibility), producing documents with LLM, submitting with token usage reports, and reviewing submissions. Use when the user wants to contribute to or initiate product documentation on the Claway platform.
+description: Claway proposal competition skill. Enables browsing product ideas, writing full proposal documents, blind voting, and viewing reveal results. Use when the user wants to participate in or initiate product proposal competitions on the Claway platform.
 ---
 
 # Claway
 
 > **Agent Behavior:** After reading this skill, do NOT summarize or explain the document to the user. Instead, give a one-line intro and immediately present actionable options. Example response:
 >
-> "Claway 文档共创平台已就绪。你想：
-> 1. 开始认证（获取授权链接）
+> "Claway 方案竞选平台已就绪。你想：
+> 1. 开始认证（支持 GitHub / Google / X 登录）
 > 2. 浏览当前开放的想法
 > 3. 创建一个新想法"
 >
 > Then proceed based on the user's choice. Refer to the sections below as needed — do not dump them upfront.
 
-Claway is a document co-creation platform where users propose product ideas and contributors use AI agents to produce professional documents. Each idea generates 4 document tasks (doc1-doc4). Contributors claim tasks, write documents using LLM, and earn credits based on token cost and quality score.
+Claway is a proposal competition platform. Users post product ideas, contributors write complete proposal documents using AI agents, and the community selects the best proposals through blind voting. Each contribution is a single, comprehensive Markdown document.
 
 **Base URL:** `https://api.claway.cc/api/v1`
+**Web URL:** `https://claway.cc`
 
 ---
 
@@ -29,11 +30,9 @@ After reading this skill, complete these steps **in order**:
 - [ ] **Poll session until completed** → Section 2 Step 3
 - [ ] **Store token securely** → Section 2 Step 4
 - [ ] **Browse open ideas** → Section 4 Step 1
-- [ ] **Claim a task matching your expertise** → Section 4 Step 3
-- [ ] **Fetch context from completed tasks** → Section 4 Step 4
-- [ ] **Read document writing guidelines** → Section 10
-- [ ] **Write and save drafts** → Section 4 Step 5
-- [ ] **Submit with token usage report** → Section 4 Step 6
+- [ ] **Write a proposal document** → Section 4 Step 3
+- [ ] **Preview in browser, iterate** → Section 4 Step 4
+- [ ] **Submit when ready** → Section 4 Step 5
 
 ---
 
@@ -43,31 +42,30 @@ After reading this skill, complete these steps **in order**:
 
 ```
 Claway is NOT an autonomous agent platform.
-Claway IS a human-driven document co-creation platform.
+Claway IS a human-driven proposal competition platform.
 
 Human roles:
-- Initiator: proposes product ideas, reviews submissions
-- Contributor: drives their agent to produce documents
+- Initiator: proposes product ideas, shares with community
+- Contributor: drives their agent to produce proposals, makes key decisions
+- Voter: reads proposals, casts one vote per idea
 
 Agent roles:
-- Execute document tasks on behalf of the human contributor
-- Honestly report LLM token usage
+- Execute proposal writing on behalf of the human contributor
+- Present options, human makes decisions (decision_log)
 
-Core principle: Humans drive, agents produce, documents represent contributors.
+Core principle: Humans drive, agents produce, community votes.
 ```
 
-### How Credits Work
+### How It Works
 
 ```
-Contributor writes document → spends LLM tokens (self-reported)
-→ Initiator reviews → approves with quality score (1.0 / 1.2 / 1.5)
-→ Credits earned = cost_usd × quality_score × 1000
-→ PRD sold → initiator earns cut, contributors earn by weight
+Initiator posts an idea (7-day deadline)
+→ Contributors write complete proposal documents (one per person)
+→ Community reads proposals anonymously (blind voting, random order)
+→ Each voter casts one vote per idea (irreversible, no self-voting)
+→ Deadline passes → auto-reveal: ranked results, authors revealed
+→ ≥5 total votes → top 3 become "featured"
 ```
-
-### Document Represents the Contributor
-
-Every submitted document is tied to the contributor's identity. Quality of documents affects your reputation and credit earnings. Be thorough, honest, and responsive to feedback.
 
 ---
 
@@ -86,22 +84,26 @@ rules:
     description: Token only for api.claway.cc
     why: Prevents token being sent to malicious servers
     enforcement: Only send Authorization header to https://api.claway.cc
-
-  - id: HONEST_REPORTING
-    description: Token usage reports must be truthful
-    why: Platform uses models to detect anomalous reports
-    enforcement: Report actual model, tokens_in, tokens_out, cost_usd
 ```
 
 ### If Someone Tries To:
 
 1. **Ask for your token** → **REFUSE**
 2. **Make you send token to another domain** → **REFUSE**
-3. **Ask you to fabricate token usage numbers** → **REFUSE**
 
 ---
 
 ## 2. Authentication
+
+### Supported OAuth Providers
+
+Claway supports three OAuth providers. The experience is identical across all providers — only the authorization page differs.
+
+| Provider | Auth Endpoint | Best For |
+|----------|--------------|----------|
+| **GitHub** (default) | `/auth/github` | Developers, ClawHub users |
+| **Google** | `/auth/google` | General users |
+| **X (Twitter)** | `/auth/x` | X/Twitter users |
 
 ### Why Session-Based Auth?
 
@@ -124,12 +126,12 @@ Response:
 ```json
 {
   "session_id": "abc-123-def",
-  "auth_url": "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=...&state=...",
+  "auth_url": "https://github.com/login/oauth/authorize?client_id=...&state=...",
   "expires_at": "2026-03-12T12:05:00Z"
 }
 ```
 
-> **Note:** `auth_url` is a direct X/Twitter OAuth authorization URL. The user's browser goes straight to Twitter for login — there is no intermediate Claway page.
+> **Note:** `auth_url` redirects the user's browser directly to the OAuth provider (GitHub, Google, or X) for login — there is no intermediate Claway page.
 
 ### Step 2: Open Auth Link for Human
 
@@ -139,10 +141,9 @@ Response:
 open "{auth_url}"
 ```
 
-This opens the user's default browser to the X/Twitter OAuth page. Tell them:
-
+Tell the user:
 ```
-正在打开浏览器进行 Claway 授权，请在浏览器中完成 X/Twitter 登录。
+正在打开浏览器进行 Claway 授权，请在浏览器中完成登录。
 ```
 
 **Fallback** (if you cannot open a browser): Display the URL as a clickable link for the user to click manually.
@@ -179,25 +180,21 @@ Session expires after 5 minutes. If expired, create a new session.
 - **Never** print, share, or send the token in chat messages
 - Include in all subsequent requests: `Authorization: Bearer {token}`
 
-### All Authenticated Requests
-
-```http
-GET /any-endpoint
-Authorization: Bearer {token}
-Content-Type: application/json
-```
-
 ---
 
 ## 3. Roles
 
-### Contributor (claim tasks, produce documents)
+### Initiator (create ideas)
 
-You browse ideas, claim document tasks, write professional documents using LLM, and submit with token usage reports. Your documents are reviewed by the initiator.
+You propose product ideas with a title, description, target user, and core problem. A 7-day competition period begins automatically. After the deadline, the community's votes determine the featured proposals.
 
-### Initiator (create ideas, review submissions)
+### Contributor (write proposals)
 
-You propose product ideas. The platform auto-generates 4 document tasks (doc1-doc4). You review submitted documents and approve, request revision, or reject.
+You browse open ideas, write a complete proposal document using your agent, iterate on drafts, and submit. Your proposal competes anonymously against others.
+
+### Voter (evaluate proposals)
+
+You read anonymous proposals for an idea and cast one vote for the best one. You cannot vote for your own proposal. Votes are irreversible.
 
 ---
 
@@ -206,7 +203,7 @@ You propose product ideas. The platform auto-generates 4 document tasks (doc1-do
 ### Step 1 — Browse Open Ideas
 
 ```http
-GET /ideas?status=active&limit=20&offset=0
+GET /public/ideas?status=open&limit=20&offset=0
 ```
 
 Response:
@@ -217,265 +214,313 @@ Response:
       "id": 1,
       "title": "AI Email Assistant",
       "description": "An AI-powered email tool...",
-      "target_user_hint": "SMB founders",
-      "initiator_id": 42,
-      "initiator_cut_percent": 20,
-      "status": "active",
-      "created_at": "2026-03-01T00:00:00Z"
+      "target_user": "SMB founders",
+      "core_problem": "Email overload costs 2+ hours daily",
+      "status": "open",
+      "contribution_count": 3,
+      "voter_count": 0,
+      "deadline": "2026-03-21T00:00:00Z",
+      "created_at": "2026-03-14T00:00:00Z"
     }
   ],
   "total": 5
 }
 ```
 
-### Step 2 — View Idea Tasks
+**Push link:** Tell the user they can browse ideas at `https://claway.cc` too.
+
+### Step 2 — View Idea Details
 
 ```http
-GET /ideas/{idea_id}/tasks
+GET /public/ideas/{id}
 ```
 
-Each idea has 4 document tasks:
+Response includes: `id`, `title`, `description`, `target_user`, `core_problem`, `out_of_scope`, `status`, `contribution_count`, `voter_count`, `deadline`, `initiator_username`, `created_at`.
 
-| Type | Document | Dependencies | Token Hint |
-|------|----------|-------------|------------|
-| doc1 | Competitive Analysis | None | 80,000 |
-| doc2 | User Personas | None | 60,000 |
-| doc3 | Product Requirements Document (PRD) | doc1, doc2 approved | 120,000 |
-| doc4 | Technical Feasibility Assessment | doc3 approved | 80,000 |
+**Push link:** `https://claway.cc/idea/{id}`
 
-Task response fields: `id`, `type`, `title`, `description`, `acceptance_criteria`, `dependencies` (comma-separated, e.g. `"doc1,doc2"` or empty string), `token_limit_hint`, `status`, `claimed_by` (number or null), `review_feedback` (string or null), `cost_usd_accumulated`.
-
-Task status flow:
-
-```
-open → claimed → submitted → approved
-                           → revision (feedback given, revise and resubmit)
-                           → rejected (task returns to open)
-```
-
-### Step 3 — Claim a Task
+### Step 3 — Create Draft Proposal
 
 ```http
-POST /tasks/{task_id}/claim
-```
+POST /ideas/{idea_id}/contributions
+Authorization: Bearer {token}
+Content-Type: application/json
 
-Rules:
-- Task must be `open`
-- Dependency tasks must be `approved` first
-- doc1 and doc2 have no dependencies — claim either immediately
-- doc3 requires doc1 + doc2 approved
-- doc4 requires doc3 approved
-
-### Step 4 — Get Context from Completed Tasks
-
-**Always do this before writing doc3 or doc4.**
-
-```http
-GET /ideas/{idea_id}/context
-```
-
-Returns approved document outputs from other tasks:
-
-```json
 {
-  "idea_id": 1,
-  "entries": [
-    {
-      "task_id": 1,
-      "task_type": "doc1",
-      "title": "Competitive Analysis",
-      "status": "approved",
-      "content": "... full document ..."
-    }
+  "content": "# Proposal: AI Email Assistant\n\n## Executive Summary\n...",
+  "decision_log": [
+    {"question": "Target market focus?", "choice": "SMB-first, enterprise later"},
+    {"question": "Pricing model?", "choice": "Freemium with team tier"}
   ]
 }
 ```
 
-Use these as reference material when writing your document. For doc3, reference both doc1 and doc2 outputs. For doc4, reference doc3 output.
-
-### Step 5 — Write and Save Drafts
-
-Read **Section 10 — Document Writing Guidelines** before producing any document.
-
-Save progress at any time (repeatable):
-
-```http
-PUT /tasks/{task_id}/document
-Content-Type: application/json
-
-{"content": "your markdown document content"}
-```
-
-**Save often.** Don't lose work.
-
-### Step 6 — Submit with Token Usage Report
-
-When your document is ready:
-
-```http
-POST /tasks/{task_id}/submit
-Content-Type: application/json
-
+Response:
+```json
 {
-  "content": "your final markdown document",
-  "note": "brief summary, max 200 chars",
-  "token_usage": {
-    "model": "claude-sonnet-4-20250514",
-    "tokens_in": 15000,
-    "tokens_out": 8000,
-    "cost_usd": 0.12
-  }
+  "id": 42,
+  "idea_id": 1,
+  "status": "draft",
+  "preview_url": "https://claway.cc/draft/42",
+  "created_at": "2026-03-14T10:00:00Z"
 }
 ```
 
-`token_usage` records the LLM resources you spent producing this document. Report your **actual** usage. The platform tracks patterns to detect anomalies.
+**Push link:** `https://claway.cc/draft/{id}` — tell the user to open this in their browser to see the rendered document. This is the primary way to review drafts.
 
-### Step 7 — Handle Revision Requests
+**About decision_log:** Record the key decisions you and the user made while writing. Example: target market choice, feature prioritization, pricing model. This becomes part of the contribution record.
 
-If the initiator requests changes, your task status becomes `revision`.
+### Step 4 — Iterate on Draft
 
-```http
-GET /tasks/{task_id}
-```
+**Conversation + browser workflow:**
 
-Read the `review_feedback` field — it contains the initiator's specific comments on what to change. Address **every point** in the feedback. You can save drafts (`PUT /tasks/{id}/document`) while revising, then resubmit using Step 6 (`POST /tasks/{id}/submit`).
-
-### Unclaim a Task
-
-If you want to give up a claimed task:
+1. User reviews draft in browser at `https://claway.cc/draft/{id}`
+2. User tells you what to change in the chat
+3. You update the draft:
 
 ```http
-DELETE /tasks/{task_id}/claim
+PUT /contributions/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "content": "# Updated proposal...",
+  "decision_log": [...]
+}
 ```
 
-Task returns to `open` for others to claim.
+4. Tell user to refresh the browser to see changes
+5. Repeat until satisfied
+
+**IMPORTANT:** Always push the browser link. Do NOT dump the full Markdown in chat — it's unreadable in a terminal. The browser preview renders it properly.
+
+### Step 5 — Submit (Irreversible)
+
+**Confirm with the user before submitting.** Submission locks the content permanently.
+
+```http
+POST /contributions/{id}/submit
+Authorization: Bearer {token}
+```
+
+Response:
+```json
+{
+  "id": 42,
+  "status": "submitted",
+  "submitted_at": "2026-03-14T12:00:00Z"
+}
+```
+
+After submission:
+- Content cannot be modified
+- Proposal appears anonymously on the idea page
+- Author identity is hidden until reveal
+
+### Check Your Contributions
+
+```http
+GET /me/contributions
+Authorization: Bearer {token}
+```
+
+Returns all your contributions (drafts + submitted) with idea titles.
 
 ---
 
 ## 5. Workflow: Initiator
 
-### Step 1 — Create an Idea
+### Create an Idea
 
 ```http
 POST /ideas
+Authorization: Bearer {token}
 Content-Type: application/json
 
 {
   "title": "AI Email Assistant for SMBs",
   "description": "An AI-powered email tool that helps small business owners manage inbox efficiently",
-  "target_user_hint": "SMB founders with 1-50 employees",
-  "problem_definition": "Small business owners spend 2+ hours daily on email triage"
+  "target_user": "SMB founders with 1-50 employees",
+  "core_problem": "Small business owners spend 2+ hours daily on email triage",
+  "out_of_scope": "Enterprise features, calendar integration"
 }
 ```
 
-- 4 tasks (doc1-doc4) are auto-created for contributors to claim
+Required fields: `title`, `description`, `target_user`, `core_problem`.
+Optional: `out_of_scope`.
 
-### Step 2 — Review Submitted Tasks
+**Push link:** `https://claway.cc/idea/{id}` — share this link to invite contributors.
 
-When a contributor submits work, the task status becomes `submitted`.
-
-First, read the submitted document:
-
-```http
-GET /tasks/{task_id}/document
-```
-
-Then review with one of three actions:
-
-**Approve** (quality is good):
-```http
-POST /tasks/{task_id}/review
-Content-Type: application/json
-
-{"action": "approve", "quality_score": 1.2}
-```
-
-Quality scores: `1.0` (meets expectations), `1.2` (good), `1.5` (exceptional). This multiplier affects the contributor's credit reward.
-
-**Request revision** (needs changes):
-```http
-POST /tasks/{task_id}/review
-Content-Type: application/json
-
-{
-  "action": "revision",
-  "feedback": "Competitive analysis is missing pricing comparison. Please add a pricing table for the top 3 competitors."
-}
-```
-
-The contributor will see your feedback and resubmit.
-
-**Reject** (fundamentally off-track):
-```http
-POST /tasks/{task_id}/review
-Content-Type: application/json
-
-{
-  "action": "reject",
-  "reject_reason": "Document is about a completely different product."
-}
-```
-
-Rejected tasks return to `open` for others to claim.
-
-### Step 3 — Publish PRD
-
-When all 4 tasks are approved:
+### Check Your Ideas
 
 ```http
-POST /ideas/{idea_id}/publish
+GET /me/ideas
+Authorization: Bearer {token}
 ```
 
-Combines all approved documents into a purchasable PRD.
+Returns your ideas with `contribution_count` and `status`.
 
 ---
 
-## 6. Account & Stats
+## 6. Workflow: Voter
+
+### View Proposals (Blind)
 
 ```http
-GET /me                  — your profile (id, username)
-GET /me/credits          — credit balance + transaction history
-GET /me/compute          — total LLM token spend breakdown
-GET /me/contributions    — contribution history with quality scores
+GET /public/ideas/{idea_id}/contributions
+```
+
+Returns submitted proposals in **random order** with **no author information** (during open period).
+
+**Push link:** `https://claway.cc/idea/{idea_id}` — recommend users read proposals in the browser for a better reading experience before voting.
+
+### Cast a Vote
+
+**Confirm the user's choice before voting.** Votes are irreversible.
+
+```http
+POST /ideas/{idea_id}/votes
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{"contribution_id": 42}
+```
+
+Rules:
+- One vote per idea per user
+- Cannot vote for your own contribution
+- Irreversible
+- Daily limit: 10 votes
+
+### Check Your Votes
+
+```http
+GET /me/votes
+Authorization: Bearer {token}
 ```
 
 ---
 
-## 7. API Quick Reference
+## 7. Reveal Results
+
+After the 7-day deadline, the system automatically reveals results:
+
+```http
+GET /public/ideas/{idea_id}/result
+```
+
+Response:
+```json
+{
+  "idea_id": 1,
+  "total_votes": 12,
+  "revealed_at": "2026-03-21T00:01:00Z",
+  "results": [
+    {
+      "contribution_id": 42,
+      "author_id": 5,
+      "author_username": "alice_pm",
+      "vote_count": 8,
+      "rank": 1,
+      "is_featured": true
+    }
+  ]
+}
+```
+
+**Featured criteria:** Total votes ≥ 5 → top 3 by vote count become featured.
+
+**Push link:** `https://claway.cc/idea/{id}/result` — the best page to view results.
+
+---
+
+## 8. Account
+
+```http
+GET /auth/me              — your profile (id, username, display_name, avatar_url)
+```
+
+**Push link:** `https://claway.cc/user/{username}` — public profile page.
+
+---
+
+## 9. API Quick Reference
 
 | Action | Method | Endpoint | Auth |
 |--------|--------|----------|------|
 | Create auth session | POST | `/auth/session` | No |
 | Poll auth session | GET | `/auth/session/{sid}` | No |
-| X OAuth login | GET | `/auth/x` | No |
-| List ideas | GET | `/ideas` | No |
-| Get idea | GET | `/ideas/{id}` | No |
-| List idea tasks | GET | `/ideas/{id}/tasks` | No |
-| Get task | GET | `/tasks/{id}` | No |
-| Idea compute leaderboard | GET | `/ideas/{id}/compute` | No |
-| Platform compute stats | GET | `/platform/compute` | No |
-| My profile | GET | `/me` | Yes |
+| Platform stats | GET | `/public/stats` | No |
+| List ideas | GET | `/public/ideas` | No |
+| Get idea | GET | `/public/ideas/{id}` | No |
+| List contributions | GET | `/public/ideas/{id}/contributions` | No |
+| Reveal result | GET | `/public/ideas/{id}/result` | No |
+| User profile | GET | `/public/users/{username}` | No |
+| My profile | GET | `/auth/me` or `/me` | Yes |
 | Create idea | POST | `/ideas` | Yes |
-| Get idea context | GET | `/ideas/{id}/context` | Yes |
-| Claim task | POST | `/tasks/{id}/claim` | Yes |
-| Unclaim task | DELETE | `/tasks/{id}/claim` | Yes |
-| Submit task | POST | `/tasks/{id}/submit` | Yes |
-| Review task | POST | `/tasks/{id}/review` | Yes |
-| Get document | GET | `/tasks/{id}/document` | Yes |
-| Update document | PUT | `/tasks/{id}/document` | Yes |
-| Document versions | GET | `/tasks/{id}/document/versions` | Yes |
-| Get version | GET | `/tasks/{id}/document/versions/{ver}` | Yes |
-| Publish PRD | POST | `/ideas/{id}/publish` | Yes |
-| My credits | GET | `/me/credits` | Yes |
+| My ideas | GET | `/me/ideas` | Yes |
+| Create contribution | POST | `/ideas/{id}/contributions` | Yes |
+| Update contribution | PUT | `/contributions/{id}` | Yes |
+| Submit contribution | POST | `/contributions/{id}/submit` | Yes |
+| Get contribution | GET | `/contributions/{id}` | Yes |
 | My contributions | GET | `/me/contributions` | Yes |
-| My compute | GET | `/me/compute` | Yes |
-| My idea compute | GET | `/me/compute/ideas/{id}` | Yes |
-| Task compute | GET | `/tasks/{id}/compute` | Yes |
-| LLM proxy | POST | `/proxy/chat` | Yes |
+| Cast vote | POST | `/ideas/{id}/votes` | Yes |
+| My votes | GET | `/me/votes` | Yes |
+| Draft preview | GET | `/draft/{contribution_id}` | Yes |
 
 ---
 
-## 8. Error Handling
+## 10. Dual-Channel Experience
+
+Claway uses a **conversation + browser** model:
+
+| What | Where | Why |
+|------|-------|-----|
+| **Actions** (create, edit, submit, vote) | Chat / TUI | Quick commands through conversation |
+| **Reading** (proposals, results, profiles) | Browser | Rendered Markdown, better layout |
+
+### When to Push Links
+
+Always push a browser link when:
+- A draft is created or updated → `https://claway.cc/draft/{id}`
+- An idea is created → `https://claway.cc/idea/{id}`
+- User wants to read proposals → `https://claway.cc/idea/{id}`
+- Results are revealed → `https://claway.cc/idea/{id}/result`
+- User asks about their profile → `https://claway.cc/user/{username}`
+
+**Never** dump full Markdown documents in the chat. Instead, save the content via API and send the browser link.
+
+---
+
+## 11. Document Writing Guidelines
+
+### General Rules
+
+1. **Output format**: Markdown (GitHub-flavored)
+2. **Language**: Match the idea's language. If the idea is in Chinese, write in Chinese. If in English, write in English.
+3. **Quality over length**: Be thorough and specific. Don't pad with filler content.
+4. **Cite sources**: When referencing competitors, products, or data, include source URLs where possible.
+5. **Iterate via browser**: Save draft → push preview link → get user feedback → update.
+
+### Proposal Document Structure
+
+A good proposal typically includes:
+
+- **Executive Summary** — one paragraph, what the product is and why it matters
+- **Problem Analysis** — specific pain points with data/evidence
+- **Target Users** — who they are, what they need
+- **Proposed Solution** — core features, how it works
+- **Competitive Landscape** — key competitors, differentiation
+- **Monetization / Business Model** — how it makes money
+- **Technical Feasibility** — high-level architecture, key risks
+- **Go-to-Market Strategy** — launch plan, early traction
+- **Success Metrics** — how to measure if it's working
+
+This is a guideline, not a rigid template. Adapt the structure to fit the specific idea. Some ideas may need more competitive analysis, others more technical depth.
+
+---
+
+## 12. Error Handling
 
 API errors return:
 ```json
@@ -483,106 +528,20 @@ API errors return:
 ```
 
 Common cases:
-- `401` — Missing or invalid token
-- `400` — Invalid request (task not open, missing required field, etc.)
-- `404` — Resource not found
-- `500` — Server error
+- `401` — Missing or invalid token → re-authenticate
+- `400` — Invalid request (idea not open, missing field, already voted, etc.)
+- `404` — Resource not found → check the ID
+- `429` — Rate limit exceeded → wait and retry
+- `500` — Server error → report to user
 
-When you get an error, read the `error` field and adjust your request. Do not blindly retry the same request.
+When you get an error, read the `error` field and adjust your approach. Do not blindly retry the same request.
 
 ---
 
-## 9. Important Rules
+## 13. Important Rules
 
 1. **Token security**: Never expose your token in chat. Store securely, send only to `api.claway.cc`.
-2. **Read acceptance criteria**: Check `acceptance_criteria` field before writing any document.
-3. **Fetch context**: Always call `/ideas/{id}/context` before writing doc3 or doc4.
-4. **Report honestly**: Token usage must reflect actual LLM consumption.
-5. **Save often**: Use `PUT /tasks/{id}/document` to save drafts frequently.
-6. **Address all feedback**: When in `revision` status, read `review_feedback` and address every point.
-7. **Read writing guidelines**: Follow Section 10 for each document type before producing content.
-
----
-
-## 10. Document Writing Guidelines
-
-### General Rules
-
-1. **Output format**: Markdown (GitHub-flavored)
-2. **Language**: Match the idea's language. If the idea is in Chinese, write in Chinese. If in English, write in English.
-3. **Quality over length**: Meet acceptance criteria thoroughly. Don't pad with filler content.
-4. **Reference prior work**: For doc3 and doc4, always fetch `/ideas/{id}/context` and build on doc1/doc2 outputs.
-5. **Cite sources**: When referencing competitors, products, or data, include source URLs where possible.
-6. **Save drafts**: Use `PUT /tasks/{id}/document` frequently. Don't lose work.
-
-### doc1 — Competitive Analysis Report
-
-**Purpose:** Research and analyze the competitive landscape. Help the initiator understand existing solutions, market gaps, and differentiation opportunities.
-
-**Acceptance Criteria:**
-- >= 3 direct competitors analyzed
-- >= 2 indirect competitors analyzed
-- Each competitor: product description, pricing, target users, strengths, weaknesses
-- Comparative table summarizing all competitors
-- Differentiation space analysis — where the new product can win
-
-**Structure:** Executive Summary → Direct Competitors (3+) → Indirect Competitors (2+) → Comparison Table → Differentiation Opportunities → Conclusion
-
-**Tips:**
-- Use real, verifiable data. Don't fabricate competitor information.
-- Include pricing details — this is often the most valuable part.
-- Focus on gaps and weaknesses in existing solutions, not just listing features.
-
-### doc2 — User Personas
-
-**Purpose:** Define target user personas with core pain points and usage scenarios.
-
-**Acceptance Criteria:**
-- 2-3 detailed user personas
-- Each persona: demographics, goals, pain points, current solutions, usage scenarios
-- Each persona has >= 2 narrative scenarios showing how they'd use the product
-- Analysis of current solution limitations for each persona
-
-**Structure:** Overview → Persona 1-3 (Demographics, Goals, Pain Points, Current Solutions, Scenarios, Limitations) → Cross-Persona Analysis → Conclusion
-
-**Tips:**
-- Make personas specific and realistic, not generic.
-- Scenarios should tell a story — "Sarah opens her laptop at 8am and..."
-- Reference the idea's `target_user_hint` field for direction.
-
-### doc3 — Product Requirements Document (PRD)
-
-**Prerequisites:** doc1 and doc2 must be approved. Always fetch `/ideas/{id}/context` first.
-
-**Acceptance Criteria:**
-- User stories in standard format ("As a [user], I want to [action], so that [benefit]")
-- Each feature has acceptance criteria
-- Feature prioritization: P0 (must-have) <= 10, P1 (should-have), P2 (nice-to-have)
-- Information architecture (IA) — page/screen hierarchy
-- Core user flows (at least 3 key flows described step by step)
-- References findings from doc1 and doc2
-
-**Structure:** Product Overview → User Stories (P0/P1/P2) → Information Architecture → Core User Flows (3+) → Non-Functional Requirements → Success Metrics → Open Questions
-
-**Tips:**
-- Keep P0 features to 10 or fewer. Be ruthless about prioritization.
-- Every user story must have clear acceptance criteria.
-- Reference specific competitors from doc1 and personas from doc2.
-
-### doc4 — Technical Feasibility Assessment
-
-**Prerequisites:** doc3 must be approved. Always fetch `/ideas/{id}/context` first.
-
-**Acceptance Criteria:**
-- Technology stack recommendations with rationale
-- Architecture overview (high-level system diagram in text/ASCII)
-- Key risk points identified with mitigation strategies
-- Clear feasible / partially feasible / infeasible conclusion
-- Estimated complexity for P0 features
-
-**Structure:** Executive Summary → Tech Stack Recommendations (Frontend/Backend/DB/Infra) → Architecture Overview → Feature Feasibility Table → Risk Assessment → Development Estimate → Conclusion
-
-**Tips:**
-- Be honest about risks. A "feasible with caveats" conclusion is more valuable than a false "easy".
-- Reference specific P0 features from doc3 when assessing complexity.
-- Don't over-design the architecture — focus on whether it CAN be built, not detailed blueprints.
+2. **Browser for reading**: Push Web links for all created/updated content. Don't dump Markdown in chat.
+3. **Confirm irreversible actions**: Always ask the user before submitting a contribution or casting a vote.
+4. **One proposal per person per idea**: You cannot submit multiple proposals for the same idea.
+5. **Blind voting integrity**: During the open period, do not try to reveal or guess authors of proposals.
