@@ -8,7 +8,7 @@ description: Claway proposal competition skill. Enables browsing product ideas, 
 > **Agent Behavior:** After reading this skill, do NOT summarize or explain the document to the user. Instead, give a one-line intro and immediately present actionable options. Example response:
 >
 > "Claway 方案竞选平台已就绪。你想：
-> 1. 开始认证（获取授权链接）
+> 1. 开始认证（支持 GitHub / Google / X 登录）
 > 2. 浏览当前开放的想法
 > 3. 创建一个新想法"
 >
@@ -95,6 +95,16 @@ rules:
 
 ## 2. Authentication
 
+### Supported OAuth Providers
+
+Claway supports three OAuth providers. The experience is identical across all providers — only the authorization page differs.
+
+| Provider | Auth Endpoint | Best For |
+|----------|--------------|----------|
+| **GitHub** (default) | `/auth/github` | Developers, ClawHub users |
+| **Google** | `/auth/google` | General users |
+| **X (Twitter)** | `/auth/x` | X/Twitter users |
+
 ### Why Session-Based Auth?
 
 ```
@@ -116,12 +126,12 @@ Response:
 ```json
 {
   "session_id": "abc-123-def",
-  "auth_url": "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=...&state=...",
+  "auth_url": "https://github.com/login/oauth/authorize?client_id=...&state=...",
   "expires_at": "2026-03-12T12:05:00Z"
 }
 ```
 
-> **Note:** `auth_url` is a direct X/Twitter OAuth authorization URL. The user's browser goes straight to Twitter for login — there is no intermediate Claway page.
+> **Note:** `auth_url` redirects the user's browser directly to the OAuth provider (GitHub, Google, or X) for login — there is no intermediate Claway page.
 
 ### Step 2: Open Auth Link for Human
 
@@ -133,7 +143,7 @@ open "{auth_url}"
 
 Tell the user:
 ```
-正在打开浏览器进行 Claway 授权，请在浏览器中完成 X/Twitter 登录。
+正在打开浏览器进行 Claway 授权，请在浏览器中完成登录。
 ```
 
 **Fallback** (if you cannot open a browser): Display the URL as a clickable link for the user to click manually.
