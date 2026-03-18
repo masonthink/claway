@@ -148,8 +148,17 @@ func (h *AuthHandler) GetMe(c echo.Context) error {
 
 // CreateAuthSession handles POST /api/v1/auth/session
 // Creates a new auth session for agent-based login flows.
+// Accepts optional JSON body: {"provider": "github"|"google"|"x"} (default: "github")
 func (h *AuthHandler) CreateAuthSession(c echo.Context) error {
-	session, authURL, err := h.svc.CreateAuthSession(c.Request().Context())
+	var body struct {
+		Provider string `json:"provider"`
+	}
+	_ = c.Bind(&body) // ignore error — provider defaults to "github"
+	if body.Provider == "" {
+		body.Provider = "github"
+	}
+
+	session, authURL, err := h.svc.CreateAuthSession(c.Request().Context(), body.Provider)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
 	}

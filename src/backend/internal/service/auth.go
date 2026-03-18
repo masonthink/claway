@@ -684,8 +684,9 @@ func (s *Service) HandleOpenClawCallback(ctx context.Context, code string) (*Aut
 const authSessionTTL = 5 * time.Minute
 
 // CreateAuthSession generates a new pending auth session and returns it along
-// with the X OAuth authorization URL that includes the session ID.
-func (s *Service) CreateAuthSession(ctx context.Context) (*model.AuthSession, string, error) {
+// with an OAuth authorization URL for the specified provider.
+// Supported providers: "github" (default), "google", "x".
+func (s *Service) CreateAuthSession(ctx context.Context, provider string) (*model.AuthSession, string, error) {
 	// Generate session ID (UUID v4 via crypto/rand)
 	idBytes := make([]byte, 16)
 	if _, err := rand.Read(idBytes); err != nil {
@@ -709,13 +710,58 @@ func (s *Service) CreateAuthSession(ctx context.Context) (*model.AuthSession, st
 		return nil, "", fmt.Errorf("create auth session: %w", err)
 	}
 
-	// Generate an X OAuth URL that carries the session ID through the state flow.
-	authURL, err := s.getXAuthURLForSession(sessionID)
+	// Generate OAuth URL for the requested provider
+	authURL, err := s.getAuthURLForSession(sessionID, provider)
 	if err != nil {
 		return nil, "", err
 	}
 
 	return session, authURL, nil
+}
+
+// getAuthURLForSession generates an OAuth URL with the session ID embedded in state.
+func (s *Service) getAuthURLForSession(sessionID, provider string) (string, error) {
+	stateBytes := make([]byte, 16)
+	if _, err := rand.Read(stateBytes); err != nil {
+		return "", fmt.Errorf("generate state: %w", err)
+	}
+	state := base64.RawURLEncoding.EncodeToString(stateBytes)
+
+	switch provider {
+	case "github":
+		if s.cfg.GitHubClientID == "" {
+			return "", fmt.Errorf("GITHUB_CLIENT_ID not configured")
+		}
+		saveOAuthState(state, "", "", sessionID)
+		params := url.Values{
+			"client_id":    {s.cfg.GitHubClientID},
+			"redirect_uri": {s.cfg.GitHubRedirectURI},
+			"scope":        {"read:user user:email"},
+			"state":        {state},
+		}
+		return "https://github.com/login/oauth/authorize?" + params.Encode(), nil
+
+	case "google":
+		if s.cfg.GoogleClientID == "" {
+			return "", fmt.Errorf("GOOGLE_CLIENT_ID not configured")
+		}
+		saveOAuthState(state, "", "", sessionID)
+		params := url.Values{
+			"client_id":     {s.cfg.GoogleClientID},
+			"redirect_uri":  {s.cfg.GoogleRedirectURI},
+			"response_type": {"code"},
+			"scope":         {"openid profile email"},
+			"state":         {state},
+			"access_type":   {"offline"},
+		}
+		return "https://accounts.google.com/o/oauth2/v2/auth?" + params.Encode(), nil
+
+	case "x":
+		return s.getXAuthURLForSession(sessionID)
+
+	default:
+		return "", fmt.Errorf("unsupported provider: %s", provider)
+	}
 }
 
 // getXAuthURLForSession is like GetXAuthURL but tags the OAuth state with a session ID.

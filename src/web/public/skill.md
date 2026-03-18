@@ -120,7 +120,12 @@ Core concept: Token never appears in chat
 
 ```http
 POST /auth/session
+Content-Type: application/json
+
+{"provider": "github"}
 ```
+
+Supported providers: `"github"` (default), `"google"`, `"x"`.
 
 Response:
 ```json
