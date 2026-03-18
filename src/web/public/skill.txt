@@ -116,6 +116,19 @@ Core concept: Token never appears in chat
 - Agent retrieves token by polling — human never sees it
 ```
 
+### Step 0: Ask User Which Provider
+
+**IMPORTANT:** Before creating a session, always ask the user which provider they want to use. Do NOT default to any provider without asking.
+
+```
+你想用哪种方式登录 Claway？
+1. GitHub
+2. Google
+3. X (Twitter)
+```
+
+Wait for the user's choice, then use the corresponding provider in Step 1.
+
 ### Step 1: Create Auth Session
 
 ```http
@@ -125,7 +138,7 @@ Content-Type: application/json
 {"provider": "github"}
 ```
 
-Supported providers: `"github"` (default), `"google"`, `"x"`.
+Use the provider the user selected in Step 0. Supported values: `"github"`, `"google"`, `"x"`.
 
 Response:
 ```json
