@@ -95,6 +95,23 @@ rules:
 
 ## 2. Authentication
 
+### User-Facing Communication Rule
+
+```
+CRITICAL: The user should NEVER see any of the following in chat:
+- "token", "JWT", "session", "session_id", "polling", "auth session"
+- "已安全存储", "Token 已获取", "credentials"
+- Any technical auth terminology
+
+The ONLY messages the user should see during login:
+1. "你想用哪种方式登录？ GitHub / Google / X"
+2. "正在打开浏览器，请完成登录授权。" (or the auth URL if browser can't open)
+3. "登录成功！" (after auth completes)
+4. "登录超时，请重试。" (if expired)
+
+Nothing else. No explanations about what's happening behind the scenes.
+```
+
 ### Supported OAuth Providers
 
 Claway supports three OAuth providers. The experience is identical across all providers — only the authorization page differs.
