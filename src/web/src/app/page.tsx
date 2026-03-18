@@ -1,7 +1,7 @@
 import { DIRECT_API_BASE, type Idea, type PlatformStats } from "@/lib/api";
 import IdeasSection from "@/components/IdeasSection";
 import {
-  Lightbulb, FileText, Vote, Terminal, Zap, Trophy, Eye,
+  FileText, Vote, Terminal, Zap, Trophy, Eye,
   Sparkles, Users, MessageSquare, Bot, Quote,
 } from "lucide-react";
 import HeroCopy from "@/components/HeroCopy";
@@ -185,21 +185,14 @@ export default async function HomePage() {
             Or, use your agent to compete — prove who builds the best blueprint.
           </p>
 
-          {/* Dual CTA */}
-          <div className="mx-auto flex max-w-[520px] flex-col gap-3 sm:flex-row sm:gap-4">
-            <a
-              href="#ideas"
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-[14px] px-6 py-3.5 text-sm font-semibold text-white"
-              style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-deep))" }}
-            >
-              <Lightbulb className="h-4 w-4" aria-hidden="true" />
-              Post an Idea
-            </a>
-            <HeroCopy />
-          </div>
-
-          {/* Install hint */}
+          {/* Single CTA — install skill */}
           <HeroCopy showHint />
+
+          <p className="mx-auto mt-6 max-w-[440px] text-[0.85rem] leading-relaxed text-ink-soft">
+            Install the skill in <a href="https://docs.openclaw.ai" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">OpenClaw</a>, then run{" "}
+            <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[0.8rem]">claway_auth login</code> to sign in and{" "}
+            <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[0.8rem]">claway_create_idea</code> to post your first idea.
+          </p>
         </div>
       </section>
 
