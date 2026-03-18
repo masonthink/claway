@@ -141,6 +141,10 @@ func main() {
 	// Auth
 	v1.GET("/auth/x", authH.XLogin)
 	v1.GET("/auth/x/callback", authH.XCallback)
+	v1.GET("/auth/github", authH.GitHubLogin)
+	v1.GET("/auth/github/callback", authH.GitHubCallback)
+	v1.GET("/auth/google", authH.GoogleLogin)
+	v1.GET("/auth/google/callback", authH.GoogleCallback)
 	v1.GET("/auth/openclaw/callback", authH.OpenClawCallback) // legacy
 	v1.POST("/auth/session", authH.CreateAuthSession)         // agent session flow
 	v1.GET("/auth/session/:sid", authH.GetAuthSession)        // agent session polling

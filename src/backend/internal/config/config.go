@@ -20,6 +20,16 @@ type Config struct {
 	XClientSecret string
 	XRedirectURI  string // backend callback URL
 
+	// GitHub OAuth 2.0
+	GitHubClientID     string
+	GitHubClientSecret string
+	GitHubRedirectURI  string
+
+	// Google OAuth 2.0
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURI  string
+
 	// Legacy OpenClaw OAuth (kept for backward compatibility)
 	OpenClawClientID     string
 	OpenClawClientSecret string
@@ -39,6 +49,12 @@ func Load() (*Config, error) {
 		XClientID:            os.Getenv("X_CLIENT_ID"),
 		XClientSecret:        os.Getenv("X_CLIENT_SECRET"),
 		XRedirectURI:         os.Getenv("X_REDIRECT_URI"),
+		GitHubClientID:       os.Getenv("GITHUB_CLIENT_ID"),
+		GitHubClientSecret:   os.Getenv("GITHUB_CLIENT_SECRET"),
+		GitHubRedirectURI:    os.Getenv("GITHUB_REDIRECT_URI"),
+		GoogleClientID:       os.Getenv("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret:   os.Getenv("GOOGLE_CLIENT_SECRET"),
+		GoogleRedirectURI:    os.Getenv("GOOGLE_REDIRECT_URI"),
 		OpenClawClientID:     os.Getenv("OPENCLAW_CLIENT_ID"),
 		OpenClawClientSecret: os.Getenv("OPENCLAW_CLIENT_SECRET"),
 		OpenClawBaseURL:      os.Getenv("OPENCLAW_BASE_URL"),
@@ -62,6 +78,14 @@ func Load() (*Config, error) {
 
 	if cfg.XRedirectURI == "" {
 		cfg.XRedirectURI = "https://api.claway.cc/api/v1/auth/x/callback"
+	}
+
+	if cfg.GitHubRedirectURI == "" {
+		cfg.GitHubRedirectURI = "https://api.claway.cc/api/v1/auth/github/callback"
+	}
+
+	if cfg.GoogleRedirectURI == "" {
+		cfg.GoogleRedirectURI = "https://api.claway.cc/api/v1/auth/google/callback"
 	}
 
 	if cfg.OpenClawBaseURL == "" {

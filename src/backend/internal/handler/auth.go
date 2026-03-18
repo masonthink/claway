@@ -53,6 +53,72 @@ func (h *AuthHandler) XCallback(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, redirectURL)
 }
 
+// GitHubLogin handles GET /api/v1/auth/github
+func (h *AuthHandler) GitHubLogin(c echo.Context) error {
+	cliPort := c.QueryParam("cli_port")
+
+	authURL, err := h.svc.GetGitHubAuthURL(cliPort)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, authURL)
+}
+
+// GitHubCallback handles GET /api/v1/auth/github/callback
+func (h *AuthHandler) GitHubCallback(c echo.Context) error {
+	code := c.QueryParam("code")
+	state := c.QueryParam("state")
+
+	if code == "" {
+		errorMsg := c.QueryParam("error")
+		if errorMsg == "" {
+			errorMsg = "missing authorization code"
+		}
+		return c.HTML(http.StatusBadRequest, authErrorHTML("Authorization failed: "+errorMsg))
+	}
+
+	redirectURL, err := h.svc.HandleGitHubCallback(c.Request().Context(), code, state)
+	if err != nil {
+		return c.HTML(http.StatusInternalServerError, authErrorHTML("Login failed: "+userMessage(err)))
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+}
+
+// GoogleLogin handles GET /api/v1/auth/google
+func (h *AuthHandler) GoogleLogin(c echo.Context) error {
+	cliPort := c.QueryParam("cli_port")
+
+	authURL, err := h.svc.GetGoogleAuthURL(cliPort)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": userMessage(err)})
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, authURL)
+}
+
+// GoogleCallback handles GET /api/v1/auth/google/callback
+func (h *AuthHandler) GoogleCallback(c echo.Context) error {
+	code := c.QueryParam("code")
+	state := c.QueryParam("state")
+
+	if code == "" {
+		errorMsg := c.QueryParam("error")
+		if errorMsg == "" {
+			errorMsg = "missing authorization code"
+		}
+		return c.HTML(http.StatusBadRequest, authErrorHTML("Authorization failed: "+errorMsg))
+	}
+
+	redirectURL, err := h.svc.HandleGoogleCallback(c.Request().Context(), code, state)
+	if err != nil {
+		return c.HTML(http.StatusInternalServerError, authErrorHTML("Login failed: "+userMessage(err)))
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+}
+
 // OpenClawCallback handles GET /api/v1/auth/openclaw/callback (legacy)
 func (h *AuthHandler) OpenClawCallback(c echo.Context) error {
 	code := c.QueryParam("code")

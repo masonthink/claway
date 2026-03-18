@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -132,7 +133,12 @@ func (s *Service) HandleXCallback(ctx context.Context, code, state string) (redi
 	}
 
 	// Find or create user
-	user, err := s.findOrCreateOAuthUser(ctx, "x", profile.Data.ID, profile.Data.Username, profile.Data.Name, profile.Data.ProfileImageURL, tokenResp)
+	tokenData := &oauthTokenData{
+		AccessToken:  tokenResp.AccessToken,
+		RefreshToken: tokenResp.RefreshToken,
+		ExpiresIn:    tokenResp.ExpiresIn,
+	}
+	user, err := s.findOrCreateOAuthUser(ctx, "x", profile.Data.ID, profile.Data.Username, profile.Data.Name, profile.Data.ProfileImageURL, "", tokenData)
 	if err != nil {
 		return "", err
 	}
@@ -143,22 +149,7 @@ func (s *Service) HandleXCallback(ctx context.Context, code, state string) (redi
 		return "", err
 	}
 
-	// Redirect based on flow type
-	if saved.SessionID != "" {
-		// Agent session flow: store token in session, redirect to success page
-		if err := s.store.CompleteAuthSession(ctx, saved.SessionID, jwtToken); err != nil {
-			return "", fmt.Errorf("complete auth session: %w", err)
-		}
-		return fmt.Sprintf("%s/auth/session-success", s.cfg.FrontendURL), nil
-	}
-
-	if saved.CLIPort != "" {
-		// CLI flow: redirect to localhost
-		return fmt.Sprintf("http://127.0.0.1:%s/callback?token=%s", saved.CLIPort, url.QueryEscape(jwtToken)), nil
-	}
-
-	// Web flow: redirect to frontend
-	return fmt.Sprintf("%s/auth/callback?token=%s", s.cfg.FrontendURL, url.QueryEscape(jwtToken)), nil
+	return s.buildAuthRedirect(saved, jwtToken)
 }
 
 func (s *Service) exchangeXCode(code, codeVerifier string) (*xTokenResponse, error) {
@@ -236,18 +227,328 @@ func sanitizeAvatarURL(raw string) string {
 	return u.String()
 }
 
-func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerUserID, username, displayName, avatarURL string, tokenResp *xTokenResponse) (*model.User, error) {
+// --- GitHub OAuth 2.0 ---
+
+type githubTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+}
+
+type githubUserResponse struct {
+	ID        int64  `json:"id"`
+	Login     string `json:"login"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatar_url"`
+	Email     string `json:"email"`
+}
+
+// GetGitHubAuthURL generates the GitHub OAuth authorization URL.
+func (s *Service) GetGitHubAuthURL(cliPort string) (string, error) {
+	if s.cfg.GitHubClientID == "" {
+		return "", fmt.Errorf("GITHUB_CLIENT_ID not configured")
+	}
+
+	stateBytes := make([]byte, 16)
+	if _, err := rand.Read(stateBytes); err != nil {
+		return "", fmt.Errorf("generate state: %w", err)
+	}
+	state := base64.RawURLEncoding.EncodeToString(stateBytes)
+
+	saveOAuthState(state, "", cliPort, "")
+
+	params := url.Values{
+		"client_id":    {s.cfg.GitHubClientID},
+		"redirect_uri": {s.cfg.GitHubRedirectURI},
+		"scope":        {"read:user user:email"},
+		"state":        {state},
+	}
+
+	return "https://github.com/login/oauth/authorize?" + params.Encode(), nil
+}
+
+// HandleGitHubCallback processes the GitHub OAuth callback.
+func (s *Service) HandleGitHubCallback(ctx context.Context, code, state string) (redirectURL string, err error) {
+	saved, ok := popOAuthState(state)
+	if !ok {
+		return "", fmt.Errorf("invalid or expired OAuth state")
+	}
+
+	tokenResp, err := s.exchangeGitHubCode(code)
+	if err != nil {
+		return "", err
+	}
+
+	profile, err := s.fetchGitHubProfile(tokenResp.AccessToken)
+	if err != nil {
+		return "", err
+	}
+
+	displayName := profile.Name
+	if displayName == "" {
+		displayName = profile.Login
+	}
+
+	tokenData := &oauthTokenData{
+		AccessToken: tokenResp.AccessToken,
+	}
+	user, err := s.findOrCreateOAuthUser(ctx, "github", strconv.FormatInt(profile.ID, 10), profile.Login, displayName, profile.AvatarURL, profile.Email, tokenData)
+	if err != nil {
+		return "", err
+	}
+
+	jwtToken, err := s.issueJWT(user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	return s.buildAuthRedirect(saved, jwtToken)
+}
+
+func (s *Service) exchangeGitHubCode(code string) (*githubTokenResponse, error) {
+	data := url.Values{
+		"client_id":     {s.cfg.GitHubClientID},
+		"client_secret": {s.cfg.GitHubClientSecret},
+		"code":          {code},
+		"redirect_uri":  {s.cfg.GitHubRedirectURI},
+	}
+
+	req, err := http.NewRequest("POST", "https://github.com/login/oauth/access_token",
+		strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("create token request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("exchange code: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("token exchange failed (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var tokenResp githubTokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return nil, fmt.Errorf("decode token response: %w", err)
+	}
+
+	if tokenResp.AccessToken == "" {
+		return nil, fmt.Errorf("GitHub token exchange returned empty access token")
+	}
+
+	return &tokenResp, nil
+}
+
+func (s *Service) fetchGitHubProfile(accessToken string) (*githubUserResponse, error) {
+	req, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+	if err != nil {
+		return nil, fmt.Errorf("create profile request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("fetch profile: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("profile fetch failed (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var profile githubUserResponse
+	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
+		return nil, fmt.Errorf("decode profile: %w", err)
+	}
+
+	return &profile, nil
+}
+
+// --- Google OAuth 2.0 ---
+
+type googleTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+}
+
+type googleUserResponse struct {
+	ID      string `json:"id"`
+	Email   string `json:"email"`
+	Name    string `json:"name"`
+	Picture string `json:"picture"`
+}
+
+// GetGoogleAuthURL generates the Google OAuth authorization URL.
+func (s *Service) GetGoogleAuthURL(cliPort string) (string, error) {
+	if s.cfg.GoogleClientID == "" {
+		return "", fmt.Errorf("GOOGLE_CLIENT_ID not configured")
+	}
+
+	stateBytes := make([]byte, 16)
+	if _, err := rand.Read(stateBytes); err != nil {
+		return "", fmt.Errorf("generate state: %w", err)
+	}
+	state := base64.RawURLEncoding.EncodeToString(stateBytes)
+
+	saveOAuthState(state, "", cliPort, "")
+
+	params := url.Values{
+		"client_id":     {s.cfg.GoogleClientID},
+		"redirect_uri":  {s.cfg.GoogleRedirectURI},
+		"response_type": {"code"},
+		"scope":         {"openid profile email"},
+		"state":         {state},
+		"access_type":   {"offline"},
+	}
+
+	return "https://accounts.google.com/o/oauth2/v2/auth?" + params.Encode(), nil
+}
+
+// HandleGoogleCallback processes the Google OAuth callback.
+func (s *Service) HandleGoogleCallback(ctx context.Context, code, state string) (redirectURL string, err error) {
+	saved, ok := popOAuthState(state)
+	if !ok {
+		return "", fmt.Errorf("invalid or expired OAuth state")
+	}
+
+	tokenResp, err := s.exchangeGoogleCode(code)
+	if err != nil {
+		return "", err
+	}
+
+	profile, err := s.fetchGoogleProfile(tokenResp.AccessToken)
+	if err != nil {
+		return "", err
+	}
+
+	// Use email prefix as username
+	username := profile.Email
+	if idx := strings.Index(profile.Email, "@"); idx > 0 {
+		username = profile.Email[:idx]
+	}
+
+	displayName := profile.Name
+	if displayName == "" {
+		displayName = username
+	}
+
+	tokenData := &oauthTokenData{
+		AccessToken:  tokenResp.AccessToken,
+		RefreshToken: tokenResp.RefreshToken,
+		ExpiresIn:    tokenResp.ExpiresIn,
+	}
+	user, err := s.findOrCreateOAuthUser(ctx, "google", profile.ID, username, displayName, profile.Picture, profile.Email, tokenData)
+	if err != nil {
+		return "", err
+	}
+
+	jwtToken, err := s.issueJWT(user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	return s.buildAuthRedirect(saved, jwtToken)
+}
+
+func (s *Service) exchangeGoogleCode(code string) (*googleTokenResponse, error) {
+	data := url.Values{
+		"client_id":     {s.cfg.GoogleClientID},
+		"client_secret": {s.cfg.GoogleClientSecret},
+		"code":          {code},
+		"redirect_uri":  {s.cfg.GoogleRedirectURI},
+		"grant_type":    {"authorization_code"},
+	}
+
+	resp, err := http.PostForm("https://oauth2.googleapis.com/token", data)
+	if err != nil {
+		return nil, fmt.Errorf("exchange code: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("token exchange failed (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var tokenResp googleTokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return nil, fmt.Errorf("decode token response: %w", err)
+	}
+
+	return &tokenResp, nil
+}
+
+func (s *Service) fetchGoogleProfile(accessToken string) (*googleUserResponse, error) {
+	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v2/userinfo", nil)
+	if err != nil {
+		return nil, fmt.Errorf("create profile request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("fetch profile: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("profile fetch failed (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var profile googleUserResponse
+	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
+		return nil, fmt.Errorf("decode profile: %w", err)
+	}
+
+	return &profile, nil
+}
+
+// buildAuthRedirect constructs the redirect URL based on the OAuth flow type.
+func (s *Service) buildAuthRedirect(saved *oauthState, jwtToken string) (string, error) {
+	if saved.SessionID != "" {
+		ctx := context.Background()
+		if err := s.store.CompleteAuthSession(ctx, saved.SessionID, jwtToken); err != nil {
+			return "", fmt.Errorf("complete auth session: %w", err)
+		}
+		return fmt.Sprintf("%s/auth/session-success", s.cfg.FrontendURL), nil
+	}
+
+	if saved.CLIPort != "" {
+		return fmt.Sprintf("http://127.0.0.1:%s/callback?token=%s", saved.CLIPort, url.QueryEscape(jwtToken)), nil
+	}
+
+	return fmt.Sprintf("%s/auth/callback?token=%s", s.cfg.FrontendURL, url.QueryEscape(jwtToken)), nil
+}
+
+// oauthTokenData is a provider-agnostic token container used by findOrCreateOAuthUser.
+type oauthTokenData struct {
+	AccessToken  string
+	RefreshToken string
+	ExpiresIn    int
+}
+
+func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerUserID, username, displayName, avatarURL, email string, tokenData *oauthTokenData) (*model.User, error) {
 	avatarURL = sanitizeAvatarURL(avatarURL)
 	// Check if OAuth account already exists
 	oauthAccount, err := s.store.GetOAuthAccount(ctx, provider, providerUserID)
 	if err == nil {
 		// Existing account — update tokens and return user
 		var expiresAt interface{}
-		if tokenResp.ExpiresIn > 0 {
-			t := time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
+		if tokenData.ExpiresIn > 0 {
+			t := time.Now().Add(time.Duration(tokenData.ExpiresIn) * time.Second)
 			expiresAt = t
 		}
-		_ = s.store.UpdateOAuthTokens(ctx, oauthAccount.ID, tokenResp.AccessToken, tokenResp.RefreshToken, expiresAt)
+		_ = s.store.UpdateOAuthTokens(ctx, oauthAccount.ID, tokenData.AccessToken, tokenData.RefreshToken, expiresAt)
 
 		user, err := s.store.GetUserByID(ctx, oauthAccount.UserID)
 		if err != nil {
@@ -271,13 +572,13 @@ func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerU
 		Provider:         provider,
 		ProviderUserID:   providerUserID,
 		ProviderUsername:  username,
-		ProviderEmail:    "",
-		AccessToken:      tokenResp.AccessToken,
-		RefreshToken:     tokenResp.RefreshToken,
+		ProviderEmail:    email,
+		AccessToken:      tokenData.AccessToken,
+		RefreshToken:     tokenData.RefreshToken,
 	}
-	if tokenResp.ExpiresIn > 0 {
+	if tokenData.ExpiresIn > 0 {
 		account.TokenExpiresAt = model.NullTime{NullTime: sql.NullTime{
-			Time:  time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second),
+			Time:  time.Now().Add(time.Duration(tokenData.ExpiresIn) * time.Second),
 			Valid: true,
 		}}
 	}
