@@ -65,9 +65,9 @@
   --color-accent-deep: var(--accent-deep);
   --color-seafoam: var(--seafoam);
   --color-gold: var(--gold);
-  --font-display: "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
-  --font-body: "Manrope", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: var(--font-display-face), system-ui, -apple-system, sans-serif;
+  --font-body: var(--font-body-face), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {

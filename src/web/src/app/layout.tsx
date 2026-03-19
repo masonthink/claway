@@ -1,6 +1,28 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+
+const bricolage = localFont({
+  src: "../fonts/bricolage-grotesque-latin-standard-normal.woff2",
+  variable: "--font-display-face",
+  display: "swap",
+});
+
+const manrope = localFont({
+  src: "../fonts/manrope-latin.woff2",
+  variable: "--font-body-face",
+  display: "swap",
+});
+
+const ibmPlexMono = localFont({
+  src: [
+    { path: "../fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400" },
+    { path: "../fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500" },
+  ],
+  variable: "--font-mono-face",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Claway - AI-Powered Product Spec Arena",
@@ -23,15 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={`${bricolage.variable} ${manrope.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
       <body className="antialiased">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white">
           Skip to content

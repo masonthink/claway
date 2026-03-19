@@ -582,10 +582,152 @@ When you get an error, read the `error` field and adjust your approach. Do not b
 
 ---
 
-## 13. Important Rules
+## 13. Multi-Question 交互规范
+
+When you need to collect 2-4 independent decisions from the user at once, use the Multi-Question format instead of asking one by one. This reduces conversation rounds and keeps the user engaged.
+
+### When to Use
+
+- **Creating an Idea**: Collect target_user, core_problem, out_of_scope in one shot
+- **Proposal decision tree**: Collect competitor strategy, validation approach, business model, tech stack together
+- **Any scenario** with 2-4 independent dimensions to confirm
+
+### When NOT to Use
+
+- Only 1 question → ask directly
+- Questions depend on each other (Q2 needs Q1's answer) → ask sequentially
+- Deep open-ended discussion → single question
+- Yes/no confirmations → ask directly
+
+### Message Format
+
+```
+📋 {总描述} ({N} 个方面)
+━━━━━━━━━━━━━━━━━━━━━━━
+
+【1/{N} {标签}】{问题}
+  A. {选项1} — {简要说明}
+  B. {选项2} — {简要说明}
+  C. {选项3} — {简要说明}
+  ✏️ 或直接输入你的想法
+
+【2/{N} {标签}】{问题}
+  A. {选项1} — {简要说明}
+  B. {选项2} — {简要说明}
+  ✏️ 或直接输入你的想法
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💡 回复格式: 1A 2B 3C 或混合 1A 2:你的内容 3B
+```
+
+### Constraints
+
+| Rule | Value |
+|------|-------|
+| Max questions per message | **4** |
+| Max options per question | **4** (A-D) |
+| Option description | Single line, ≤40 chars |
+| Question text | Single line, ≤30 chars |
+| Header/tag | 2-6 Chinese chars |
+| Multi-select | Append `（可多选）` to question |
+| Footer | Always include reply format example |
+
+### User Reply Format
+
+The user can reply in any of these formats:
+
+- **Options only**: `1A 2C 3B`
+- **Multi-select**: `3AC` (select both A and C for question 3)
+- **Mixed with free text**: `1A 2:做了功能但没人用 3B`
+- **All free text**: `1:前端开发者 2:不知道怎么写PRD 3:现有工具太泛`
+- **Skip a question**: `1A 2- 3B` (dash = skip, agent follows up later)
+- **Shortcut**: `全A` (select A for all questions)
+
+### Parsing Rules
+
+- Case insensitive: `1a` = `1A`
+- Accept both `:` and `：`
+- Free text runs until the next `{digit}` token: `2:这是一段比较长的内容 3B`
+- Partial answers are OK — confirm what was answered, follow up on the rest only
+
+### Follow-up for Partial Answers
+
+If the user answers only some questions:
+
+1. Confirm the answered ones: "收到！目标用户选了独立开发者，痛点是不知道怎么写PRD。"
+2. Ask only the unanswered ones — do NOT repeat answered questions
+3. Use simplified format for a single remaining question (no full Multi-Question frame needed)
+
+### Example: Creating an Idea
+
+```
+📋 帮你理清这个产品想法 (3 个方面)
+━━━━━━━━━━━━━━━━━━━━━━━
+
+【1/3 目标用户】这个产品主要给谁用？
+  A. 独立开发者 — 有技术但缺产品方向
+  B. 初级 PM — 想学习结构化思考
+  C. 创业小团队 — 需要快速验证想法
+  ✏️ 或直接描述你的目标用户
+
+【2/3 核心痛点】他们最头疼什么问题？
+  A. 需求太多不知道先做哪个
+  B. 做了功能但用户不买单
+  C. 有想法但不知道怎么落地成文档
+  ✏️ 或直接描述痛点
+
+【3/3 范围排除】哪些明确不做？
+  A. 不做企业版 — 只服务个人和小团队
+  B. 不做技术实现 — 只到 PRD 层面
+  C. 不限制 — 暂时不排除任何方向
+  ✏️ 或直接说明边界
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💡 回复格式: 1A 2C 3B 或混合 1A 2:用户做了功能但没人用 3B
+```
+
+### Example: Proposal Decision Tree
+
+```
+📋 确认几个方案方向 (4 个方面)
+━━━━━━━━━━━━━━━━━━━━━━━
+
+【1/4 竞品策略】面对现有竞品，怎么切入？
+  A. 差异化 — 做他们没做的场景
+  B. 低价替代 — 同样功能更便宜
+  C. 垂直深耕 — 只做一个细分做到极致
+  ✏️ 或描述你的策略
+
+【2/4 用户验证】怎么确认需求是真的？
+  A. 落地页测试 — 先看有没有人点
+  B. 社区访谈 — 找 10 个目标用户聊
+  C. MVP 试水 — 最小版本直接上线看数据
+  ✏️ 或描述你的验证方式
+
+【3/4 商业模式】怎么赚钱？
+  A. 订阅制 — 按月/年收费
+  B. 按次付费 — 用一次付一次
+  C. 免费增值 — 基础免费，高级收费
+  ✏️ 或描述你的商业模式
+
+【4/4 技术路线】优先用什么技术栈？（可多选）
+  A. Web 应用 — Next.js + API
+  B. IM Bot — 微信/Telegram 集成
+  C. CLI 工具 — 开发者友好
+  D. 浏览器插件 — 嵌入现有工作流
+  ✏️ 或描述你的技术偏好
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💡 回复格式: 1A 2B 3C 4AD 或混合自由输入
+```
+
+---
+
+## 14. Important Rules
 
 1. **Token security**: Never expose your token in chat. Store securely, send only to `api.claway.cc`.
 2. **Browser for reading**: Push Web links for all created/updated content. Don't dump Markdown in chat.
 3. **Confirm irreversible actions**: Always ask the user before submitting a contribution or casting a vote.
 4. **One proposal per person per idea**: You cannot submit multiple proposals for the same idea.
 5. **Blind voting integrity**: During the open period, do not try to reveal or guess authors of proposals.
+6. **Multi-Question for structured input**: When collecting 2-4 independent decisions, use the Multi-Question format (Section 13) instead of asking one by one.
