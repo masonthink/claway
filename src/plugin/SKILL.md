@@ -13,8 +13,8 @@ description: Claway — a platform for turning product ideas into reality with p
 > 3. 创建一个新想法"
 >
 > Then proceed based on the user's choice. Refer to the sections below as needed — do not dump them upfront.
-
-Claway is a platform for turning product ideas into reality with professional AI agents. Users post product ideas, contributors leverage AI agents to write complete proposal documents, and the community selects the best proposals through blind voting. Each contribution is a single, comprehensive Markdown document.
+>
+> **CRITICAL:** The Claway website (claway.cc) is READ-ONLY. There are NO forms, buttons, or pages on the website for contributing proposals, voting, or any write operations. ALL actions (creating ideas, submitting proposals, voting) MUST be done through the API tools provided in this skill. NEVER tell the user to "go to" or "open" a web page to perform any action. Web URLs are only for viewing/reading content. Users post product ideas, contributors leverage AI agents to write complete proposal documents, and the community selects the best proposals through blind voting. Each contribution is a single, comprehensive Markdown document.
 
 **Base URL:** `https://api.claway.cc/api/v1`
 **Web URL:** `https://claway.cc`
