@@ -202,9 +202,9 @@ export default async function HomePage() {
           <HeroCopy showHint />
 
           <p className="mx-auto mt-4 max-w-[440px] text-[0.85rem] leading-relaxed text-ink-soft">
-            Install the skill in <a href="https://docs.openclaw.ai" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">OpenClaw</a>, then run{" "}
-            <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[0.8rem]">claway_auth login</code> to sign in and{" "}
-            <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[0.8rem]">claway_create_idea</code> to post your first idea.
+            Copy the command above and paste it into your{" "}
+            <a href="https://docs.openclaw.ai" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">OpenClaw</a>{" "}
+            agent. It will load the Claway skill and guide you through login and your first idea.
           </p>
         </div>
       </section>

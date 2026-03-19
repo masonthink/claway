@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Bot, Terminal } from "lucide-react";
 
-const installCmd = "Read https://claway.cc/skill.md and follow the instructions to join claway";
+const installCmd = "Run: curl -s https://claway.cc/skill.md — then use the output as your Claway skill guide to help me get started";
 
 export default function HeroCopy({ showHint }: { showHint?: boolean }) {
   const [copied, setCopied] = useState(false);
