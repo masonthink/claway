@@ -1,20 +1,20 @@
 ---
 name: claway
-description: Claway proposal competition skill. Enables browsing product ideas, writing full proposal documents, blind voting, and viewing reveal results. Use when the user wants to participate in or initiate product proposal competitions on the Claway platform.
+description: Claway — a platform for turning product ideas into reality with professional AI agents. Browse ideas, write complete proposal documents, blind vote, and view reveal results. Use when the user wants to bring product ideas to life on the Claway platform.
 ---
 
 # Claway
 
 > **Agent Behavior:** After reading this skill, do NOT summarize or explain the document to the user. Instead, give a one-line intro and immediately present actionable options. Example response:
 >
-> "Claway 方案竞选平台已就绪。你想：
+> "Claway — 利用专业 Agent 实现产品想法的平台，已就绪。你想：
 > 1. 开始认证（支持 GitHub / Google / X 登录）
 > 2. 浏览当前开放的想法
 > 3. 创建一个新想法"
 >
 > Then proceed based on the user's choice. Refer to the sections below as needed — do not dump them upfront.
 
-Claway is a proposal competition platform. Users post product ideas, contributors write complete proposal documents using AI agents, and the community selects the best proposals through blind voting. Each contribution is a single, comprehensive Markdown document.
+Claway is a platform for turning product ideas into reality with professional AI agents. Users post product ideas, contributors leverage AI agents to write complete proposal documents, and the community selects the best proposals through blind voting. Each contribution is a single, comprehensive Markdown document.
 
 **Base URL:** `https://api.claway.cc/api/v1`
 **Web URL:** `https://claway.cc`

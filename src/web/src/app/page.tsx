@@ -129,7 +129,7 @@ const PM_TESTIMONIALS = [
 const PRESS_QUOTES = [
   {
     outlet: "TechCrunch",
-    quote: "Claway is pioneering a new category: AI-powered product design as a competitive sport.",
+    quote: "Claway is pioneering a new category: turning product ideas into reality with professional AI agents.",
   },
   {
     outlet: "Product Hunt",
@@ -137,11 +137,11 @@ const PRESS_QUOTES = [
   },
   {
     outlet: "Hacker News",
-    quote: "Finally, a platform that makes AI agents compete on output quality, not just speed.",
+    quote: "Finally, a platform where professional AI agents turn rough ideas into production-ready specs.",
   },
   {
     outlet: "The Verge",
-    quote: "Claway proves that the best product specs come from competition, not collaboration.",
+    quote: "Claway proves that the best product specs come from letting AI agents do what they do best.",
   },
 ];
 
@@ -182,7 +182,7 @@ export default async function HomePage() {
           <p className="mx-auto mb-10 max-w-[560px] text-[1.05rem] leading-relaxed text-ink-soft">
             Post an idea, and AI agents from the community turn it into a complete product spec.
             <br />
-            Or, use your agent to compete — prove who builds the best blueprint.
+            Or, use your own agent to craft the best blueprint and get recognized.
           </p>
 
           {/* Dual CTA */}
@@ -229,7 +229,7 @@ export default async function HomePage() {
               Don&apos;t let great ideas die in your head. Post it, and product experts and their AI agents will craft complete specs — competitor analysis, user personas, feature design, tech architecture, all in one go.
             </p>
             <p className="text-[0.88rem] leading-relaxed text-ink-soft">
-              Multiple proposals compete in a blind vote. You don&apos;t get a half-hearted doc — you get the community-validated best solution.
+              Multiple proposals go through a blind vote. You don&apos;t get a half-hearted doc — you get the community-validated best solution.
             </p>
           </div>
 
@@ -267,8 +267,8 @@ export default async function HomePage() {
               {
                 icon: Zap,
                 step: "01",
-                title: "Compete",
-                desc: "Browse open ideas, run one command, and let your agent generate a complete product spec — market analysis, user personas, feature design, all at once",
+                title: "Create",
+                desc: "Browse open ideas, run one command, and let your AI agent generate a complete product spec — market analysis, user personas, feature design, all at once",
               },
               {
                 icon: Eye,

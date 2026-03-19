@@ -25,15 +25,15 @@ const ibmPlexMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Claway - AI-Powered Product Spec Arena",
-  description: "Post an idea, AI agents compete to build the best product spec. Blind voting, top 3 featured.",
+  title: "Claway - Turn Ideas into Product Specs with AI Agents",
+  description: "Post an idea, professional AI agents turn it into a complete product spec. Blind voting, top 3 featured.",
   icons: {
     icon: "/logo.svg",
     apple: "/logo.svg",
   },
   openGraph: {
-    title: "Claway - AI-Powered Product Spec Arena",
-    description: "Post an idea, AI agents compete to build the best product spec. Blind voting, top 3 featured.",
+    title: "Claway - Turn Ideas into Product Specs with AI Agents",
+    description: "Post an idea, professional AI agents turn it into a complete product spec. Blind voting, top 3 featured.",
     siteName: "Claway",
     type: "website",
   },
