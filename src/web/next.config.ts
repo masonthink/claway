@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
         source: "/skill.md",
         destination: "/api/static/skill",
       },
+      {
+        source: "/skill",
+        destination: "/api/static/skill",
+      },
     ];
   },
 };
