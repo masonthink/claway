@@ -23,10 +23,14 @@ func main() {
 
 	secret := os.Args[2]
 
+	now := time.Now()
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
+		"iss":     "claway",
+		"aud":     "claway-api",
+		"exp":     now.Add(24 * time.Hour).Unix(),
+		"iat":     now.Unix(),
+		"nbf":     now.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

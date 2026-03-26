@@ -12,6 +12,8 @@ export default function AuthCallback() {
     const token = searchParams.get("token");
     if (token) {
       setToken(token);
+      // Immediately clear the token from URL to prevent leaking via Referer/history
+      window.history.replaceState({}, "", "/auth/callback");
       router.replace("/");
     }
   }, [searchParams, router]);

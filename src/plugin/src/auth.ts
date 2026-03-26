@@ -124,11 +124,16 @@ p{color:#999;margin-top:0.5rem}</style></head>
 <body><div class="card"><div class="check">&#10003;</div><h2>Login Successful</h2><p>You can close this tab and return to your terminal.</p></div></body></html>`;
 }
 
+function escapeHtml(unsafe: string): string {
+  return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
 function errorHTML(msg: string): string {
+  const safe = escapeHtml(msg);
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Claway - Auth Error</title>
 <style>body{font-family:system-ui;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0a;color:#e5e5e5}
 .card{text-align:center;padding:2rem 3rem;border-radius:12px;border:1px solid #333}
 p{color:#ff6b6b}</style></head>
-<body><div class="card"><h2>Authentication Error</h2><p>${msg}</p></div></body></html>`;
+<body><div class="card"><h2>Authentication Error</h2><p>${safe}</p></div></body></html>`;
 }

@@ -39,8 +39,21 @@ type ContributionResponse struct {
 	PreviewURL  string             `json:"preview_url,omitempty"`
 }
 
+// Input length limits for contribution fields.
+const (
+	maxContributionContentLen     = 100000 // 100KB max for markdown content
+	maxContributionDecisionLogLen = 50000  // 50KB max for decision log JSON
+)
+
 // CreateContribution creates a new draft contribution for an idea.
 func (s *Service) CreateContribution(ctx context.Context, userID int64, ideaID int64, req CreateContributionRequest) (*ContributionResponse, error) {
+	if len(req.Content) > maxContributionContentLen {
+		return nil, fmt.Errorf("content must be at most %d characters", maxContributionContentLen)
+	}
+	if len(req.DecisionLog) > maxContributionDecisionLogLen {
+		return nil, fmt.Errorf("decision_log must be at most %d bytes", maxContributionDecisionLogLen)
+	}
+
 	// Check idea exists and is open
 	idea, err := s.store.GetIdeaByID(ctx, ideaID)
 	if err != nil {
@@ -86,6 +99,13 @@ func (s *Service) CreateContribution(ctx context.Context, userID int64, ideaID i
 
 // UpdateContribution updates a draft contribution.
 func (s *Service) UpdateContribution(ctx context.Context, userID int64, contribID int64, req UpdateContributionRequest) (*ContributionResponse, error) {
+	if len(req.Content) > maxContributionContentLen {
+		return nil, fmt.Errorf("content must be at most %d characters", maxContributionContentLen)
+	}
+	if len(req.DecisionLog) > maxContributionDecisionLogLen {
+		return nil, fmt.Errorf("decision_log must be at most %d bytes", maxContributionDecisionLogLen)
+	}
+
 	contrib, err := s.store.GetContributionByID(ctx, contribID)
 	if err != nil {
 		return nil, fmt.Errorf("contribution not found")

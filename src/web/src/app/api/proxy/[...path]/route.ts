@@ -3,13 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND_URL =
   process.env.BACKEND_URL || "https://api.claway.cc/api/v1";
 
-// Allowed path prefixes to prevent SSRF
+// Allowed path prefixes to prevent SSRF.
+// All prefixes must end with "/" or be followed by "/" or query params at runtime.
 const ALLOWED_PREFIXES = [
   "public/",
   "auth/",
-  "ideas",
-  "contributions",
+  "ideas/",
+  "ideas",    // exact match for /ideas (list endpoint)
+  "contributions/",
   "me/",
+  "me",       // exact match for /me
   "draft/",
 ];
 
@@ -44,8 +47,16 @@ export async function DELETE(
 async function proxy(req: NextRequest, params: { path: string[] }) {
   const path = params.path.join("/");
 
-  // Validate path: reject traversal and non-whitelisted prefixes
-  if (path.includes("..") || path.includes("//") || !ALLOWED_PREFIXES.some((p) => path.startsWith(p))) {
+  // Validate path: reject traversal, encoded traversal, and non-whitelisted prefixes
+  if (
+    path.includes("..") ||
+    path.includes("//") ||
+    path.includes("%2e") ||
+    path.includes("%2E") ||
+    !ALLOWED_PREFIXES.some((p) =>
+      path === p || path.startsWith(p.endsWith("/") ? p : p + "/") || path === p
+    )
+  ) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

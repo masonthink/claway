@@ -22,6 +22,8 @@ func (s *Store) CreateAuthSession(_ context.Context, session *model.AuthSession)
 
 // GetAuthSession retrieves an auth session by ID, returning ErrNotFound if
 // the session does not exist or has expired.
+// Security: If the session is completed (token present), it is consumed
+// (deleted) on first read to prevent replay attacks on the session ID.
 func (s *Store) GetAuthSession(_ context.Context, id string) (*model.AuthSession, error) {
 	val, ok := s.authSessions.Load(id)
 	if !ok {
@@ -34,6 +36,11 @@ func (s *Store) GetAuthSession(_ context.Context, id string) (*model.AuthSession
 	if time.Now().After(session.ExpiresAt) {
 		s.authSessions.Delete(id)
 		return nil, ErrNotFound
+	}
+
+	// Consume completed sessions on first read to prevent token replay
+	if session.Status == "completed" && session.Token != "" {
+		s.authSessions.Delete(id)
 	}
 
 	return session, nil

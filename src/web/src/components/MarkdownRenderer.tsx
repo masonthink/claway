@@ -3,6 +3,11 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+// Security: Explicitly disallow dangerous HTML elements.
+// react-markdown does not render raw HTML by default (safe), but we add
+// explicit overrides for defense-in-depth against future plugin additions.
+const disallowedElements = ["script", "iframe", "object", "embed", "form", "input", "style", "link"];
+
 export default function MarkdownRenderer({ content }: { content: string }) {
   return (
     <div
@@ -12,7 +17,13 @@ export default function MarkdownRenderer({ content }: { content: string }) {
         border: "1px solid var(--line)",
       }}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        disallowedElements={disallowedElements}
+        unwrapDisallowed={true}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }

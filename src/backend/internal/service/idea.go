@@ -27,19 +27,43 @@ type IdeaResponse struct {
 	InitiatorUsername string `json:"initiator_username"`
 }
 
+// Input length limits for idea fields.
+const (
+	maxIdeaTitleLen       = 200
+	maxIdeaDescriptionLen = 5000
+	maxIdeaTargetUserLen  = 500
+	maxIdeaCoreProblemLen = 2000
+	maxIdeaOutOfScopeLen  = 2000
+)
+
 // CreateIdea validates input, checks daily rate limit, and creates an idea with a 7-day deadline.
 func (s *Service) CreateIdea(ctx context.Context, userID int64, req CreateIdeaRequest) (*IdeaResponse, error) {
 	if req.Title == "" {
 		return nil, fmt.Errorf("title is required")
 	}
+	if len(req.Title) > maxIdeaTitleLen {
+		return nil, fmt.Errorf("title must be at most %d characters", maxIdeaTitleLen)
+	}
 	if req.Description == "" {
 		return nil, fmt.Errorf("description is required")
+	}
+	if len(req.Description) > maxIdeaDescriptionLen {
+		return nil, fmt.Errorf("description must be at most %d characters", maxIdeaDescriptionLen)
 	}
 	if req.TargetUser == "" {
 		return nil, fmt.Errorf("target_user is required")
 	}
+	if len(req.TargetUser) > maxIdeaTargetUserLen {
+		return nil, fmt.Errorf("target_user must be at most %d characters", maxIdeaTargetUserLen)
+	}
 	if req.CoreProblem == "" {
 		return nil, fmt.Errorf("core_problem is required")
+	}
+	if len(req.CoreProblem) > maxIdeaCoreProblemLen {
+		return nil, fmt.Errorf("core_problem must be at most %d characters", maxIdeaCoreProblemLen)
+	}
+	if len(req.OutOfScope) > maxIdeaOutOfScopeLen {
+		return nil, fmt.Errorf("out_of_scope must be at most %d characters", maxIdeaOutOfScopeLen)
 	}
 
 	// Check daily rate limit: max 2 ideas per day

@@ -86,6 +86,21 @@ func main() {
 	// Global middleware
 	e.Use(echomw.Logger())
 	e.Use(echomw.Recover())
+
+	// Request body size limit (1MB max)
+	e.Use(echomw.BodyLimit("1M"))
+
+	// Security headers
+	e.Use(echomw.SecureWithConfig(echomw.SecureConfig{
+		XSSProtection:         "1; mode=block",
+		ContentTypeNosniff:    "nosniff",
+		XFrameOptions:         "DENY",
+		HSTSMaxAge:            31536000,
+		HSTSExcludeSubdomains: false,
+		ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'",
+		ReferrerPolicy:        "strict-origin-when-cross-origin",
+	}))
+
 	e.Use(echomw.GzipWithConfig(echomw.GzipConfig{
 		Level: 5,
 	}))
@@ -98,10 +113,11 @@ func main() {
 			echomw.RateLimiterMemoryStoreConfig{Rate: 30, Burst: 60, ExpiresIn: 1 * time.Minute},
 		),
 		IdentifierExtractor: func(c echo.Context) (string, error) {
-			// Use X-Forwarded-For for Cloudflare/Caddy proxied requests
-			if xff := c.Request().Header.Get("X-Forwarded-For"); xff != "" {
-				return xff, nil
+			// Prefer Cloudflare's authenticated client IP header (cannot be spoofed by end users)
+			if cfIP := c.Request().Header.Get("CF-Connecting-IP"); cfIP != "" {
+				return cfIP, nil
 			}
+			// Fallback to Echo's RealIP which respects trusted proxies
 			return c.RealIP(), nil
 		},
 		DenyHandler: func(c echo.Context, identifier string, err error) error {

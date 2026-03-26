@@ -16,7 +16,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
-          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          key: ${{ secrets.VPS_ROOT_SSH_KEY }}
           command_timeout: 10m
           script: |
             set -e
@@ -39,7 +39,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
-          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          key: ${{ secrets.VPS_ROOT_SSH_KEY }}
           script: |
             set -e
             if id deploy &>/dev/null; then
@@ -61,7 +61,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
-          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          key: ${{ secrets.VPS_ROOT_SSH_KEY }}
           command_timeout: 5m
           script: |
             set -e
@@ -88,7 +88,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
-          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          key: ${{ secrets.VPS_ROOT_SSH_KEY }}
           command_timeout: 5m
           script: |
             set -e
@@ -126,7 +126,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
-          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          key: ${{ secrets.VPS_ROOT_SSH_KEY }}
           script: |
             set -e
             cat > /opt/claway/.env.prod << EOF
@@ -145,7 +145,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
-          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          key: ${{ secrets.VPS_ROOT_SSH_KEY }}
           source: "docker-compose.prod.yml"
           target: "/opt/claway/"
 
@@ -154,7 +154,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
-          password: ${{ secrets.VPS_ROOT_PASSWORD }}
+          key: ${{ secrets.VPS_ROOT_SSH_KEY }}
           script: |
             echo "=== Docker containers ==="
             docker ps

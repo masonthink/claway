@@ -30,7 +30,11 @@ func RequireAuth(jwtSecret string) echo.MiddlewareFunc {
 					return nil, jwt.ErrSignatureInvalid
 				}
 				return []byte(jwtSecret), nil
-			})
+			},
+				jwt.WithIssuer("claway"),
+				jwt.WithAudience("claway-api"),
+				jwt.WithValidMethods([]string{"HS256"}),
+			)
 			if err != nil || !token.Valid {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid or expired token"})
 			}
@@ -42,7 +46,7 @@ func RequireAuth(jwtSecret string) echo.MiddlewareFunc {
 
 			// Extract user_id from claims (stored as float64 by default in JSON)
 			userIDFloat, ok := claims["user_id"].(float64)
-			if !ok {
+			if !ok || userIDFloat <= 0 {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid user_id in token"})
 			}
 

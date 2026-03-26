@@ -15,8 +15,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// TestJWTSecret is used for all tests.
-const TestJWTSecret = "test-jwt-secret"
+// TestJWTSecret is used for all tests. Must be >= 32 chars to satisfy config validation.
+const TestJWTSecret = "test-jwt-secret-at-least-32-chars-long!"
 
 // defaultTestDatabaseURL is the fallback when TEST_DATABASE_URL is not set.
 const defaultTestDatabaseURL = "postgres://mason@localhost:5432/claway_test?sslmode=disable"

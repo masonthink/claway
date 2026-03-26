@@ -25,6 +25,11 @@ import (
 
 // --- OAuth state management (in-memory, good enough for single-instance MVP) ---
 
+const (
+	oauthStateTTL      = 10 * time.Minute // max time a state can live before expiry
+	oauthStateMaxCount = 1000             // max pending states to prevent memory DoS
+)
+
 type oauthState struct {
 	CodeVerifier string
 	CLIPort      string // empty for web flow
@@ -40,11 +45,34 @@ var (
 func saveOAuthState(state, codeVerifier, cliPort, sessionID string) {
 	oauthStatesMu.Lock()
 	defer oauthStatesMu.Unlock()
+
+	// Evict expired states and enforce max count to prevent memory DoS
+	now := time.Now()
+	for k, v := range oauthStates {
+		if now.Sub(v.CreatedAt) > oauthStateTTL {
+			delete(oauthStates, k)
+		}
+	}
+	if len(oauthStates) >= oauthStateMaxCount {
+		// Drop oldest entry
+		var oldestKey string
+		var oldestTime time.Time
+		for k, v := range oauthStates {
+			if oldestKey == "" || v.CreatedAt.Before(oldestTime) {
+				oldestKey = k
+				oldestTime = v.CreatedAt
+			}
+		}
+		if oldestKey != "" {
+			delete(oauthStates, oldestKey)
+		}
+	}
+
 	oauthStates[state] = &oauthState{
 		CodeVerifier: codeVerifier,
 		CLIPort:      cliPort,
 		SessionID:    sessionID,
-		CreatedAt:    time.Now(),
+		CreatedAt:    now,
 	}
 }
 
@@ -54,6 +82,9 @@ func popOAuthState(state string) (*oauthState, bool) {
 	s, ok := oauthStates[state]
 	if ok {
 		delete(oauthStates, state)
+	}
+	if ok && time.Since(s.CreatedAt) > oauthStateTTL {
+		return nil, false // expired
 	}
 	return s, ok
 }
@@ -524,7 +555,12 @@ func (s *Service) buildAuthRedirect(saved *oauthState, jwtToken string) (string,
 	}
 
 	if saved.CLIPort != "" {
-		return fmt.Sprintf("http://127.0.0.1:%s/callback?token=%s", saved.CLIPort, url.QueryEscape(jwtToken)), nil
+		// Validate CLI port is a safe number in the ephemeral/user range
+		port, err := strconv.Atoi(saved.CLIPort)
+		if err != nil || port < 1024 || port > 65535 {
+			return "", fmt.Errorf("invalid CLI port: must be between 1024 and 65535")
+		}
+		return fmt.Sprintf("http://127.0.0.1:%d/callback?token=%s", port, url.QueryEscape(jwtToken)), nil
 	}
 
 	return fmt.Sprintf("%s/auth/callback?token=%s", s.cfg.FrontendURL, url.QueryEscape(jwtToken)), nil
@@ -542,14 +578,7 @@ func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerU
 	// Check if OAuth account already exists
 	oauthAccount, err := s.store.GetOAuthAccount(ctx, provider, providerUserID)
 	if err == nil {
-		// Existing account — update tokens and return user
-		var expiresAt interface{}
-		if tokenData.ExpiresIn > 0 {
-			t := time.Now().Add(time.Duration(tokenData.ExpiresIn) * time.Second)
-			expiresAt = t
-		}
-		_ = s.store.UpdateOAuthTokens(ctx, oauthAccount.ID, tokenData.AccessToken, tokenData.RefreshToken, expiresAt)
-
+		// Existing account — return user (no longer persist OAuth tokens)
 		user, err := s.store.GetUserByID(ctx, oauthAccount.UserID)
 		if err != nil {
 			return nil, fmt.Errorf("get user for oauth account: %w", err)
@@ -567,14 +596,17 @@ func (s *Service) findOrCreateOAuthUser(ctx context.Context, provider, providerU
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 
+	// Security: Do NOT persist OAuth access/refresh tokens in the database.
+	// They are only used during the initial login to fetch the user profile,
+	// and storing them creates unnecessary risk if the database is compromised.
 	account := &model.OAuthAccount{
 		UserID:           user.ID,
 		Provider:         provider,
 		ProviderUserID:   providerUserID,
 		ProviderUsername:  username,
 		ProviderEmail:    email,
-		AccessToken:      tokenData.AccessToken,
-		RefreshToken:     tokenData.RefreshToken,
+		AccessToken:      "",
+		RefreshToken:     "",
 	}
 	if tokenData.ExpiresIn > 0 {
 		account.TokenExpiresAt = model.NullTime{NullTime: sql.NullTime{
@@ -836,12 +868,23 @@ func (s *Service) GetMe(ctx context.Context, userID int64) (*model.User, error) 
 	return user, nil
 }
 
+// JWT constants for issuer/audience validation.
+const (
+	jwtIssuer   = "claway"
+	jwtAudience = "claway-api"
+	jwtMaxAge   = 24 * time.Hour // reduced from 7 days to 24 hours
+)
+
 // issueJWT creates a signed JWT token for the given user ID.
 func (s *Service) issueJWT(userID int64) (string, error) {
+	now := time.Now()
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
+		"iss":     jwtIssuer,
+		"aud":     jwtAudience,
+		"exp":     now.Add(jwtMaxAge).Unix(),
+		"iat":     now.Unix(),
+		"nbf":     now.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
